@@ -1,9 +1,12 @@
+import { auth } from "@/auth";
 import { AppShell } from "@/components/layout/app-shell";
 
-export default function AppGroupLayout({
+export default async function AppGroupLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AppShell>{children}</AppShell>;
+  const session = await auth();
+
+  return <AppShell isAuthenticated={Boolean(session?.user)}>{children}</AppShell>;
 }
