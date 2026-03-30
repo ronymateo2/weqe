@@ -1,0 +1,45 @@
+{
+  "name": "neuroeye-log",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auth/pg-adapter": "^1.10.0",
+    "@serwist/next": "^9.0.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "@fontsource/dm-sans": "^5.2.8",
+    "clsx": "^2.1.1",
+    "geist": "^1.7.0",
+    "html2canvas": "^1.4.1",
+    "idb-keyval": "^6.2.1",
+    "jspdf": "^3.0.1",
+    "lucide-react": "^0.511.0",
+    "next": "^15.3.0",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^2.15.3",
+    "serwist": "^9.0.0",
+    "simple-statistics": "^7.8.8",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/node": "^22.15.29",
+    "@types/pg": "^8.15.2",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.26.0",
+    "eslint-config-next": "^15.3.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.8.3"
+  }
+}
