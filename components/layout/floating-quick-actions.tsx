@@ -15,6 +15,10 @@ export function FloatingQuickActions() {
   const [sheet, setSheet] = useState<"drop" | "trigger" | null>(null);
 
   const isVisible = useMemo(() => pathname === "/register" || pathname === "/history", [pathname]);
+  const fabBottomOffsetClass =
+    pathname === "/register"
+      ? "bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+var(--sticky-cta-height)+16px)]"
+      : "bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+24px)]";
 
   if (!isVisible) return null;
 
@@ -25,7 +29,7 @@ export function FloatingQuickActions() {
 
   return (
     <>
-      <div className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+24px)] right-6 z-30">
+      <div className={cn("fixed right-6 z-30", fabBottomOffsetClass)}>
         <div className="flex flex-col items-end gap-3">
           {menuOpen ? (
             <>

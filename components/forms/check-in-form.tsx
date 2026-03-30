@@ -1,13 +1,15 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
+import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
+import type { SaveCheckInInput } from "@/lib/actions/check-ins";
 import type { ActionState, TimeOfDay } from "@/types/domain";
 
 const defaultPainState = {
@@ -24,6 +26,20 @@ export function CheckInForm() {
   const [sleepQuality, setSleepQuality] = useState(5);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
+  const [zeroWarning, setZeroWarning] = useState<string | null>(null);
+  const [pendingInput, setPendingInput] = useState<SaveCheckInInput | null>(null);
+
+  useEffect(() => {
+    if (!zeroWarning) return;
+    if (typeof window === "undefined") return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([35, 40, 55]);
+    }
+  }, [zeroWarning]);
 
   const updatePain = (key: keyof typeof pain, value: number) => {
     setPain((current) => ({
@@ -32,21 +48,54 @@ export function CheckInForm() {
     }));
   };
 
-  const handleSave = () => {
+  const buildPayload = (): SaveCheckInInput => ({
+    id: crypto.randomUUID(),
+    loggedAt: new Date().toISOString(),
+    timeOfDay,
+    eyelidPain: pain.eyelidPain,
+    templePain: pain.templePain,
+    masseterPain: pain.masseterPain,
+    overallPain: pain.overallPain,
+    sleepHours: timeOfDay === "morning" && sleepHours ? Number(sleepHours) : null,
+    sleepQuality: timeOfDay === "morning" ? sleepQuality : null
+  });
+
+  const getZeroValueWarning = (input: SaveCheckInInput): string | null => {
+    const trackedValues: Array<{ label: string; value: number }> = [
+      { label: "parpados", value: input.eyelidPain },
+      { label: "sienes", value: input.templePain },
+      { label: "masetero", value: input.masseterPain },
+      { label: "dolor general", value: input.overallPain }
+    ];
+
+    if (input.sleepHours !== null && input.sleepHours !== undefined) {
+      trackedValues.push({ label: "horas de sueno", value: input.sleepHours });
+    }
+
+    if (input.sleepQuality !== null && input.sleepQuality !== undefined) {
+      trackedValues.push({ label: "calidad del sueno", value: input.sleepQuality });
+    }
+
+    const zeroValues = trackedValues.filter((field) => field.value === 0);
+
+    if (zeroValues.length === 0) {
+      return null;
+    }
+
+    const allValuesAreZero = trackedValues.every((field) => field.value === 0);
+
+    if (allValuesAreZero) {
+      return "Todos los valores estan en 0. Vas a guardar el registro igual. Deseas continuar?";
+    }
+
+    return `Vas a guardar valores en 0 para: ${zeroValues.map((field) => field.label).join(", ")}. Deseas continuar?`;
+  };
+
+  const submitCheckIn = (input: SaveCheckInInput) => {
     setIsPending(true);
 
     startTransition(async () => {
-      const result = await saveCheckInAction({
-        id: crypto.randomUUID(),
-        loggedAt: new Date().toISOString(),
-        timeOfDay,
-        eyelidPain: pain.eyelidPain,
-        templePain: pain.templePain,
-        masseterPain: pain.masseterPain,
-        overallPain: pain.overallPain,
-        sleepHours: timeOfDay === "morning" && sleepHours ? Number(sleepHours) : null,
-        sleepQuality: timeOfDay === "morning" ? sleepQuality : null
-      });
+      const result = await saveCheckInAction(input);
 
       setState({
         status: result.ok ? "success" : "error",
@@ -59,6 +108,35 @@ export function CheckInForm() {
 
       setIsPending(false);
     });
+  };
+
+  const closeZeroWarning = () => {
+    setZeroWarning(null);
+    setPendingInput(null);
+  };
+
+  const confirmSaveWithZeros = () => {
+    if (!pendingInput) {
+      closeZeroWarning();
+      return;
+    }
+
+    const input = pendingInput;
+    closeZeroWarning();
+    submitCheckIn(input);
+  };
+
+  const handleSave = () => {
+    const input = buildPayload();
+    const warningMessage = getZeroValueWarning(input);
+
+    if (!warningMessage) {
+      submitCheckIn(input);
+      return;
+    }
+
+    setPendingInput(input);
+    setZeroWarning(warningMessage);
   };
 
   return (
@@ -113,6 +191,24 @@ export function CheckInForm() {
           </Button>
         </div>
       </div>
+
+      <MobileSheet
+        description="Revisa antes de confirmar."
+        open={Boolean(zeroWarning)}
+        panelClassName="warning-sheet-attention"
+        title="Confirmar valores en cero"
+        onClose={closeZeroWarning}
+      >
+        <div className="space-y-5">
+          <p className="m-0 text-[15px] leading-6 text-[var(--text-primary)]">{zeroWarning}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button variant="subtle" onClick={closeZeroWarning}>
+              Revisar registro
+            </Button>
+            <Button onClick={confirmSaveWithZeros}>Guardar igual</Button>
+          </div>
+        </div>
+      </MobileSheet>
     </div>
   );
 }

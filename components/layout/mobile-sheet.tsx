@@ -1,12 +1,15 @@
+import { cn } from "@/lib/utils";
+
 type MobileSheetProps = {
   open: boolean;
   title: string;
   description: string;
   onClose: () => void;
   children: React.ReactNode;
+  panelClassName?: string;
 };
 
-export function MobileSheet({ open, title, description, onClose, children }: MobileSheetProps) {
+export function MobileSheet({ open, title, description, onClose, children, panelClassName }: MobileSheetProps) {
   if (!open) return null;
 
   return (
@@ -17,7 +20,7 @@ export function MobileSheet({ open, title, description, onClose, children }: Mob
         type="button"
         onClick={onClose}
       />
-      <section aria-modal="true" className="sheet-panel" role="dialog">
+      <section aria-modal="true" className={cn("sheet-panel", panelClassName)} role="dialog">
         <div className="sheet-handle" />
         <header className="mb-6">
           <h2 className="screen-title text-[17px]">{title}</h2>
