@@ -10,7 +10,7 @@ type RegisterPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const AUTH_REDIRECT_ROUTES = ["/register", "/history", "/dashboard", "/report"] as const;
+const AUTH_REDIRECT_ROUTES = ["/register", "/history", "/dashboard", "/report", "/drop-types"] as const;
 
 function getSafeRedirect(path: string | undefined) {
   if (!path || !path.startsWith("/") || path.startsWith("//")) {
