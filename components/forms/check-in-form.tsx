@@ -39,7 +39,7 @@ export function CheckInForm() {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("morning");
   const [pain, setPain] = useState(defaultPainState);
   const [sleepHours, setSleepHours] = useState("6");
-  const [sleepQuality, setSleepQuality] = useState(5);
+  const [sleepQuality, setSleepQuality] = useState(6);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
@@ -185,7 +185,12 @@ export function CheckInForm() {
           <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
             <p className="section-label">Sueno</p>
             <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
-            <PainSlider label="Calidad del sueno" value={sleepQuality} onChange={setSleepQuality} />
+            <PainSlider
+              label="Calidad del sueno"
+              value={sleepQuality}
+              variant="quality"
+              onChange={setSleepQuality}
+            />
           </div>
         ) : null}
       </div>

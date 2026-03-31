@@ -1,14 +1,18 @@
 "use client";
 
-import { painColor, painGradient } from "@/lib/pain";
+import { painColor, painGradient, qualityColor, qualityGradient } from "@/lib/pain";
 
 type PainSliderProps = {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  variant?: "pain" | "quality";
 };
 
-export function PainSlider({ label, value, onChange }: PainSliderProps) {
+export function PainSlider({ label, value, onChange, variant = "pain" }: PainSliderProps) {
+  const colorFn = variant === "quality" ? qualityColor : painColor;
+  const gradientFn = variant === "quality" ? qualityGradient : painGradient;
+
   return (
     <label className="block space-y-3">
       <div className="flex items-end justify-between gap-4">
@@ -16,7 +20,7 @@ export function PainSlider({ label, value, onChange }: PainSliderProps) {
         <span
           className="mono text-[22px] font-light"
           style={{
-            color: painColor(value)
+            color: colorFn(value)
           }}
         >
           {value}
@@ -30,7 +34,7 @@ export function PainSlider({ label, value, onChange }: PainSliderProps) {
           min={0}
           step={1}
           style={{
-            background: painGradient(value)
+            background: gradientFn(value)
           }}
           type="range"
           value={value}
