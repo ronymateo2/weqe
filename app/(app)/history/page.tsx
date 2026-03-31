@@ -20,6 +20,7 @@ export default async function HistoryPage() {
         action={<SignOutButton />}
         description="El historial agrupa check-ins, gotas y triggers por dia para revisar contexto clinico rapido."
         title="Historial"
+        user={session.user}
       />
       <HistoryScreen historyFeed={historyFeed} />
     </section>

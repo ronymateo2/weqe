@@ -17,6 +17,7 @@ export default async function ReportPage() {
         action={<SignOutButton />}
         description="Preparamos un resumen claro para consulta medica y exportacion PDF."
         title="Reporte"
+        user={session.user}
       />
       <ReportScreen />
     </section>

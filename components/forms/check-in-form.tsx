@@ -4,8 +4,8 @@ import { startTransition, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
 import { StatusBanner } from "@/components/ui/status-banner";
-import { TextInput } from "@/components/ui/text-input";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
@@ -19,10 +19,26 @@ const defaultPainState = {
   overallPain: 0
 };
 
+function parseSleepHours(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const normalized = value.replace(",", ".");
+  const parsed = Number(normalized);
+
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  const clamped = Math.min(12, Math.max(0, parsed));
+  return Math.round((Math.round(clamped / 0.5) * 0.5) * 10) / 10;
+}
+
 export function CheckInForm() {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("morning");
   const [pain, setPain] = useState(defaultPainState);
-  const [sleepHours, setSleepHours] = useState("");
+  const [sleepHours, setSleepHours] = useState("6");
   const [sleepQuality, setSleepQuality] = useState(5);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
@@ -56,7 +72,7 @@ export function CheckInForm() {
     templePain: pain.templePain,
     masseterPain: pain.masseterPain,
     overallPain: pain.overallPain,
-    sleepHours: timeOfDay === "morning" && sleepHours ? Number(sleepHours) : null,
+    sleepHours: timeOfDay === "morning" ? parseSleepHours(sleepHours) : null,
     sleepQuality: timeOfDay === "morning" ? sleepQuality : null
   });
 
@@ -104,6 +120,7 @@ export function CheckInForm() {
 
       if (result.ok) {
         setPain(defaultPainState);
+        setSleepHours("6");
       }
 
       setIsPending(false);
@@ -167,18 +184,7 @@ export function CheckInForm() {
         {timeOfDay === "morning" ? (
           <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
             <p className="section-label">Sueno</p>
-            <div className="space-y-2">
-              <label className="text-[13px] font-medium text-[var(--text-primary)]" htmlFor="sleep-hours">
-                Horas de sueno
-              </label>
-              <TextInput
-                id="sleep-hours"
-                inputMode="decimal"
-                placeholder="6.5"
-                value={sleepHours}
-                onChange={(event) => setSleepHours(event.target.value)}
-              />
-            </div>
+            <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
             <PainSlider label="Calidad del sueno" value={sleepQuality} onChange={setSleepQuality} />
           </div>
         ) : null}

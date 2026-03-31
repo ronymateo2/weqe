@@ -20,6 +20,7 @@ export default async function DashboardPage() {
         action={<SignOutButton />}
         description="Las correlaciones importan mas que las entradas aisladas. Aqui veremos patrones de dolor, sueno y triggers."
         title="Dashboard"
+        user={session.user}
       />
       <DashboardScreen dashboardData={dashboardData} />
     </section>

@@ -214,6 +214,15 @@ svg {
   border: 0;
 }
 
+.wheel-picker {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.wheel-picker::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes warning-sheet-shake {
   0% {
     transform: translateX(0);

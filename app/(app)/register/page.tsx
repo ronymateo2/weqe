@@ -36,6 +36,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
         action={session?.user ? <SignOutButton /> : undefined}
         description="Registra dolor y sueno con el minimo esfuerzo posible, incluso en un mal dia."
         title="Registro rapido"
+        user={session?.user}
       />
 
       {!session?.user ? (
