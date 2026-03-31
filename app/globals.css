@@ -261,3 +261,29 @@ svg {
     transition-duration: 0.01ms !important;
   }
 }
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-el);
+}
+
+.skeleton::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(28, 24, 16, 0.4), transparent);
+  animation: shimmer 1.5s infinite;
+  content: "";
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

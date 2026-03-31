@@ -178,7 +178,7 @@ export async function saveDropAction(input: SaveDropInput) {
     revalidatePath("/register");
     revalidatePath("/drop-types");
 
-    return { ok: true, message: "Gota registrada." };
+    return { ok: true, message: "Gota registrada.", dropType };
   } catch (error) {
     return {
       ok: false,

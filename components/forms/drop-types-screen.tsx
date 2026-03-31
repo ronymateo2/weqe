@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { set } from "idb-keyval";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
 import { saveDropTypeAction } from "@/lib/actions/drops";
 import type { ActionState, DropTypeRecord } from "@/types/domain";
+
+const CACHE_KEY = "neuroeye_drop_types";
 
 type DropTypesScreenProps = {
   initialDropTypes: DropTypeRecord[];
@@ -41,12 +44,21 @@ export function DropTypesScreen({ initialDropTypes, initialErrorMessage }: DropT
 
       const savedDropType = result.dropType;
 
-      setDropTypes((current) => {
-        const withoutCurrent = current.filter((item) => item.id !== savedDropType.id);
+      const nextDropTypes = (() => {
+        const withoutCurrent = dropTypes.filter((item) => item.id !== savedDropType.id);
         const next = [...withoutCurrent, savedDropType];
         return next.sort((a, b) => a.name.localeCompare(b.name, "es-CO"));
-      });
+      })();
+
+      setDropTypes(nextDropTypes);
       setDropName("");
+
+      // Update cache
+      try {
+        await set(CACHE_KEY, nextDropTypes);
+      } catch (err) {
+        console.warn("Failed to update drop types cache", err);
+      }
     });
   };
 
