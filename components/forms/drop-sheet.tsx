@@ -32,14 +32,20 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
   // Sync initial selection when dropTypes load
   useEffect(() => {
-    if (dropTypes.length > 0 && selectedDropType === CUSTOM_DROP_TYPE && !customDropName) {
+    if (
+      dropTypes.length > 0 &&
+      selectedDropType === CUSTOM_DROP_TYPE &&
+      !customDropName
+    ) {
       setSelectedDropType(dropTypes[0].id);
     }
   }, [dropTypes, selectedDropType, customDropName]);
 
   const wheelOptions = useMemo(() => {
-    const opts = dropTypes.map((dt: DropTypeRecord) => ({ value: dt.id, label: dt.name }));
-    opts.push({ value: CUSTOM_DROP_TYPE, label: "Nueva gota...", isAction: true });
+    const opts = dropTypes.map((dt: DropTypeRecord) => ({
+      value: dt.id,
+      label: dt.name,
+    }));
     return opts;
   }, [dropTypes]);
 
@@ -48,7 +54,9 @@ export function DropSheet({ onSaved }: DropSheetProps) {
       return customDropName;
     }
 
-    const selected = dropTypes.find((item: DropTypeRecord) => item.id === selectedDropType);
+    const selected = dropTypes.find(
+      (item: DropTypeRecord) => item.id === selectedDropType,
+    );
     return selected?.name ?? "";
   }, [customDropName, dropTypes, selectedDropType]);
 
@@ -69,7 +77,9 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
       if (result.ok) {
         // If saveDropAction returns the created dropType, we update our local cache
-        const createdDropType = (result as any).dropType as DropTypeRecord | undefined;
+        const createdDropType = (result as any).dropType as
+          | DropTypeRecord
+          | undefined;
         if (createdDropType) {
           const nextDropTypes = (() => {
             const exists = dropTypes.some((d) => d.id === createdDropType.id);
@@ -77,7 +87,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
             const next = [...dropTypes, createdDropType];
             return next.sort((a, b) => a.name.localeCompare(b.name, "es-CO"));
           })();
-          
+
           if (nextDropTypes !== dropTypes) {
             try {
               await set(DROP_TYPES_CACHE_KEY, nextDropTypes);
@@ -95,10 +105,14 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
   return (
     <div className="space-y-5">
-      {(state.message || error) ? (
+      {state.message || error ? (
         <StatusBanner
           message={state.message || error || ""}
-          tone={state.status === "error" || (error && state.status === "idle") ? "error" : "success"}
+          tone={
+            state.status === "error" || (error && state.status === "idle")
+              ? "error"
+              : "success"
+          }
         />
       ) : null}
 
@@ -159,7 +173,11 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
       <Button
         className="w-full"
-        disabled={isPending || (loading && dropTypes.length === 0) || !selectedDropName.trim()}
+        disabled={
+          isPending ||
+          (loading && dropTypes.length === 0) ||
+          !selectedDropName.trim()
+        }
         type="button"
         onClick={saveDrop}
       >
