@@ -4,7 +4,7 @@ import type {
   AdapterAccount,
   AdapterSession,
   AdapterUser,
-  VerificationToken
+  VerificationToken,
 } from "@auth/core/adapters";
 import type { Pool } from "pg";
 
@@ -20,7 +20,7 @@ function mapUser(row: {
     name: row.name,
     email: row.email as AdapterUser["email"],
     emailVerified: row.emailVerified,
-    image: row.image
+    image: row.image,
   };
 }
 
@@ -32,7 +32,7 @@ function mapSession(row: {
   return {
     sessionToken: row.sessionToken,
     userId: row.userId,
-    expires: row.expires
+    expires: row.expires,
   };
 }
 
@@ -60,7 +60,7 @@ function mapAccount(row: {
     token_type: (row.token_type ?? undefined) as AdapterAccount["token_type"],
     scope: row.scope ?? undefined,
     id_token: row.id_token ?? undefined,
-    session_state: row.session_state ?? undefined
+    session_state: row.session_state ?? undefined,
   };
 }
 
@@ -74,7 +74,13 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           values ($1, $2, $3, $4, $5)
           returning id, name, email, "emailVerified", image
         `,
-        [id, user.name ?? null, user.email, user.emailVerified ?? null, user.image ?? null]
+        [
+          id,
+          user.name ?? null,
+          user.email,
+          user.emailVerified ?? null,
+          user.image ?? null,
+        ],
       );
 
       return mapUser(result.rows[0]);
@@ -86,7 +92,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           from dy_users
           where id = $1
         `,
-        [id]
+        [id],
       );
 
       return result.rowCount ? mapUser(result.rows[0]) : null;
@@ -98,7 +104,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           from dy_users
           where email = $1
         `,
-        [email]
+        [email],
       );
 
       return result.rowCount ? mapUser(result.rows[0]) : null;
@@ -111,7 +117,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           join dy_accounts a on a."userId" = u.id
           where a.provider = $1 and a."providerAccountId" = $2
         `,
-        [provider, providerAccountId]
+        [provider, providerAccountId],
       );
 
       return result.rowCount ? mapUser(result.rows[0]) : null;
@@ -123,7 +129,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           from dy_users
           where id = $1
         `,
-        [user.id]
+        [user.id],
       );
 
       if (!existing.rowCount) {
@@ -143,8 +149,8 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           nextUser.name ?? null,
           nextUser.email,
           nextUser.emailVerified ?? null,
-          nextUser.image ?? null
-        ]
+          nextUser.image ?? null,
+        ],
       );
 
       return mapUser(result.rows[0]);
@@ -193,8 +199,8 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           account.token_type ?? null,
           account.scope ?? null,
           account.id_token ?? null,
-          account.session_state ?? null
-        ]
+          account.session_state ?? null,
+        ],
       );
 
       return mapAccount(result.rows[0]);
@@ -205,7 +211,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           delete from dy_accounts
           where provider = $1 and "providerAccountId" = $2
         `,
-        [provider, providerAccountId]
+        [provider, providerAccountId],
       );
     },
     async createSession(session) {
@@ -215,7 +221,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           values ($1, $2, $3)
           returning "sessionToken", "userId", expires
         `,
-        [session.sessionToken, session.userId, session.expires]
+        [session.sessionToken, session.userId, session.expires],
       );
 
       return mapSession(result.rows[0]);
@@ -236,7 +242,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           join dy_users u on u.id = s."userId"
           where s."sessionToken" = $1
         `,
-        [sessionToken]
+        [sessionToken],
       );
 
       if (!result.rowCount) {
@@ -247,7 +253,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
 
       return {
         session: mapSession(row),
-        user: mapUser(row)
+        user: mapUser(row),
       };
     },
     async updateSession(session) {
@@ -257,7 +263,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           from dy_sessions
           where "sessionToken" = $1
         `,
-        [session.sessionToken]
+        [session.sessionToken],
       );
 
       if (!existing.rowCount) {
@@ -272,7 +278,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           where "sessionToken" = $1
           returning "sessionToken", "userId", expires
         `,
-        [nextSession.sessionToken, nextSession.expires]
+        [nextSession.sessionToken, nextSession.expires],
       );
 
       return result.rowCount ? mapSession(result.rows[0]) : null;
@@ -283,7 +289,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           delete from dy_sessions
           where "sessionToken" = $1
         `,
-        [sessionToken]
+        [sessionToken],
       );
     },
     async createVerificationToken(verificationToken) {
@@ -292,7 +298,11 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           insert into dy_verification_tokens (identifier, token, expires)
           values ($1, $2, $3)
         `,
-        [verificationToken.identifier, verificationToken.token, verificationToken.expires]
+        [
+          verificationToken.identifier,
+          verificationToken.token,
+          verificationToken.expires,
+        ],
       );
 
       return verificationToken;
@@ -304,7 +314,7 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           where identifier = $1 and token = $2
           returning identifier, token, expires
         `,
-        [identifier, token]
+        [identifier, token],
       );
 
       return result.rowCount ? (result.rows[0] as VerificationToken) : null;
@@ -327,10 +337,10 @@ export function DyPostgresAdapter(client: Pool): Adapter {
           from dy_accounts
           where provider = $1 and "providerAccountId" = $2
         `,
-        [provider, providerAccountId]
+        [provider, providerAccountId],
       );
 
       return result.rowCount ? mapAccount(result.rows[0]) : null;
-    }
+    },
   };
 }

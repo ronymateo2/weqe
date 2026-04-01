@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 const authPool = env.AUTH_POSTGRES_URL
   ? new Pool({
       connectionString: env.AUTH_POSTGRES_URL,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false },
     })
   : null;
 
@@ -18,15 +18,15 @@ export const authConfig = {
       ? [
           Google({
             clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET
-          })
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }),
         ]
       : [],
   session: {
-    strategy: authPool ? "database" : "jwt"
+    strategy: authPool ? "database" : "jwt",
   },
   pages: {
-    signIn: "/register"
+    signIn: "/register",
   },
   callbacks: {
     async session({ session, user }) {
@@ -35,6 +35,6 @@ export const authConfig = {
       }
 
       return session;
-    }
-  }
+    },
+  },
 } satisfies NextAuthConfig;
