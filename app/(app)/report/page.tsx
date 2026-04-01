@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { ReportScreen } from "@/components/report/report-screen";
+import { getReportDataAction } from "@/lib/actions/report";
 import { redirect } from "next/navigation";
 
 export default async function ReportPage() {
@@ -11,6 +12,8 @@ export default async function ReportPage() {
     redirect("/register?from=%2Freport");
   }
 
+  const data = await getReportDataAction();
+
   return (
     <section>
       <ScreenHeader
@@ -19,7 +22,7 @@ export default async function ReportPage() {
         title="Reporte"
         user={session.user}
       />
-      <ReportScreen />
+      <ReportScreen data={data} />
     </section>
   );
 }
