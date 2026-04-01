@@ -45,7 +45,12 @@ export function ReportScreen({ data }: Props) {
   const handleGeneratePDF = async () => {
     setGenerating(true);
     try {
-      const { jsPDF } = await import("jspdf");
+      // Import UMD build directly to bypass jsPDF's "browser" exports condition
+      // which points to the ES module and causes a webpack chunk 404 in Next.js.
+      // jsPDF exports "./dist/*" so this path is valid per its package.json.
+      const { jsPDF } = (await import(
+        "jspdf/dist/jspdf.umd.min.js"
+      )) as unknown as typeof import("jspdf");
       const html2canvas = (await import("html2canvas")).default;
 
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
