@@ -7,6 +7,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WheelPicker } from "@/components/ui/wheel-picker";
 import { DROP_EYES } from "@/lib/constants";
 import { saveDropAction } from "@/lib/actions/drops";
 import { useDropTypes } from "@/lib/hooks/use-drop-types";
@@ -21,7 +22,7 @@ type DropSheetProps = {
 const CUSTOM_DROP_TYPE = "__custom__";
 
 export function DropSheet({ onSaved }: DropSheetProps) {
-  const { dropTypes, loading, error, setDropTypes } = useDropTypes();
+  const { dropTypes, loading, error } = useDropTypes();
   const [selectedDropType, setSelectedDropType] = useState(CUSTOM_DROP_TYPE);
   const [customDropName, setCustomDropName] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -35,6 +36,12 @@ export function DropSheet({ onSaved }: DropSheetProps) {
       setSelectedDropType(dropTypes[0].id);
     }
   }, [dropTypes, selectedDropType, customDropName]);
+
+  const wheelOptions = useMemo(() => {
+    const opts = dropTypes.map((dt: DropTypeRecord) => ({ value: dt.id, label: dt.name }));
+    opts.push({ value: CUSTOM_DROP_TYPE, label: "Nueva gota...", isAction: true });
+    return opts;
+  }, [dropTypes]);
 
   const selectedDropName = useMemo(() => {
     if (selectedDropType === CUSTOM_DROP_TYPE) {
@@ -102,29 +109,20 @@ export function DropSheet({ onSaved }: DropSheetProps) {
             className="text-[12px] font-medium text-[var(--accent)] hover:text-[var(--accent-bright)]"
             href="/drop-types"
           >
-            Gestionar
+            Nueva gota
           </Link>
         </div>
 
         {loading && dropTypes.length === 0 ? (
-          <Skeleton className="h-12 w-full rounded-[10px]" />
+          <Skeleton className="h-[148px] w-full rounded-[16px]" />
         ) : (
           <>
-            {dropTypes.length > 0 || !loading ? (
-              <select
-                aria-label="Seleccionar tipo de gota"
-                className="min-h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-                value={selectedDropType}
-                onChange={(event) => setSelectedDropType(event.target.value)}
-              >
-                {dropTypes.map((dropType: DropTypeRecord) => (
-                  <option key={dropType.id} value={dropType.id}>
-                    {dropType.name}
-                  </option>
-                ))}
-                <option value={CUSTOM_DROP_TYPE}>Nueva gota...</option>
-              </select>
-            ) : null}
+            <WheelPicker
+              label="Seleccionar tipo de gota"
+              options={wheelOptions}
+              value={selectedDropType}
+              onChange={setSelectedDropType}
+            />
 
             {shouldShowCustomInput ? (
               <TextInput
