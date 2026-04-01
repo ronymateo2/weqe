@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
-import { StatusBanner } from "@/components/ui/status-banner";
+import { Toast } from "@/components/ui/toast";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
@@ -160,7 +160,11 @@ export function CheckInForm() {
     <div className="relative pb-[calc(var(--sticky-cta-height)+32px)]">
       <div className="space-y-6">
         {state.status !== "idle" && state.message ? (
-          <StatusBanner message={state.message} tone={state.status === "success" ? "success" : "error"} />
+          <Toast
+            message={state.message}
+            tone={state.status === "success" ? "success" : "error"}
+            onDismiss={() => setState({ status: "idle" })}
+          />
         ) : null}
 
         <SegmentedControl
