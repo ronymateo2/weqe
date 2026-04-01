@@ -1,118 +1,176 @@
 create extension if not exists pgcrypto;
 
-create table if not exists dy_users (
-  id text primary key,
-  name text,
-  email text unique,
-  email_verified timestamptz,
-  image text,
-  timezone text not null default 'America/New_York',
-  created_at timestamptz not null default now()
-);
+create table public.dy_users (
+  id text not null,
+  name text null,
+  email text null,
+  "emailVerified" timestamp with time zone null,
+  image text null,
+  timezone text not null default 'America/New_York'::text,
+  created_at timestamp with time zone not null default now(),
+  constraint dy_users_pkey primary key (id),
+  constraint dy_users_email_key unique (email)
+) TABLESPACE pg_default;
 
-create table if not exists dy_accounts (
-  user_id text not null references dy_users(id) on delete cascade,
+create table public.dy_accounts (
+  "userId" text not null,
   type text not null,
   provider text not null,
-  provider_account_id text not null,
-  access_token text,
-  refresh_token text,
-  expires_at integer,
-  token_type text,
-  scope text,
-  id_token text,
-  session_state text,
-  primary key (provider, provider_account_id)
-);
+  "providerAccountId" text not null,
+  refresh_token text null,
+  access_token text null,
+  expires_at integer null,
+  token_type text null,
+  scope text null,
+  id_token text null,
+  session_state text null,
+  constraint dy_accounts_pkey primary key (provider, "providerAccountId"),
+  constraint dy_accounts_userId_fkey foreign KEY ("userId") references dy_users (id) on delete CASCADE
+) TABLESPACE pg_default;
 
-create table if not exists dy_sessions (
-  session_token text primary key,
-  user_id text not null references dy_users(id) on delete cascade,
-  expires timestamptz not null
-);
+create table public.dy_sessions (
+  "sessionToken" text not null,
+  "userId" text not null,
+  expires timestamp with time zone not null,
+  constraint dy_sessions_pkey primary key ("sessionToken"),
+  constraint dy_sessions_userId_fkey foreign KEY ("userId") references dy_users (id) on delete CASCADE
+) TABLESPACE pg_default;
 
-create table if not exists dy_verification_tokens (
+create table public.dy_verification_tokens (
   identifier text not null,
-  expires timestamptz not null,
   token text not null,
-  primary key (identifier, token)
-);
+  expires timestamp with time zone not null,
+  constraint dy_verification_tokens_pkey primary key (identifier, token)
+) TABLESPACE pg_default;
 
-create table if not exists dy_check_ins (
-  id uuid primary key default gen_random_uuid(),
-  user_id text not null references dy_users(id) on delete cascade,
-  logged_at timestamptz not null default now(),
-  time_of_day text not null check (time_of_day in ('morning', 'evening', 'other')),
-  eyelid_pain int not null check (eyelid_pain between 0 and 10),
-  temple_pain int not null check (temple_pain between 0 and 10),
-  masseter_pain int not null check (masseter_pain between 0 and 10),
-  overall_pain int not null check (overall_pain between 0 and 10),
-  sleep_hours numeric(3, 1) check (sleep_hours between 0 and 24),
-  sleep_quality int check (sleep_quality between 0 and 10),
-  notes text
-);
-
-create table if not exists dy_drop_types (
-  id uuid primary key default gen_random_uuid(),
-  user_id text not null references dy_users(id) on delete cascade,
-  name text not null check (name = lower(trim(name)) and length(name) <= 100),
-  unique (user_id, name)
-);
-
-create table if not exists dy_drops (
-  id uuid primary key default gen_random_uuid(),
-  user_id text not null references dy_users(id) on delete cascade,
-  drop_type_id uuid not null references dy_drop_types(id) on delete cascade,
-  logged_at timestamptz not null default now(),
-  quantity int not null check (quantity > 0),
-  eye text not null check (eye in ('left', 'right', 'both')),
-  notes text
-);
-
-create table if not exists dy_triggers (
-  id uuid primary key default gen_random_uuid(),
-  user_id text not null references dy_users(id) on delete cascade,
-  logged_at timestamptz not null default now(),
-  trigger_type text not null check (
-    trigger_type in ('climate', 'humidifier', 'stress', 'screens', 'tv', 'ergonomics', 'exercise', 'other')
+create table public.dy_check_ins (
+  id uuid not null default gen_random_uuid (),
+  user_id text not null,
+  logged_at timestamp with time zone not null default now(),
+  time_of_day text not null,
+  eyelid_pain integer not null,
+  temple_pain integer not null,
+  masseter_pain integer not null,
+  overall_pain integer not null,
+  sleep_hours numeric(3, 1) null,
+  sleep_quality integer null,
+  notes text null,
+  constraint dy_check_ins_pkey primary key (id),
+  constraint dy_check_ins_user_id_fkey foreign KEY (user_id) references dy_users (id) on delete CASCADE,
+  constraint dy_check_ins_overall_pain_check check (
+    (
+      (overall_pain >= 0)
+      and (overall_pain <= 10)
+    )
   ),
-  intensity int not null check (intensity between 1 and 3),
-  notes text
-);
+  constraint dy_check_ins_eyelid_pain_check check (
+    (
+      (eyelid_pain >= 0)
+      and (eyelid_pain <= 10)
+    )
+  ),
+  constraint dy_check_ins_sleep_quality_check check (
+    (
+      (sleep_quality >= 0)
+      and (sleep_quality <= 10)
+    )
+  ),
+  constraint dy_check_ins_temple_pain_check check (
+    (
+      (temple_pain >= 0)
+      and (temple_pain <= 10)
+    )
+  ),
+  constraint dy_check_ins_time_of_day_check check (
+    (
+      time_of_day = any (
+        array['morning'::text, 'evening'::text, 'other'::text]
+      )
+    )
+  ),
+  constraint dy_check_ins_sleep_hours_check check (
+    (
+      (sleep_hours >= (0)::numeric)
+      and (sleep_hours <= (24)::numeric)
+    )
+  ),
+  constraint dy_check_ins_masseter_pain_check check (
+    (
+      (masseter_pain >= 0)
+      and (masseter_pain <= 10)
+    )
+  )
+) TABLESPACE pg_default;
 
-create index if not exists dy_check_ins_user_logged_at_idx on dy_check_ins (user_id, logged_at desc);
-create index if not exists dy_drop_types_user_idx on dy_drop_types (user_id);
-create index if not exists dy_drops_user_logged_at_idx on dy_drops (user_id, logged_at desc);
-create index if not exists dy_triggers_user_logged_at_idx on dy_triggers (user_id, logged_at desc);
+create index IF not exists dy_check_ins_user_id_logged_at_idx on public.dy_check_ins using btree (user_id, logged_at) TABLESPACE pg_default;
 
-alter table dy_users enable row level security;
-alter table dy_accounts enable row level security;
-alter table dy_sessions enable row level security;
-alter table dy_verification_tokens enable row level security;
-alter table dy_check_ins enable row level security;
-alter table dy_drop_types enable row level security;
-alter table dy_drops enable row level security;
-alter table dy_triggers enable row level security;
+create index IF not exists dy_check_ins_user_id_time_of_day_idx on public.dy_check_ins using btree (user_id, time_of_day) TABLESPACE pg_default;
 
-drop policy if exists "server only" on dy_users;
-drop policy if exists "server only" on dy_accounts;
-drop policy if exists "server only" on dy_sessions;
-drop policy if exists "server only" on dy_verification_tokens;
-drop policy if exists "server only" on dy_check_ins;
-drop policy if exists "server only" on dy_drop_types;
-drop policy if exists "server only" on dy_drops;
-drop policy if exists "server only" on dy_triggers;
+create table public.dy_drop_types (
+  id uuid not null default gen_random_uuid (),
+  user_id text not null,
+  name text not null,
+  constraint dy_drop_types_pkey primary key (id),
+  constraint dy_drop_types_user_id_name_key unique (user_id, name),
+  constraint dy_drop_types_user_id_fkey foreign KEY (user_id) references dy_users (id) on delete CASCADE,
+  constraint dy_drop_types_name_check check ((char_length(name) <= 100))
+) TABLESPACE pg_default;
 
-create policy "server only" on dy_users for all using (false) with check (false);
-create policy "server only" on dy_accounts for all using (false) with check (false);
-create policy "server only" on dy_sessions for all using (false) with check (false);
-create policy "server only" on dy_verification_tokens for all using (false) with check (false);
-create policy "server only" on dy_check_ins for all using (false) with check (false);
-create policy "server only" on dy_drop_types for all using (false) with check (false);
-create policy "server only" on dy_drops for all using (false) with check (false);
-create policy "server only" on dy_triggers for all using (false) with check (false);
+create index IF not exists dy_drop_types_user_id_idx on public.dy_drop_types using btree (user_id) TABLESPACE pg_default;
 
-create or replace view users as select * from dy_users;
-create or replace view accounts as select * from dy_accounts;
-create or replace view sessions as select * from dy_sessions;
-create or replace view verification_tokens as select * from dy_verification_tokens;
+create table public.dy_drops (
+  id uuid not null default gen_random_uuid (),
+  user_id text not null,
+  drop_type_id uuid not null,
+  logged_at timestamp with time zone not null default now(),
+  quantity integer not null,
+  eye text not null,
+  notes text null,
+  constraint dy_drops_pkey primary key (id),
+  constraint dy_drops_drop_type_id_fkey foreign KEY (drop_type_id) references dy_drop_types (id) on delete RESTRICT,
+  constraint dy_drops_user_id_fkey foreign KEY (user_id) references dy_users (id) on delete CASCADE,
+  constraint dy_drops_eye_check check (
+    (
+      eye = any (array['left'::text, 'right'::text, 'both'::text])
+    )
+  ),
+  constraint dy_drops_quantity_check check ((quantity > 0))
+) TABLESPACE pg_default;
+
+create index IF not exists dy_drops_user_id_logged_at_idx on public.dy_drops using btree (user_id, logged_at) TABLESPACE pg_default;
+
+create table public.dy_triggers (
+  id uuid not null default gen_random_uuid (),
+  user_id text not null,
+  logged_at timestamp with time zone not null default now(),
+  trigger_type text not null,
+  intensity integer not null,
+  notes text null,
+  constraint dy_triggers_pkey primary key (id),
+  constraint dy_triggers_user_id_fkey foreign KEY (user_id) references dy_users (id) on delete CASCADE,
+  constraint dy_triggers_intensity_check check (
+    (
+      (intensity >= 1)
+      and (intensity <= 3)
+    )
+  ),
+  constraint dy_triggers_trigger_type_check check (
+    (
+      trigger_type = any (
+        array[
+          'climate'::text,
+          'humidifier'::text,
+          'stress'::text,
+          'screens'::text,
+          'tv'::text,
+          'ergonomics'::text,
+          'exercise'::text,
+          'other'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists dy_triggers_user_id_logged_at_idx on public.dy_triggers using btree (user_id, logged_at) TABLESPACE pg_default;
+
