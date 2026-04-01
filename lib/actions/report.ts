@@ -3,6 +3,7 @@
 import { sampleCorrelation } from "simple-statistics";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSafeTimezone, getDayKey } from "@/lib/utils/timezone";
 import type { TriggerType } from "@/types/domain";
 
 export type ReportTrendPoint = {
@@ -50,19 +51,6 @@ export type ReportDataResult =
 
 const MIN_RECORDS = 14;
 
-function getSafeTimezone(timezone: string | null | undefined) {
-  if (!timezone) return "America/New_York";
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: timezone });
-    return timezone;
-  } catch {
-    return "America/New_York";
-  }
-}
-
-function getDayKey(isoDate: string, timezone: string) {
-  return new Date(isoDate).toLocaleDateString("en-CA", { timeZone: timezone });
-}
 
 function getAverageRank(values: number[]) {
   const indexed = values

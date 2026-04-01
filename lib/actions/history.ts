@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSafeTimezone, getDayKey, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
 import type { DropEye, TriggerType } from "@/types/domain";
 
 type HistoryCheckInEntry = {
@@ -32,7 +33,10 @@ type HistoryTriggerEntry = {
   intensity: 1 | 2 | 3;
 };
 
-export type HistoryEntry = HistoryCheckInEntry | HistoryDropEntry | HistoryTriggerEntry;
+export type HistoryEntry =
+  | HistoryCheckInEntry
+  | HistoryDropEntry
+  | HistoryTriggerEntry;
 
 export type HistoryDayGroup = {
   dayKey: string;
@@ -54,22 +58,6 @@ type GetHistoryFeedError = {
 
 export type GetHistoryFeedResult = GetHistoryFeedSuccess | GetHistoryFeedError;
 
-function getSafeTimezone(timezone: string | null | undefined) {
-  if (!timezone) {
-    return "America/New_York";
-  }
-
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: timezone });
-    return timezone;
-  } catch {
-    return "America/New_York";
-  }
-}
-
-function getDayKey(loggedAt: string, timezone: string) {
-  return new Date(loggedAt).toLocaleDateString("en-CA", { timeZone: timezone });
-}
 
 export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
   const session = await auth();
@@ -78,8 +66,8 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
     return {
       ok: false,
       message: "Necesitas iniciar sesion para ver el historial.",
-      timezone: "America/New_York",
-      groups: []
+      timezone: DEFAULT_TIMEZONE,
+      groups: [],
     };
   }
 
@@ -98,17 +86,20 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
 
     const timezone = getSafeTimezone(user?.timezone);
 
-    const [checkInsResponse, dropsResponse, triggersResponse] = await Promise.all([
-      supabase
-        .from("dy_check_ins")
-        .select("id, logged_at, eyelid_pain, temple_pain, masseter_pain, overall_pain, sleep_hours")
-        .eq("user_id", session.user.id)
-        .order("logged_at", { ascending: false })
-        .limit(150),
-      supabase
-        .from("dy_drops")
-        .select(
-          `
+    const [checkInsResponse, dropsResponse, triggersResponse] =
+      await Promise.all([
+        supabase
+          .from("dy_check_ins")
+          .select(
+            "id, logged_at, eyelid_pain, temple_pain, masseter_pain, overall_pain, sleep_hours",
+          )
+          .eq("user_id", session.user.id)
+          .order("logged_at", { ascending: false })
+          .limit(150),
+        supabase
+          .from("dy_drops")
+          .select(
+            `
             id,
             logged_at,
             quantity,
@@ -116,18 +107,18 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
             drop_type:dy_drop_types (
               name
             )
-          `
-        )
-        .eq("user_id", session.user.id)
-        .order("logged_at", { ascending: false })
-        .limit(150),
-      supabase
-        .from("dy_triggers")
-        .select("id, logged_at, trigger_type, intensity")
-        .eq("user_id", session.user.id)
-        .order("logged_at", { ascending: false })
-        .limit(150)
-    ]);
+          `,
+          )
+          .eq("user_id", session.user.id)
+          .order("logged_at", { ascending: false })
+          .limit(150),
+        supabase
+          .from("dy_triggers")
+          .select("id, logged_at, trigger_type, intensity")
+          .eq("user_id", session.user.id)
+          .order("logged_at", { ascending: false })
+          .limit(150),
+      ]);
 
     if (checkInsResponse.error) {
       throw checkInsResponse.error;
@@ -141,40 +132,52 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       throw triggersResponse.error;
     }
 
-    const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map((checkIn) => ({
-      id: checkIn.id,
-      kind: "check_in",
-      loggedAt: checkIn.logged_at,
-      eyelidPain: checkIn.eyelid_pain,
-      templePain: checkIn.temple_pain,
-      masseterPain: checkIn.masseter_pain,
-      overallPain: checkIn.overall_pain,
-      sleepHours: checkIn.sleep_hours
-    }));
+    const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
+      (checkIn) => ({
+        id: checkIn.id,
+        kind: "check_in",
+        loggedAt: checkIn.logged_at,
+        eyelidPain: checkIn.eyelid_pain,
+        templePain: checkIn.temple_pain,
+        masseterPain: checkIn.masseter_pain,
+        overallPain: checkIn.overall_pain,
+        sleepHours: checkIn.sleep_hours,
+      }),
+    );
 
-    const dropEntries: HistoryEntry[] = (dropsResponse.data ?? []).map((drop) => {
-      const dropType = Array.isArray(drop.drop_type) ? drop.drop_type[0] : drop.drop_type;
+    const dropEntries: HistoryEntry[] = (dropsResponse.data ?? []).map(
+      (drop) => {
+        const dropType = Array.isArray(drop.drop_type)
+          ? drop.drop_type[0]
+          : drop.drop_type;
 
-      return {
-        id: drop.id,
-        kind: "drop",
-        loggedAt: drop.logged_at,
-        quantity: drop.quantity,
-        eye: drop.eye as DropEye,
-        name: dropType?.name ?? "Gota"
-      };
-    });
+        return {
+          id: drop.id,
+          kind: "drop",
+          loggedAt: drop.logged_at,
+          quantity: drop.quantity,
+          eye: drop.eye as DropEye,
+          name: dropType?.name ?? "Gota",
+        };
+      },
+    );
 
-    const triggerEntries: HistoryEntry[] = (triggersResponse.data ?? []).map((trigger) => ({
-      id: trigger.id,
-      kind: "trigger",
-      loggedAt: trigger.logged_at,
-      triggerType: trigger.trigger_type as TriggerType,
-      intensity: trigger.intensity as 1 | 2 | 3
-    }));
+    const triggerEntries: HistoryEntry[] = (triggersResponse.data ?? []).map(
+      (trigger) => ({
+        id: trigger.id,
+        kind: "trigger",
+        loggedAt: trigger.logged_at,
+        triggerType: trigger.trigger_type as TriggerType,
+        intensity: trigger.intensity as 1 | 2 | 3,
+      }),
+    );
 
-    const allEntries = [...checkInEntries, ...dropEntries, ...triggerEntries].sort(
-      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
+    const allEntries = [
+      ...checkInEntries,
+      ...dropEntries,
+      ...triggerEntries,
+    ].sort(
+      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );
 
     const groupedEntries = new Map<string, HistoryEntry[]>();
@@ -186,22 +189,27 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       groupedEntries.set(dayKey, current);
     }
 
-    const groups: HistoryDayGroup[] = Array.from(groupedEntries.entries()).map(([dayKey, entries]) => ({
-      dayKey,
-      entries
-    }));
+    const groups: HistoryDayGroup[] = Array.from(groupedEntries.entries()).map(
+      ([dayKey, entries]) => ({
+        dayKey,
+        entries,
+      }),
+    );
 
     return {
       ok: true,
       timezone,
-      groups
+      groups,
     };
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo cargar el historial.",
-      timezone: "America/New_York",
-      groups: []
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo cargar el historial.",
+      timezone: DEFAULT_TIMEZONE,
+      groups: [],
     };
   }
 }

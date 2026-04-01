@@ -3,6 +3,7 @@
 import { sampleCorrelation } from "simple-statistics";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSafeTimezone, getDayKey, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
 import type { TriggerType } from "@/types/domain";
 
 type TrendPoint = {
@@ -67,22 +68,6 @@ export type DashboardDataResult = DashboardSuccess | DashboardError;
 
 const MIN_CORRELATION_SAMPLES = 14;
 
-function getSafeTimezone(timezone: string | null | undefined) {
-  if (!timezone) {
-    return "America/New_York";
-  }
-
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: timezone });
-    return timezone;
-  } catch {
-    return "America/New_York";
-  }
-}
-
-function getDayKey(isoDate: string, timezone: string) {
-  return new Date(isoDate).toLocaleDateString("en-CA", { timeZone: timezone });
-}
 
 function formatShortDayLabel(dayKey: string) {
   const [year, month, day] = dayKey.split("-").map((value) => Number(value));
@@ -173,7 +158,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     return {
       ok: false,
       message: "Necesitas iniciar sesion para ver el dashboard.",
-      timezone: "America/New_York",
+      timezone: DEFAULT_TIMEZONE,
       trend: { points: [], daysWithData: 0, average7d: null, average30d: null },
       correlation: {
         minimumRequired: MIN_CORRELATION_SAMPLES,
@@ -356,7 +341,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     return {
       ok: false,
       message: error instanceof Error ? error.message : "No se pudo cargar el dashboard.",
-      timezone: "America/New_York",
+      timezone: DEFAULT_TIMEZONE,
       trend: { points: [], daysWithData: 0, average7d: null, average30d: null },
       correlation: {
         minimumRequired: MIN_CORRELATION_SAMPLES,

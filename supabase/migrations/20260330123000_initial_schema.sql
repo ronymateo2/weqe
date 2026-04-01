@@ -6,7 +6,7 @@ create table public.dy_users (
   email text null,
   "emailVerified" timestamp with time zone null,
   image text null,
-  timezone text not null default 'America/New_York'::text,
+  timezone text not null default 'America/Bogota'::text,
   created_at timestamp with time zone not null default now(),
   constraint dy_users_pkey primary key (id),
   constraint dy_users_email_key unique (email)

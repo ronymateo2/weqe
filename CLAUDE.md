@@ -20,7 +20,7 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 - All DB access through Next.js Server Actions only. Never expose service role key to client.
 - RLS policies are `using (false)` — defense in depth. Service role key bypasses on server.
 - Auth.js session provides `user.id` — always validate in every Server Action before any DB operation.
-- Timezone: store IANA timezone in `users.timezone`. Use `toLocaleDateString('en-CA', { timeZone: userTimezone })` for date grouping. Never use `'local'` in SQL.
+- Timezone: store IANA timezone in `dy_users.timezone` (default `America/Bogota`). Always read it from the DB — never hardcode a timezone in a Server Action. Use the shared helpers `getSafeTimezone` and `getDayKey` from `lib/utils/timezone.ts` (single source of truth). Use `toLocaleDateString('en-CA', { timeZone: userTimezone })` for date grouping. Never use `'local'` in SQL.
 - `logged_at` must be set **client-side** at form submission time for all tables (check_ins, drops, triggers). `default now()` in DB is a fallback only. Offline submissions must send the time the user actually logged — not the sync time.
 - Offline write pattern: generate `id = crypto.randomUUID()` and `logged_at = new Date().toISOString()` client-side before calling the Server Action. On failure, queue to IndexedDB with that same UUID. On sync, use `upsert` with `id` as conflict key (idempotent, last-write-wins).
 
