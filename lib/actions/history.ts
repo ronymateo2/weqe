@@ -35,10 +35,18 @@ type HistoryTriggerEntry = {
   intensity: 1 | 2 | 3;
 };
 
+type HistorySymptomEntry = {
+  id: string;
+  kind: "symptom";
+  loggedAt: string;
+  symptomType: string;
+};
+
 export type HistoryEntry =
   | HistoryCheckInEntry
   | HistoryDropEntry
-  | HistoryTriggerEntry;
+  | HistoryTriggerEntry
+  | HistorySymptomEntry;
 
 export type HistoryDayGroup = {
   dayKey: string;
@@ -88,7 +96,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
 
     const timezone = getSafeTimezone(user?.timezone);
 
-    const [checkInsResponse, dropsResponse, triggersResponse] =
+    const [checkInsResponse, dropsResponse, triggersResponse, symptomsResponse] =
       await Promise.all([
         supabase
           .from("dy_check_ins")
@@ -120,6 +128,12 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
           .eq("user_id", session.user.id)
           .order("logged_at", { ascending: false })
           .limit(150),
+        supabase
+          .from("dy_symptoms")
+          .select("id, logged_at, symptom_type")
+          .eq("user_id", session.user.id)
+          .order("logged_at", { ascending: false })
+          .limit(150),
       ]);
 
     if (checkInsResponse.error) {
@@ -132,6 +146,10 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
 
     if (triggersResponse.error) {
       throw triggersResponse.error;
+    }
+
+    if (symptomsResponse.error) {
+      throw symptomsResponse.error;
     }
 
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
@@ -176,10 +194,20 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       }),
     );
 
+    const symptomEntries: HistoryEntry[] = (symptomsResponse.data ?? []).map(
+      (symptom) => ({
+        id: symptom.id,
+        kind: "symptom",
+        loggedAt: symptom.logged_at,
+        symptomType: symptom.symptom_type,
+      }),
+    );
+
     const allEntries = [
       ...checkInEntries,
       ...dropEntries,
       ...triggerEntries,
+      ...symptomEntries,
     ].sort(
       (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );

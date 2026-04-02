@@ -49,6 +49,26 @@ export type TriggerRecord = {
   notes: string | null;
 };
 
+export type SymptomType =
+  | "ardor"
+  | "sequedad"
+  | "lagrimeo_paradojico"
+  | "fotofobia"
+  | "vision_borrosa"
+  | "sensacion_arena"
+  | "picazon"
+  | "hinchazon"
+  | "enrojecimiento"
+  | "dolor_cabeza"
+  | "otro";
+
+export type SymptomRecord = {
+  id: string;
+  loggedAt: string;
+  symptomType: string;
+  notes: string | null;
+};
+
 export type ActionState = {
   status: "idle" | "success" | "error";
   message?: string;

@@ -2,19 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Droplets, Plus, Zap } from "lucide-react";
+import { Activity, Droplets, Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
 import { TriggerSheet } from "@/components/forms/trigger-sheet";
+import { SymptomSheet } from "@/components/forms/symptom-sheet";
 import { cn } from "@/lib/utils";
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheet, setSheet] = useState<"drop" | "trigger" | null>(null);
+  const [sheet, setSheet] = useState<"drop" | "trigger" | "symptom" | null>(
+    null,
+  );
 
-  const isVisible = useMemo(() => pathname === "/register" || pathname === "/history", [pathname]);
+  const isVisible = useMemo(
+    () => pathname === "/register" || pathname === "/history",
+    [pathname],
+  );
   const fabBottomOffsetClass =
     pathname === "/register"
       ? "bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+var(--sticky-cta-height)+16px)]"
@@ -33,7 +39,11 @@ export function FloatingQuickActions() {
         <div className="flex flex-col items-end gap-3">
           {menuOpen ? (
             <>
-              <Button className="min-w-[132px] justify-start gap-2" variant="subtle" onClick={() => setSheet("drop")}>
+              <Button
+                className="min-w-[132px] justify-start gap-2"
+                variant="subtle"
+                onClick={() => setSheet("drop")}
+              >
                 <Droplets size={18} />
                 Gota
               </Button>
@@ -45,13 +55,23 @@ export function FloatingQuickActions() {
                 <Zap size={18} />
                 Trigger
               </Button>
+              <Button
+                className="min-w-[132px] justify-start gap-2"
+                variant="subtle"
+                onClick={() => setSheet("symptom")}
+              >
+                <Activity size={18} />
+                Sintomas
+              </Button>
             </>
           ) : null}
           <button
             aria-label="Acciones rapidas"
             className={cn(
               "flex h-14 w-14 items-center justify-center rounded-full border-0 text-[#121008] shadow-[0_4px_20px_rgba(212,162,76,0.35)] transition-transform",
-              menuOpen ? "rotate-45 bg-[var(--accent-bright)]" : "bg-[var(--accent)]"
+              menuOpen
+                ? "rotate-45 bg-[var(--accent-bright)]"
+                : "bg-[var(--accent)]",
             )}
             type="button"
             onClick={() => setMenuOpen((current) => !current)}
@@ -77,6 +97,15 @@ export function FloatingQuickActions() {
         onClose={closeAll}
       >
         <TriggerSheet onSaved={closeAll} />
+      </MobileSheet>
+
+      <MobileSheet
+        description="Registra los sintomas que estas sintiendo ahora."
+        open={sheet === "symptom"}
+        title="Sintomas"
+        onClose={closeAll}
+      >
+        <SymptomSheet onSaved={closeAll} />
       </MobileSheet>
     </>
   );

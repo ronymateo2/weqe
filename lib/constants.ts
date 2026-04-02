@@ -20,6 +20,19 @@ export const SLEEP_QUALITY_OPTIONS = [
   { label: "Excelente", value: "excelente" }
 ] as const;
 
+export const SYMPTOM_OPTIONS = [
+  { id: "ardor", label: "Ardor", value: "ardor" },
+  { id: "sequedad", label: "Sequedad", value: "sequedad" },
+  { id: "lagrimeo_paradojico", label: "Lagrimeo paradojico", value: "lagrimeo_paradojico" },
+  { id: "fotofobia", label: "Fotofobia", value: "fotofobia" },
+  { id: "vision_borrosa", label: "Vision borrosa", value: "vision_borrosa" },
+  { id: "sensacion_arena", label: "Sensacion de arena", value: "sensacion_arena" },
+  { id: "picazon", label: "Picazon", value: "picazon" },
+  { id: "hinchazon", label: "Hinchazon", value: "hinchazon" },
+  { id: "enrojecimiento", label: "Enrojecimiento", value: "enrojecimiento" },
+  { id: "dolor_cabeza", label: "Dolor de cabeza", value: "dolor_cabeza" }
+] as const;
+
 export const TRIGGER_OPTIONS = [
   { id: "screens", label: "Pantallas", value: "screens" },
   { id: "tv", label: "TV", value: "tv" },
