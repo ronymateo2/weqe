@@ -26,6 +26,8 @@ export type ReportAveragePain = {
   eyelid: number;
   temple: number;
   masseter: number;
+  cervical: number;
+  orbital: number;
 };
 
 export type ReportDataSuccess = {
@@ -136,7 +138,7 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, overall_pain, sleep_hours, sleep_quality"
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours, sleep_quality"
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: true })
@@ -189,16 +191,20 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
           overall: acc.overall + ci.overall_pain,
           eyelid: acc.eyelid + ci.eyelid_pain,
           temple: acc.temple + ci.temple_pain,
-          masseter: acc.masseter + ci.masseter_pain
+          masseter: acc.masseter + ci.masseter_pain,
+          cervical: acc.cervical + ci.cervical_pain,
+          orbital: acc.orbital + ci.orbital_pain
         }),
-        { overall: 0, eyelid: 0, temple: 0, masseter: 0 }
+        { overall: 0, eyelid: 0, temple: 0, masseter: 0, cervical: 0, orbital: 0 }
       );
       const n = checkIns.length;
       averagePain = {
         overall: Number((totals.overall / n).toFixed(1)),
         eyelid: Number((totals.eyelid / n).toFixed(1)),
         temple: Number((totals.temple / n).toFixed(1)),
-        masseter: Number((totals.masseter / n).toFixed(1))
+        masseter: Number((totals.masseter / n).toFixed(1)),
+        cervical: Number((totals.cervical / n).toFixed(1)),
+        orbital: Number((totals.orbital / n).toFixed(1))
       };
     }
 
@@ -216,13 +222,20 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
           )
         : null;
 
+    const sleepQualityScore: Record<string, number> = {
+      muy_malo: 1,
+      malo: 2,
+      regular: 3,
+      bueno: 4,
+      excelente: 5
+    };
     const withQuality = withSleep.filter((ci) => ci.sleep_quality !== null);
     const averageSleepQuality =
       withQuality.length > 0
         ? Number(
             (
               withQuality.reduce(
-                (sum, ci) => sum + (ci.sleep_quality as number),
+                (sum, ci) => sum + (sleepQualityScore[ci.sleep_quality as string] ?? 3),
                 0
               ) / withQuality.length
             ).toFixed(1)

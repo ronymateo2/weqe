@@ -12,6 +12,14 @@ export const TIME_OF_DAY_OPTIONS = [
   { label: "Otro", value: "other" }
 ] as const;
 
+export const SLEEP_QUALITY_OPTIONS = [
+  { label: "Muy malo", value: "muy_malo" },
+  { label: "Malo", value: "malo" },
+  { label: "Regular", value: "regular" },
+  { label: "Bueno", value: "bueno" },
+  { label: "Excelente", value: "excelente" }
+] as const;
+
 export const TRIGGER_OPTIONS = [
   { id: "screens", label: "Pantallas", value: "screens" },
   { id: "tv", label: "TV", value: "tv" },

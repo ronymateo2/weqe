@@ -21,7 +21,10 @@ export function SegmentedControl<T extends string>({
   return (
     <div className="space-y-3">
       <p className="section-label">{label}</p>
-      <div className="grid min-h-12 grid-cols-3 gap-2 rounded-[999px] border border-[var(--border)] bg-[var(--surface)] p-1">
+      <div
+        className="grid min-h-12 gap-2 rounded-[999px] border border-[var(--border)] bg-[var(--surface)] p-1"
+        style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}
+      >
         {options.map((option) => {
           const isActive = option.value === value;
 

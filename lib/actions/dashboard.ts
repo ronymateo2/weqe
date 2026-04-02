@@ -12,6 +12,8 @@ type TrendPoint = {
   eyelidPain: number | null;
   templePain: number | null;
   masseterPain: number | null;
+  cervicalPain: number | null;
+  orbitalPain: number | null;
   overallPain: number | null;
 };
 
@@ -188,7 +190,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     const [checkInsResponse, triggersResponse] = await Promise.all([
       supabase
         .from("dy_check_ins")
-        .select("id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, overall_pain, sleep_hours")
+        .select("id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours")
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
         .limit(500),
@@ -221,6 +223,8 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         eyelidPain: number;
         templePain: number;
         masseterPain: number;
+        cervicalPain: number;
+        orbitalPain: number;
         overallPain: number;
       }
     >();
@@ -237,6 +241,8 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           eyelidPain: 0,
           templePain: 0,
           masseterPain: 0,
+          cervicalPain: 0,
+          orbitalPain: 0,
           overallPain: 0
         };
 
@@ -244,6 +250,8 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         current.eyelidPain += checkIn.eyelid_pain;
         current.templePain += checkIn.temple_pain;
         current.masseterPain += checkIn.masseter_pain;
+        current.cervicalPain += checkIn.cervical_pain;
+        current.orbitalPain += checkIn.orbital_pain;
         current.overallPain += checkIn.overall_pain;
         trendBucket.set(dayKey, current);
       }

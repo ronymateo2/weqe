@@ -7,15 +7,17 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
 import { Toast } from "@/components/ui/toast";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
-import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
+import { TIME_OF_DAY_OPTIONS, SLEEP_QUALITY_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
-import type { ActionState, TimeOfDay } from "@/types/domain";
+import type { ActionState, TimeOfDay, SleepQuality } from "@/types/domain";
 
 const defaultPainState = {
   eyelidPain: 0,
   templePain: 0,
   masseterPain: 0,
+  cervicalPain: 0,
+  orbitalPain: 0,
   overallPain: 0
 };
 
@@ -39,7 +41,7 @@ export function CheckInForm() {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("morning");
   const [pain, setPain] = useState(defaultPainState);
   const [sleepHours, setSleepHours] = useState("6");
-  const [sleepQuality, setSleepQuality] = useState(6);
+  const [sleepQuality, setSleepQuality] = useState<SleepQuality>("regular");
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
@@ -71,6 +73,8 @@ export function CheckInForm() {
     eyelidPain: pain.eyelidPain,
     templePain: pain.templePain,
     masseterPain: pain.masseterPain,
+    cervicalPain: pain.cervicalPain,
+    orbitalPain: pain.orbitalPain,
     overallPain: pain.overallPain,
     sleepHours: timeOfDay === "morning" ? parseSleepHours(sleepHours) : null,
     sleepQuality: timeOfDay === "morning" ? sleepQuality : null
@@ -81,15 +85,13 @@ export function CheckInForm() {
       { label: "parpados", value: input.eyelidPain },
       { label: "sienes", value: input.templePain },
       { label: "masetero", value: input.masseterPain },
+      { label: "cuello / cervical", value: input.cervicalPain },
+      { label: "zona orbital", value: input.orbitalPain },
       { label: "dolor general", value: input.overallPain }
     ];
 
     if (input.sleepHours !== null && input.sleepHours !== undefined) {
       trackedValues.push({ label: "horas de sueno", value: input.sleepHours });
-    }
-
-    if (input.sleepQuality !== null && input.sleepQuality !== undefined) {
-      trackedValues.push({ label: "calidad del sueno", value: input.sleepQuality });
     }
 
     const zeroValues = trackedValues.filter((field) => field.value === 0);
@@ -121,6 +123,7 @@ export function CheckInForm() {
       if (result.ok) {
         setPain(defaultPainState);
         setSleepHours("6");
+        setSleepQuality("regular");
       }
 
       setIsPending(false);
@@ -182,6 +185,16 @@ export function CheckInForm() {
             value={pain.masseterPain}
             onChange={(value) => updatePain("masseterPain", value)}
           />
+          <PainSlider
+            label="Cuello / Cervical"
+            value={pain.cervicalPain}
+            onChange={(value) => updatePain("cervicalPain", value)}
+          />
+          <PainSlider
+            label="Zona Orbital"
+            value={pain.orbitalPain}
+            onChange={(value) => updatePain("orbitalPain", value)}
+          />
           <PainSlider label="Dolor general" value={pain.overallPain} onChange={(value) => updatePain("overallPain", value)} />
         </div>
 
@@ -189,10 +202,10 @@ export function CheckInForm() {
           <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
             <p className="section-label">Sueno</p>
             <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
-            <PainSlider
+            <SegmentedControl
               label="Calidad del sueno"
+              options={SLEEP_QUALITY_OPTIONS}
               value={sleepQuality}
-              variant="quality"
               onChange={setSleepQuality}
             />
           </div>

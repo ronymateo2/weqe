@@ -1,4 +1,5 @@
 export type TimeOfDay = "morning" | "evening" | "other";
+export type SleepQuality = "muy_malo" | "malo" | "regular" | "bueno" | "excelente";
 export type DropEye = "left" | "right" | "both";
 export type TriggerType =
   | "climate"
@@ -17,9 +18,11 @@ export type CheckInRecord = {
   eyelidPain: number;
   templePain: number;
   masseterPain: number;
+  cervicalPain: number;
+  orbitalPain: number;
   overallPain: number;
   sleepHours: number | null;
-  sleepQuality: number | null;
+  sleepQuality: SleepQuality | null;
   notes: string | null;
 };
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { TimeOfDay } from "@/types/domain";
+import type { TimeOfDay, SleepQuality } from "@/types/domain";
 
 export type SaveCheckInInput = {
   id: string;
@@ -12,9 +12,11 @@ export type SaveCheckInInput = {
   eyelidPain: number;
   templePain: number;
   masseterPain: number;
+  cervicalPain: number;
+  orbitalPain: number;
   overallPain: number;
   sleepHours?: number | null;
-  sleepQuality?: number | null;
+  sleepQuality?: SleepQuality | null;
   notes?: string;
 };
 
@@ -36,6 +38,8 @@ export async function saveCheckInAction(input: SaveCheckInInput) {
         eyelid_pain: input.eyelidPain,
         temple_pain: input.templePain,
         masseter_pain: input.masseterPain,
+        cervical_pain: input.cervicalPain,
+        orbital_pain: input.orbitalPain,
         overall_pain: input.overallPain,
         sleep_hours: input.sleepHours ?? null,
         sleep_quality: input.sleepQuality ?? null,
