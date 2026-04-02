@@ -39,7 +39,7 @@ export function PainSlider({
         className="pain-range"
         max={10}
         min={0}
-        style={{ "--track-bg": gradientFn(value) } as React.CSSProperties}
+        style={{ "--track-bg": gradientFn(value), "--thumb-color": colorFn(value) } as React.CSSProperties}
         type="range"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}

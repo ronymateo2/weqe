@@ -26,7 +26,9 @@ export function MobileSheet({ open, title, description, onClose, children, panel
           <h2 className="screen-title text-[17px]">{title}</h2>
           <p className="screen-subtitle text-[13px]">{description}</p>
         </header>
-        {children}
+        <div className="sheet-body">
+          {children}
+        </div>
       </section>
     </>
   );

@@ -85,39 +85,46 @@ export function SymptomSheet({ onSaved }: SymptomSheetProps) {
   };
 
   return (
-    <div className="space-y-5">
-      {state.status !== "idle" && state.message ? (
-        <StatusBanner message={state.message} tone={state.status === "success" ? "success" : "error"} />
-      ) : null}
+    <>
+      <div className="space-y-5 pb-4">
+        {state.status !== "idle" && state.message ? (
+          <StatusBanner message={state.message} tone={state.status === "success" ? "success" : "error"} />
+        ) : null}
 
-      <div className="space-y-3">
-        <p className="section-label">Sintomas</p>
-        <div className="flex flex-wrap gap-2">
-          {SYMPTOM_OPTIONS.map((option) => (
-            <SymptomChip
-              key={option.id}
-              label={option.label}
-              selected={selected.has(option.id)}
-              onClick={() => toggleSelection(option.id)}
-            />
-          ))}
+        <div className="space-y-3">
+          <p className="section-label">Sintomas</p>
+          <div className="flex flex-wrap gap-2">
+            {SYMPTOM_OPTIONS.map((option) => (
+              <SymptomChip
+                key={option.id}
+                label={option.label}
+                selected={selected.has(option.id)}
+                onClick={() => toggleSelection(option.id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="section-label">Otro</p>
+          <input
+            className="w-full rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3 text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            placeholder="Describe el sintoma..."
+            type="text"
+            value={customSymptom}
+            onChange={(e) => setCustomSymptom(e.target.value)}
+          />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="section-label">Otro</p>
-        <input
-          className="w-full rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3 text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-          placeholder="Describe el sintoma..."
-          type="text"
-          value={customSymptom}
-          onChange={(e) => setCustomSymptom(e.target.value)}
-        />
+      <div
+        className="sticky bottom-0 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3"
+        style={{ background: "linear-gradient(to top, rgba(18,16,8,1) 60%, rgba(18,16,8,0))" }}
+      >
+        <Button className="w-full" disabled={!hasSelection || isPending} type="button" onClick={saveSelection}>
+          {isPending ? "Guardando..." : "Guardar sintomas"}
+        </Button>
       </div>
-
-      <Button className="w-full" disabled={!hasSelection || isPending} type="button" onClick={saveSelection}>
-        {isPending ? "Guardando..." : "Guardar sintomas"}
-      </Button>
-    </div>
+    </>
   );
 }
