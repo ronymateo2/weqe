@@ -21,6 +21,7 @@ export type CheckInRecord = {
   cervicalPain: number;
   orbitalPain: number;
   overallPain: number;
+  stressLevel: number;
   sleepHours: number | null;
   sleepQuality: SleepQuality | null;
   notes: string | null;

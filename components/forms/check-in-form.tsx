@@ -20,6 +20,7 @@ const defaultPainState = {
   cervicalPain: 0,
   orbitalPain: 0,
   overallPain: 0,
+  stressLevel: 0,
 };
 
 function parseSleepHours(value: string) {
@@ -81,6 +82,7 @@ export function CheckInForm() {
     cervicalPain: pain.cervicalPain,
     orbitalPain: pain.orbitalPain,
     overallPain: pain.overallPain,
+    stressLevel: pain.stressLevel,
     sleepHours: timeOfDay === "morning" ? parseSleepHours(sleepHours) : null,
     sleepQuality: timeOfDay === "morning" ? sleepQuality : null,
   });
@@ -93,6 +95,7 @@ export function CheckInForm() {
       { label: "cuello / cervical", value: input.cervicalPain },
       { label: "zona orbital", value: input.orbitalPain },
       { label: "dolor general", value: input.overallPain },
+      { label: "nivel de estrés", value: input.stressLevel },
     ];
 
     if (input.sleepHours !== null && input.sleepHours !== undefined) {
@@ -182,36 +185,48 @@ export function CheckInForm() {
           onChange={setTimeOfDay}
         />
 
-        <div className="space-y-5">
+        <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+          <p className="section-label">Mapa de dolor</p>
+          <div className="space-y-5">
+            <PainSlider
+              label="👁️ Parpados"
+              value={pain.eyelidPain}
+              onChange={(value) => updatePain("eyelidPain", value)}
+            />
+            <PainSlider
+              label="🧠 Sienes"
+              value={pain.templePain}
+              onChange={(value) => updatePain("templePain", value)}
+            />
+            <PainSlider
+              label="🦷 Masetero"
+              value={pain.masseterPain}
+              onChange={(value) => updatePain("masseterPain", value)}
+            />
+            <PainSlider
+              label="🦴 Cuello / Cervical"
+              value={pain.cervicalPain}
+              onChange={(value) => updatePain("cervicalPain", value)}
+            />
+            <PainSlider
+              label="🎯 Zona Orbital"
+              value={pain.orbitalPain}
+              onChange={(value) => updatePain("orbitalPain", value)}
+            />
+            <PainSlider
+              label="🌡️ Dolor general"
+              value={pain.overallPain}
+              onChange={(value) => updatePain("overallPain", value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+          <p className="section-label">Estrés</p>
           <PainSlider
-            label="👁️ Parpados"
-            value={pain.eyelidPain}
-            onChange={(value) => updatePain("eyelidPain", value)}
-          />
-          <PainSlider
-            label="🧠 Sienes"
-            value={pain.templePain}
-            onChange={(value) => updatePain("templePain", value)}
-          />
-          <PainSlider
-            label="🦷 Masetero"
-            value={pain.masseterPain}
-            onChange={(value) => updatePain("masseterPain", value)}
-          />
-          <PainSlider
-            label="🦴 Cuello / Cervical"
-            value={pain.cervicalPain}
-            onChange={(value) => updatePain("cervicalPain", value)}
-          />
-          <PainSlider
-            label="🎯 Zona Orbital"
-            value={pain.orbitalPain}
-            onChange={(value) => updatePain("orbitalPain", value)}
-          />
-          <PainSlider
-            label="🌡️ Dolor general"
-            value={pain.overallPain}
-            onChange={(value) => updatePain("overallPain", value)}
+            label="🧠 Nivel de estrés"
+            value={pain.stressLevel}
+            onChange={(value) => updatePain("stressLevel", value)}
           />
         </div>
 
