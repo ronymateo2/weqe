@@ -133,7 +133,9 @@ export function ReportScreen({ data }: Props) {
           ["Dolor general (prom.)", `${data.averagePain.overall} / 10`],
           ["Dolor párpados (prom.)", `${data.averagePain.eyelid} / 10`],
           ["Dolor sienes (prom.)", `${data.averagePain.temple} / 10`],
-          ["Dolor masetero (prom.)", `${data.averagePain.masseter} / 10`]
+          ["Dolor masetero (prom.)", `${data.averagePain.masseter} / 10`],
+          ["Dolor cervical (prom.)", `${data.averagePain.cervical} / 10`],
+          ["Dolor orbital (prom.)", `${data.averagePain.orbital} / 10`]
         );
       }
 

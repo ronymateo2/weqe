@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
+import { SleepQualitySelector } from "@/components/ui/sleep-quality-selector";
 import { Toast } from "@/components/ui/toast";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
-import { TIME_OF_DAY_OPTIONS, SLEEP_QUALITY_OPTIONS } from "@/lib/constants";
+import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
 import type { ActionState, TimeOfDay, SleepQuality } from "@/types/domain";
@@ -202,12 +203,7 @@ export function CheckInForm() {
           <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
             <p className="section-label">Sueno</p>
             <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
-            <SegmentedControl
-              label="Calidad del sueno"
-              options={SLEEP_QUALITY_OPTIONS}
-              value={sleepQuality}
-              onChange={setSleepQuality}
-            />
+            <SleepQualitySelector value={sleepQuality} onChange={setSleepQuality} />
           </div>
         ) : null}
       </div>

@@ -3,7 +3,11 @@
 import { sampleCorrelation } from "simple-statistics";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getSafeTimezone, getDayKey, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
+import {
+  getSafeTimezone,
+  getDayKey,
+  DEFAULT_TIMEZONE,
+} from "@/lib/utils/timezone";
 import type { TriggerType } from "@/types/domain";
 
 type TrendPoint = {
@@ -70,7 +74,6 @@ export type DashboardDataResult = DashboardSuccess | DashboardError;
 
 const MIN_CORRELATION_SAMPLES = 14;
 
-
 function formatShortDayLabel(dayKey: string) {
   const [year, month, day] = dayKey.split("-").map((value) => Number(value));
   if (!year || !month || !day) {
@@ -80,7 +83,7 @@ function formatShortDayLabel(dayKey: string) {
   return new Intl.DateTimeFormat("es-CO", {
     day: "2-digit",
     month: "2-digit",
-    timeZone: "UTC"
+    timeZone: "UTC",
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
@@ -93,13 +96,18 @@ function buildLastDayKeys(timezone: string, totalDays: number) {
 }
 
 function getAverageRank(values: number[]) {
-  const indexed = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+  const indexed = values
+    .map((value, index) => ({ value, index }))
+    .sort((a, b) => a.value - b.value);
   const ranks = new Array<number>(values.length);
 
   let cursor = 0;
   while (cursor < indexed.length) {
     let end = cursor + 1;
-    while (end < indexed.length && indexed[end].value === indexed[cursor].value) {
+    while (
+      end < indexed.length &&
+      indexed[end].value === indexed[cursor].value
+    ) {
       end += 1;
     }
 
@@ -167,9 +175,9 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         sampleSize: 0,
         spearman: null,
         insight: `Necesitas ${MIN_CORRELATION_SAMPLES} registros matutinos con sueno para activar esta correlacion clinica.`,
-        points: []
+        points: [],
       },
-      highPainTriggerStats: []
+      highPainTriggerStats: [],
     };
   }
 
@@ -190,7 +198,9 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     const [checkInsResponse, triggersResponse] = await Promise.all([
       supabase
         .from("dy_check_ins")
-        .select("id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours")
+        .select(
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours",
+        )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
         .limit(500),
@@ -199,7 +209,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         .select("id, logged_at, trigger_type")
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
-        .limit(500)
+        .limit(500),
     ]);
 
     if (checkInsResponse.error) {
@@ -243,7 +253,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           masseterPain: 0,
           cervicalPain: 0,
           orbitalPain: 0,
-          overallPain: 0
+          overallPain: 0,
         };
 
         current.count += 1;
@@ -263,7 +273,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       if (checkIn.time_of_day === "morning" && checkIn.sleep_hours !== null) {
         correlationPoints.push({
           sleepHours: Number(checkIn.sleep_hours),
-          masseterPain: checkIn.masseter_pain
+          masseterPain: checkIn.masseter_pain,
         });
       }
     }
@@ -277,7 +287,9 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           eyelidPain: null,
           templePain: null,
           masseterPain: null,
-          overallPain: null
+          cervicalPain: null,
+          orbitalPain: null,
+          overallPain: null,
         };
       }
 
@@ -288,22 +300,44 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         eyelidPain: Number((bucket.eyelidPain / base).toFixed(2)),
         templePain: Number((bucket.templePain / base).toFixed(2)),
         masseterPain: Number((bucket.masseterPain / base).toFixed(2)),
-        overallPain: Number((bucket.overallPain / base).toFixed(2))
+        cervicalPain: Number((bucket.cervicalPain / base).toFixed(2)),
+        orbitalPain: Number((bucket.orbitalPain / base).toFixed(2)),
+        overallPain: Number((bucket.overallPain / base).toFixed(2)),
       };
     });
 
-    const daysWithData = trendPoints.filter((item) => item.overallPain !== null).length;
-    const last7 = trendPoints.slice(-7).map((point) => point.overallPain).filter((value): value is number => value !== null);
-    const last30 = trendPoints.map((point) => point.overallPain).filter((value): value is number => value !== null);
-    const average7d = last7.length ? Number((last7.reduce((sum, value) => sum + value, 0) / last7.length).toFixed(2)) : null;
+    const daysWithData = trendPoints.filter(
+      (item) => item.overallPain !== null,
+    ).length;
+    const last7 = trendPoints
+      .slice(-7)
+      .map((point) => point.overallPain)
+      .filter((value): value is number => value !== null);
+    const last30 = trendPoints
+      .map((point) => point.overallPain)
+      .filter((value): value is number => value !== null);
+    const average7d = last7.length
+      ? Number(
+          (last7.reduce((sum, value) => sum + value, 0) / last7.length).toFixed(
+            2,
+          ),
+        )
+      : null;
     const average30d = last30.length
-      ? Number((last30.reduce((sum, value) => sum + value, 0) / last30.length).toFixed(2))
+      ? Number(
+          (
+            last30.reduce((sum, value) => sum + value, 0) / last30.length
+          ).toFixed(2),
+        )
       : null;
 
     const sleepValues = correlationPoints.map((item) => item.sleepHours);
     const masseterValues = correlationPoints.map((item) => item.masseterPain);
     const spearman = getSpearmanCorrelation(sleepValues, masseterValues);
-    const correlationInsight = getCorrelationInsight(spearman, correlationPoints.length);
+    const correlationInsight = getCorrelationInsight(
+      spearman,
+      correlationPoints.length,
+    );
 
     const triggerDaysByType = new Map<TriggerType, Set<string>>();
 
@@ -319,10 +353,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       triggerDaysByType.set(triggerType, daySet);
     }
 
-    const highPainTriggerStats: TriggerStat[] = Array.from(triggerDaysByType.entries())
+    const highPainTriggerStats: TriggerStat[] = Array.from(
+      triggerDaysByType.entries(),
+    )
       .map(([triggerType, daysSet]) => ({
         triggerType,
-        days: daysSet.size
+        days: daysSet.size,
       }))
       .sort((a, b) => b.days - a.days)
       .slice(0, 5);
@@ -334,21 +370,24 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         points: trendPoints,
         daysWithData,
         average7d,
-        average30d
+        average30d,
       },
       correlation: {
         minimumRequired: MIN_CORRELATION_SAMPLES,
         sampleSize: correlationPoints.length,
         spearman: spearman !== null ? Number(spearman.toFixed(3)) : null,
         insight: correlationInsight,
-        points: correlationPoints
+        points: correlationPoints,
       },
-      highPainTriggerStats
+      highPainTriggerStats,
     };
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo cargar el dashboard.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo cargar el dashboard.",
       timezone: DEFAULT_TIMEZONE,
       trend: { points: [], daysWithData: 0, average7d: null, average30d: null },
       correlation: {
@@ -356,9 +395,9 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         sampleSize: 0,
         spearman: null,
         insight: `Necesitas ${MIN_CORRELATION_SAMPLES} registros matutinos con sueno para activar esta correlacion clinica.`,
-        points: []
+        points: [],
       },
-      highPainTriggerStats: []
+      highPainTriggerStats: [],
     };
   }
 }

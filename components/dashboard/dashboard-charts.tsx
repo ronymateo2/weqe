@@ -19,6 +19,8 @@ type TrendPoint = {
   eyelidPain: number | null;
   templePain: number | null;
   masseterPain: number | null;
+  cervicalPain: number | null;
+  orbitalPain: number | null;
   overallPain: number | null;
 };
 
@@ -58,6 +60,8 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
           <Line connectNulls dataKey="eyelidPain" dot={false} name="Parpados" stroke="var(--pain-low)" strokeWidth={1.5} />
           <Line connectNulls dataKey="templePain" dot={false} name="Sienes" stroke="var(--pain-mid)" strokeWidth={1.5} />
           <Line connectNulls dataKey="masseterPain" dot={false} name="Masetero" stroke="var(--pain-high)" strokeWidth={1.5} />
+          <Line connectNulls dataKey="cervicalPain" dot={false} name="Cervical" stroke="#8b6fbf" strokeWidth={1.5} />
+          <Line connectNulls dataKey="orbitalPain" dot={false} name="Orbital" stroke="#4f9ecf" strokeWidth={1.5} />
         </LineChart>
       </ResponsiveContainer>
     </div>

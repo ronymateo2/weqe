@@ -76,6 +76,8 @@ function renderDayEntries(group: HistoryDayGroup, timezone: string) {
             <span>Parpados {entry.eyelidPain}</span>
             <span>Sienes {entry.templePain}</span>
             <span>Masetero {entry.masseterPain}</span>
+            <span>Cervical {entry.cervicalPain}</span>
+            <span>Orbital {entry.orbitalPain}</span>
             <span>General {entry.overallPain}</span>
           </div>
           {entry.sleepHours !== null ? (
