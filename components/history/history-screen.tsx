@@ -26,7 +26,7 @@ const EYE_LABELS = {
 } as const;
 
 // Grouped display types produced by collapseEntries
-type DisplayCheckIn = { kind: "check_in"; id: string; loggedAt: string; eyelidPain: number; templePain: number; masseterPain: number; cervicalPain: number; orbitalPain: number; overallPain: number; sleepHours: number | null };
+type DisplayCheckIn = { kind: "check_in"; id: string; loggedAt: string; eyelidPain: number; templePain: number; masseterPain: number; cervicalPain: number; orbitalPain: number; sleepHours: number | null };
 type DisplayDrop = { kind: "drop"; id: string; loggedAt: string; name: string; quantity: number; eye: "left" | "right" | "both" };
 type DisplayTriggerGroup = { kind: "trigger_group"; id: string; loggedAt: string; triggers: { triggerType: TriggerType; intensity: 1 | 2 | 3 }[] };
 type DisplaySymptomGroup = { kind: "symptom_group"; id: string; loggedAt: string; symptomTypes: string[] };
@@ -121,7 +121,6 @@ function renderDayEntries(group: HistoryDayGroup, timezone: string) {
             <span>Masetero {item.masseterPain}</span>
             <span>Cervical {item.cervicalPain}</span>
             <span>Orbital {item.orbitalPain}</span>
-            <span>General {item.overallPain}</span>
           </div>
           {item.sleepHours !== null ? (
             <div className="mt-4 flex items-center gap-2 text-[12px] text-[var(--text-muted)]">

@@ -14,7 +14,6 @@ export type SaveCheckInInput = {
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
-  overallPain: number;
   stressLevel: number;
   sleepHours?: number | null;
   sleepQuality?: SleepQuality | null;
@@ -41,7 +40,6 @@ export async function saveCheckInAction(input: SaveCheckInInput) {
         masseter_pain: input.masseterPain,
         cervical_pain: input.cervicalPain,
         orbital_pain: input.orbitalPain,
-        overall_pain: input.overallPain,
         stress_level: input.stressLevel,
         sleep_hours: input.sleepHours ?? null,
         sleep_quality: input.sleepQuality ?? null,

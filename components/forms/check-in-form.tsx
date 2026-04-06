@@ -19,7 +19,6 @@ const defaultPainState = {
   masseterPain: 0,
   cervicalPain: 0,
   orbitalPain: 0,
-  overallPain: 0,
   stressLevel: 0,
 };
 
@@ -81,7 +80,6 @@ export function CheckInForm() {
     masseterPain: pain.masseterPain,
     cervicalPain: pain.cervicalPain,
     orbitalPain: pain.orbitalPain,
-    overallPain: pain.overallPain,
     stressLevel: pain.stressLevel,
     sleepHours: timeOfDay === "morning" ? parseSleepHours(sleepHours) : null,
     sleepQuality: timeOfDay === "morning" ? sleepQuality : null,
@@ -94,7 +92,6 @@ export function CheckInForm() {
       { label: "masetero", value: input.masseterPain },
       { label: "cuello / cervical", value: input.cervicalPain },
       { label: "zona orbital", value: input.orbitalPain },
-      { label: "dolor general", value: input.overallPain },
       { label: "nivel de estrés", value: input.stressLevel },
     ];
 
@@ -212,11 +209,6 @@ export function CheckInForm() {
               label="🦴 Cuello / Cervical"
               value={pain.cervicalPain}
               onChange={(value) => updatePain("cervicalPain", value)}
-            />
-            <PainSlider
-              label="🌡️ Dolor general"
-              value={pain.overallPain}
-              onChange={(value) => updatePain("overallPain", value)}
             />
           </div>
         </div>

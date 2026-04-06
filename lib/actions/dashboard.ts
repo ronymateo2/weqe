@@ -18,7 +18,6 @@ type TrendPoint = {
   masseterPain: number | null;
   cervicalPain: number | null;
   orbitalPain: number | null;
-  overallPain: number | null;
 };
 
 type CorrelationPoint = {
@@ -199,7 +198,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours",
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours",
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
@@ -235,7 +234,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         masseterPain: number;
         cervicalPain: number;
         orbitalPain: number;
-        overallPain: number;
       }
     >();
 
@@ -253,7 +251,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           masseterPain: 0,
           cervicalPain: 0,
           orbitalPain: 0,
-          overallPain: 0,
         };
 
         current.count += 1;
@@ -262,11 +259,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         current.masseterPain += checkIn.masseter_pain;
         current.cervicalPain += checkIn.cervical_pain;
         current.orbitalPain += checkIn.orbital_pain;
-        current.overallPain += checkIn.overall_pain;
         trendBucket.set(dayKey, current);
       }
 
-      if (checkIn.overall_pain >= 7) {
+      const meanPain =
+        (checkIn.eyelid_pain + checkIn.temple_pain + checkIn.masseter_pain + checkIn.cervical_pain + checkIn.orbital_pain) / 5;
+      if (meanPain >= 7) {
         highPainDaySet.add(dayKey);
       }
 
@@ -289,7 +287,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           masseterPain: null,
           cervicalPain: null,
           orbitalPain: null,
-          overallPain: null,
         };
       }
 
@@ -302,32 +299,31 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         masseterPain: Number((bucket.masseterPain / base).toFixed(2)),
         cervicalPain: Number((bucket.cervicalPain / base).toFixed(2)),
         orbitalPain: Number((bucket.orbitalPain / base).toFixed(2)),
-        overallPain: Number((bucket.overallPain / base).toFixed(2)),
       };
     });
 
     const daysWithData = trendPoints.filter(
-      (item) => item.overallPain !== null,
+      (item) => item.eyelidPain !== null,
     ).length;
+    const meanPainForPoint = (p: (typeof trendPoints)[number]) =>
+      p.eyelidPain !== null
+        ? (p.eyelidPain + (p.templePain ?? 0) + (p.masseterPain ?? 0) + (p.cervicalPain ?? 0) + (p.orbitalPain ?? 0)) / 5
+        : null;
     const last7 = trendPoints
       .slice(-7)
-      .map((point) => point.overallPain)
+      .map(meanPainForPoint)
       .filter((value): value is number => value !== null);
     const last30 = trendPoints
-      .map((point) => point.overallPain)
+      .map(meanPainForPoint)
       .filter((value): value is number => value !== null);
     const average7d = last7.length
       ? Number(
-          (last7.reduce((sum, value) => sum + value, 0) / last7.length).toFixed(
-            2,
-          ),
+          (last7.reduce((sum, value) => sum + value, 0) / last7.length).toFixed(2),
         )
       : null;
     const average30d = last30.length
       ? Number(
-          (
-            last30.reduce((sum, value) => sum + value, 0) / last30.length
-          ).toFixed(2),
+          (last30.reduce((sum, value) => sum + value, 0) / last30.length).toFixed(2),
         )
       : null;
 

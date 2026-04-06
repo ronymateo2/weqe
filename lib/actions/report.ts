@@ -8,7 +8,7 @@ import type { TriggerType } from "@/types/domain";
 
 export type ReportTrendPoint = {
   dayKey: string;
-  overallPain: number;
+  averagePain: number;
 };
 
 export type ReportCorrelationPoint = {
@@ -22,7 +22,6 @@ export type ReportTriggerStat = {
 };
 
 export type ReportAveragePain = {
-  overall: number;
   eyelid: number;
   temple: number;
   masseter: number;
@@ -138,7 +137,7 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, overall_pain, sleep_hours, sleep_quality"
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, sleep_quality"
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: true })
@@ -188,18 +187,16 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
     if (checkIns.length > 0) {
       const totals = checkIns.reduce(
         (acc, ci) => ({
-          overall: acc.overall + ci.overall_pain,
           eyelid: acc.eyelid + ci.eyelid_pain,
           temple: acc.temple + ci.temple_pain,
           masseter: acc.masseter + ci.masseter_pain,
           cervical: acc.cervical + ci.cervical_pain,
           orbital: acc.orbital + ci.orbital_pain
         }),
-        { overall: 0, eyelid: 0, temple: 0, masseter: 0, cervical: 0, orbital: 0 }
+        { eyelid: 0, temple: 0, masseter: 0, cervical: 0, orbital: 0 }
       );
       const n = checkIns.length;
       averagePain = {
-        overall: Number((totals.overall / n).toFixed(1)),
         eyelid: Number((totals.eyelid / n).toFixed(1)),
         temple: Number((totals.temple / n).toFixed(1)),
         masseter: Number((totals.masseter / n).toFixed(1)),
@@ -264,23 +261,20 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
     // Trend points (daily averages, all time)
     const trendBucket = new Map<
       string,
-      { count: number; overallPain: number }
+      { count: number; painSum: number }
     >();
     for (const ci of checkIns) {
       const dayKey = getDayKey(ci.logged_at, timezone);
-      const current = trendBucket.get(dayKey) ?? {
-        count: 0,
-        overallPain: 0
-      };
+      const current = trendBucket.get(dayKey) ?? { count: 0, painSum: 0 };
       current.count += 1;
-      current.overallPain += ci.overall_pain;
+      current.painSum += (ci.eyelid_pain + ci.temple_pain + ci.masseter_pain + ci.cervical_pain + ci.orbital_pain) / 5;
       trendBucket.set(dayKey, current);
     }
     const trendPoints: ReportTrendPoint[] = Array.from(trendBucket.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([dayKey, bucket]) => ({
         dayKey,
-        overallPain: Number((bucket.overallPain / bucket.count).toFixed(2))
+        averagePain: Number((bucket.painSum / bucket.count).toFixed(2))
       }));
 
     // Drops per day

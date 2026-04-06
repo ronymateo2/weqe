@@ -130,7 +130,6 @@ export function ReportScreen({ data }: Props) {
 
       if (data.averagePain) {
         rows.push(
-          ["Dolor general (prom.)", `${data.averagePain.overall} / 10`],
           ["Dolor párpados (prom.)", `${data.averagePain.eyelid} / 10`],
           ["Dolor sienes (prom.)", `${data.averagePain.temple} / 10`],
           ["Dolor masetero (prom.)", `${data.averagePain.masseter} / 10`],
@@ -185,12 +184,12 @@ export function ReportScreen({ data }: Props) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(17);
         doc.setTextColor(...textPrimary);
-        doc.text("Tendencia del Dolor General", margin, y);
+        doc.text("Tendencia del Dolor", margin, y);
         y += 8;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.setTextColor(...textMuted);
-        doc.text("Promedio diario de dolor general (0 – 10)", margin, y);
+        doc.text("Promedio diario de todas las zonas (0 – 10)", margin, y);
         y += 6;
         const imgW = contentW;
         const imgH = (canvas.height / canvas.width) * imgW;
@@ -293,18 +292,6 @@ export function ReportScreen({ data }: Props) {
             <p className="screen-subtitle text-[13px]">{data.dateRange}</p>
           </div>
 
-          {data.averagePain && (
-            <div>
-              <p className="section-label">Dolor promedio</p>
-              <p className="mono text-[36px] font-light">
-                {data.averagePain.overall}{" "}
-                <span className="text-[20px] text-[var(--text-muted)]">
-                  / 10
-                </span>
-              </p>
-            </div>
-          )}
-
           {data.averageSleepHours !== null && (
             <div>
               <p className="section-label">Sueno promedio</p>
@@ -405,9 +392,9 @@ export function ReportScreen({ data }: Props) {
               />
               <Line
                 connectNulls
-                dataKey="overallPain"
+                dataKey="averagePain"
                 dot={false}
-                name="General"
+                name="Promedio"
                 stroke="#d4a24c"
                 strokeWidth={2.3}
               />

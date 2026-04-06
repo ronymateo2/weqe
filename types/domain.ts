@@ -20,7 +20,6 @@ export type CheckInRecord = {
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
-  overallPain: number;
   stressLevel: number;
   sleepHours: number | null;
   sleepQuality: SleepQuality | null;

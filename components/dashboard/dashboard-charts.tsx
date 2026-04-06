@@ -22,7 +22,6 @@ type TrendPoint = {
   masseterPain: number | null;
   cervicalPain: number | null;
   orbitalPain: number | null;
-  overallPain: number | null;
 };
 
 type CorrelationPoint = {
@@ -58,7 +57,6 @@ export function DashboardTrendChart({
   const visiblePoints = trendPoints.slice(start, clampedEnd + 1);
 
   const painKeys = [
-    "overallPain",
     "eyelidPain",
     "templePain",
     "masseterPain",
