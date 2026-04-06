@@ -199,6 +199,11 @@ export function CheckInForm() {
               onChange={(value) => updatePain("templePain", value)}
             />
             <PainSlider
+              label="🎯 Zona Orbital"
+              value={pain.orbitalPain}
+              onChange={(value) => updatePain("orbitalPain", value)}
+            />
+            <PainSlider
               label="🦷 Masetero"
               value={pain.masseterPain}
               onChange={(value) => updatePain("masseterPain", value)}
@@ -207,11 +212,6 @@ export function CheckInForm() {
               label="🦴 Cuello / Cervical"
               value={pain.cervicalPain}
               onChange={(value) => updatePain("cervicalPain", value)}
-            />
-            <PainSlider
-              label="🎯 Zona Orbital"
-              value={pain.orbitalPain}
-              onChange={(value) => updatePain("orbitalPain", value)}
             />
             <PainSlider
               label="🌡️ Dolor general"
