@@ -249,7 +249,7 @@ export function CheckInForm() {
                 </div>
                 <input
                   type="datetime-local"
-                  className="min-h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 font-mono text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
+                  className="h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 font-mono text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
                   max={toDatetimeLocal(new Date())}
                   value={loggedAt ?? ""}
                   onChange={(e) => setLoggedAt(e.target.value)}
