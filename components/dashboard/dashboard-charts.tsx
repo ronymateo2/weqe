@@ -11,7 +11,7 @@ import {
   ScatterChart,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
 } from "recharts";
 
 type TrendPoint = {
@@ -40,14 +40,16 @@ const tooltipStyle = {
   border: "1px solid var(--border)",
   borderRadius: "10px",
   color: "var(--text-primary)",
-  fontSize: "12px"
+  fontSize: "12px",
 } as const;
 
 const WINDOW_OPTIONS = [7, 14, 30] as const;
 type WindowDays = (typeof WINDOW_OPTIONS)[number];
 const PAN_STEP = 7;
 
-export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, "trendPoints">) {
+export function DashboardTrendChart({
+  trendPoints,
+}: Pick<DashboardChartsProps, "trendPoints">) {
   const [windowDays, setWindowDays] = useState<WindowDays>(30);
   const [windowEnd, setWindowEnd] = useState(trendPoints.length - 1);
 
@@ -55,9 +57,18 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
   const start = Math.max(0, clampedEnd - windowDays + 1);
   const visiblePoints = trendPoints.slice(start, clampedEnd + 1);
 
-  const painKeys = ["overallPain", "eyelidPain", "templePain", "masseterPain", "cervicalPain", "orbitalPain"] as const;
+  const painKeys = [
+    "overallPain",
+    "eyelidPain",
+    "templePain",
+    "masseterPain",
+    "cervicalPain",
+    "orbitalPain",
+  ] as const;
   const maxPain = visiblePoints.reduce((max, p) => {
-    const vals = painKeys.map(k => p[k]).filter((v): v is number => v !== null);
+    const vals = painKeys
+      .map((k) => p[k])
+      .filter((v): v is number => v !== null);
     return vals.length > 0 ? Math.max(max, ...vals) : max;
   }, 0);
   const yMax = Math.max(4, Math.ceil(maxPain) + 1);
@@ -71,24 +82,28 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
   }
 
   function panLeft() {
-    setWindowEnd(prev => Math.max(windowDays - 1, prev - PAN_STEP));
+    setWindowEnd((prev) => Math.max(windowDays - 1, prev - PAN_STEP));
   }
 
   function panRight() {
-    setWindowEnd(prev => Math.min(trendPoints.length - 1, prev + PAN_STEP));
+    setWindowEnd((prev) => Math.min(trendPoints.length - 1, prev + PAN_STEP));
   }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <div className="flex gap-1">
-          {WINDOW_OPTIONS.map(d => (
+          {WINDOW_OPTIONS.map((d) => (
             <button
               key={d}
               className="mono flex h-[48px] min-w-[44px] items-center justify-center rounded-[var(--radius-full)] border px-3 text-[12px] transition-colors"
               style={
                 windowDays === d
-                  ? { borderColor: "var(--accent)", background: "var(--accent-dim)", color: "var(--accent)" }
+                  ? {
+                      borderColor: "var(--accent)",
+                      background: "var(--accent-dim)",
+                      color: "var(--accent)",
+                    }
                   : { borderColor: "var(--border)", color: "var(--text-muted)" }
               }
               onClick={() => handleWindowChange(d)}
@@ -104,7 +119,11 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
             style={
               canPanLeft
                 ? { borderColor: "var(--border)", color: "var(--text-muted)" }
-                : { borderColor: "var(--border)", color: "var(--text-faint)", opacity: 0.4 }
+                : {
+                    borderColor: "var(--border)",
+                    color: "var(--text-faint)",
+                    opacity: 0.4,
+                  }
             }
             onClick={panLeft}
           >
@@ -116,7 +135,11 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
             style={
               canPanRight
                 ? { borderColor: "var(--border)", color: "var(--text-muted)" }
-                : { borderColor: "var(--border)", color: "var(--text-faint)", opacity: 0.4 }
+                : {
+                    borderColor: "var(--border)",
+                    color: "var(--text-faint)",
+                    opacity: 0.4,
+                  }
             }
             onClick={panRight}
           >
@@ -126,22 +149,68 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
       </div>
       <div className="h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))] p-2">
         <ResponsiveContainer height="100%" width="100%">
-          <LineChart data={visiblePoints} margin={{ top: 12, right: 12, left: -14, bottom: 0 }}>
+          <LineChart
+            data={visiblePoints}
+            margin={{ top: 12, right: 12, left: -14, bottom: 0 }}
+          >
             <CartesianGrid stroke="rgba(46,39,24,0.8)" strokeDasharray="3 3" />
-            <XAxis dataKey="label" stroke="var(--text-faint)" tick={{ fill: "var(--text-faint)", fontSize: 11 }} />
+            <XAxis
+              dataKey="label"
+              stroke="var(--text-faint)"
+              tick={{ fill: "var(--text-faint)", fontSize: 11 }}
+            />
             <YAxis
               domain={[0, yMax]}
               stroke="var(--text-faint)"
               tick={{ fill: "var(--text-faint)", fontSize: 11 }}
               tickCount={Math.min(6, yMax + 1)}
             />
-            <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => value.toFixed(1)} labelStyle={{ color: "var(--text-muted)" }} />
-            <Line connectNulls dataKey="overallPain" dot={false} name="General" stroke="var(--accent)" strokeWidth={2.3} />
-            <Line connectNulls dataKey="eyelidPain" dot={false} name="Parpados" stroke="var(--pain-low)" strokeWidth={1.5} />
-            <Line connectNulls dataKey="templePain" dot={false} name="Sienes" stroke="var(--pain-mid)" strokeWidth={1.5} />
-            <Line connectNulls dataKey="masseterPain" dot={false} name="Masetero" stroke="var(--pain-high)" strokeWidth={1.5} />
-            <Line connectNulls dataKey="cervicalPain" dot={false} name="Cervical" stroke="#8b6fbf" strokeWidth={1.5} />
-            <Line connectNulls dataKey="orbitalPain" dot={false} name="Orbital" stroke="#4f9ecf" strokeWidth={1.5} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(value: number) => value.toFixed(1)}
+              labelStyle={{ color: "var(--text-muted)" }}
+            />
+            {/* <Line connectNulls dataKey="overallPain" dot={false} name="General" stroke="var(--accent)" strokeWidth={2.3} /> */}
+            <Line
+              connectNulls
+              dataKey="eyelidPain"
+              dot={false}
+              name="Parpados"
+              stroke="var(--pain-low)"
+              strokeWidth={1.5}
+            />
+            <Line
+              connectNulls
+              dataKey="templePain"
+              dot={false}
+              name="Sienes"
+              stroke="var(--pain-mid)"
+              strokeWidth={1.5}
+            />
+            <Line
+              connectNulls
+              dataKey="masseterPain"
+              dot={false}
+              name="Masetero"
+              stroke="var(--pain-high)"
+              strokeWidth={1.5}
+            />
+            <Line
+              connectNulls
+              dataKey="cervicalPain"
+              dot={false}
+              name="Cervical"
+              stroke="#8b6fbf"
+              strokeWidth={1.5}
+            />
+            <Line
+              connectNulls
+              dataKey="orbitalPain"
+              dot={false}
+              name="Orbital"
+              stroke="#4f9ecf"
+              strokeWidth={1.5}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -149,7 +218,9 @@ export function DashboardTrendChart({ trendPoints }: Pick<DashboardChartsProps, 
   );
 }
 
-export function DashboardCorrelationChart({ correlationPoints }: Pick<DashboardChartsProps, "correlationPoints">) {
+export function DashboardCorrelationChart({
+  correlationPoints,
+}: Pick<DashboardChartsProps, "correlationPoints">) {
   return (
     <div className="h-[200px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))] p-2">
       <ResponsiveContainer height="100%" width="100%">
@@ -175,7 +246,9 @@ export function DashboardCorrelationChart({ correlationPoints }: Pick<DashboardC
           <Tooltip
             contentStyle={tooltipStyle}
             cursor={{ stroke: "var(--border)" }}
-            formatter={(value: number, name: string) => (name === "Sueno" ? `${value.toFixed(1)}h` : value.toFixed(1))}
+            formatter={(value: number, name: string) =>
+              name === "Sueno" ? `${value.toFixed(1)}h` : value.toFixed(1)
+            }
             labelFormatter={() => ""}
           />
           <ReferenceLine stroke="rgba(212,162,76,0.5)" x={6} />
