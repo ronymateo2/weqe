@@ -12,6 +12,7 @@ import { DROP_EYES } from "@/lib/constants";
 import { saveDropAction } from "@/lib/actions/drops";
 import { useDropTypes } from "@/lib/hooks/use-drop-types";
 import { DROP_TYPES_CACHE_KEY } from "@/lib/hooks/use-drop-types";
+import { queueDrop } from "@/lib/offline/drops-queue";
 import { set } from "idb-keyval";
 import type { ActionState, DropEye, DropTypeRecord } from "@/types/domain";
 
@@ -31,6 +32,19 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, startTransition] = useTransition();
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
 
   const toDatetimeLocal = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -67,41 +81,64 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
   const saveDrop = () => {
     startTransition(async () => {
-      const result = await saveDropAction({
+      const input = {
         id: crypto.randomUUID(),
         loggedAt: loggedAt ? new Date(loggedAt).toISOString() : new Date().toISOString(),
         name: selectedDropName,
         quantity: Number(quantity),
         eye,
-      });
+      };
 
-      setState({
-        status: result.ok ? "success" : "error",
-        message: result.message,
-      });
+      // Offline: queue directly without attempting the server action
+      if (!navigator.onLine) {
+        await queueDrop(input);
+        setState({
+          status: "success",
+          message: "Guardada sin conexión. Se sincronizará al reconectar.",
+        });
+        // Don't close the sheet — let the user read the confirmation
+        return;
+      }
 
-      if (result.ok) {
-        // If saveDropAction returns the created dropType, we update our local cache
-        const createdDropType = (result as any).dropType as
-          | DropTypeRecord
-          | undefined;
-        if (createdDropType) {
-          const nextDropTypes = (() => {
-            const exists = dropTypes.some((d) => d.id === createdDropType.id);
-            if (exists) return dropTypes;
-            const next = [...dropTypes, createdDropType];
-            return next.sort((a, b) => a.name.localeCompare(b.name, "es-CO"));
-          })();
+      try {
+        const result = await saveDropAction(input);
 
-          if (nextDropTypes !== dropTypes) {
-            try {
-              await set(DROP_TYPES_CACHE_KEY, nextDropTypes);
-            } catch (err) {
-              console.warn("Failed to update cache on quick-save", err);
+        setState({
+          status: result.ok ? "success" : "error",
+          message: result.message,
+        });
+
+        if (result.ok) {
+          // If saveDropAction returns the created dropType, we update our local cache
+          const createdDropType = (result as any).dropType as
+            | DropTypeRecord
+            | undefined;
+          if (createdDropType) {
+            const nextDropTypes = (() => {
+              const exists = dropTypes.some((d) => d.id === createdDropType.id);
+              if (exists) return dropTypes;
+              const next = [...dropTypes, createdDropType];
+              return next.sort((a, b) => a.name.localeCompare(b.name, "es-CO"));
+            })();
+
+            if (nextDropTypes !== dropTypes) {
+              try {
+                await set(DROP_TYPES_CACHE_KEY, nextDropTypes);
+              } catch (err) {
+                console.warn("Failed to update cache on quick-save", err);
+              }
             }
           }
+          onSaved();
         }
-        onSaved();
+      } catch {
+        // Network failure while nominally online — queue for later
+        await queueDrop(input);
+        setState({
+          status: "success",
+          message: "Guardada sin conexión. Se sincronizará al reconectar.",
+        });
+        // Don't close the sheet — let the user read the confirmation
       }
     });
   };
@@ -214,17 +251,27 @@ export function DropSheet({ onSaved }: DropSheetProps) {
         </div>
       </div>
 
+      {!isOnline ? (
+        <div className="flex items-center gap-2 rounded-[10px] px-3 py-2" style={{ background: "var(--surface-el)" }}>
+          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: "var(--text-muted)" }} />
+          <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+            Sin conexión — se guardará y sincronizará al reconectar
+          </p>
+        </div>
+      ) : null}
+
       <Button
         className="w-full"
         disabled={
           isPending ||
           (loading && dropTypes.length === 0) ||
-          !selectedDropName.trim()
+          !selectedDropName.trim() ||
+          state.status === "success"
         }
         type="button"
         onClick={saveDrop}
       >
-        {isPending ? "Guardando..." : "Guardar gota"}
+        {isPending ? "Guardando..." : state.status === "success" ? "Guardada" : "Guardar gota"}
       </Button>
     </div>
   );

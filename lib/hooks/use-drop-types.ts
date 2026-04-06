@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { get, set } from "idb-keyval";
 import type { DropTypeRecord } from "@/types/domain";
 
@@ -8,6 +8,8 @@ export function useDropTypes() {
   const [dropTypes, setDropTypes] = useState<DropTypeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Ref to avoid stale closure when checking if cache was loaded
+  const hasCachedData = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -17,8 +19,8 @@ export function useDropTypes() {
       try {
         const cached = await get<DropTypeRecord[]>(DROP_TYPES_CACHE_KEY);
         if (cached && isMounted) {
+          hasCachedData.current = true;
           setDropTypes(cached);
-          // We set loading false as soon as we have something from cache.
           setLoading(false);
         }
       } catch (err) {
@@ -39,23 +41,18 @@ export function useDropTypes() {
             setDropTypes(result.dropTypes);
             setLoading(false);
             setError(null);
-            // Save to cache for next time
             await set(DROP_TYPES_CACHE_KEY, result.dropTypes);
           } else {
-            setError(result.message);
-            // If we don't have anything, we're not loading anymore but we have an error
-            if (dropTypes.length === 0) {
+            if (!hasCachedData.current) {
+              setError(result.message);
               setLoading(false);
             }
           }
         }
-      } catch (err) {
-        if (isMounted) {
-          // If we had cache, we might not want to show a big error
-          if (dropTypes.length === 0) {
-            setError("No se pudieron cargar tus tipos de gota.");
-            setLoading(false);
-          }
+      } catch {
+        if (isMounted && !hasCachedData.current) {
+          setError("No se pudieron cargar tus tipos de gota.");
+          setLoading(false);
         }
       }
     }

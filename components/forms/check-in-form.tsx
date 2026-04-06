@@ -13,6 +13,7 @@ import { DateTimeWheelPicker } from "@/components/ui/datetime-wheel-picker";
 import { TIME_OF_DAY_OPTIONS, TRIGGER_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
+import { queueCheckIn } from "@/lib/offline/check-ins-queue";
 import type {
   ActionState,
   TimeOfDay,
@@ -57,10 +58,23 @@ export function CheckInForm() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
   const [pendingInput, setPendingInput] = useState<SaveCheckInInput | null>(
     null,
   );
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (!zeroWarning) return;
@@ -144,25 +158,49 @@ export function CheckInForm() {
     return `Vas a guardar valores en 0 para: ${zeroValues.map((field) => field.label).join(", ")}. Deseas continuar?`;
   };
 
+  const resetForm = () => {
+    setPain(defaultPainState);
+    setSleepHours("6");
+    setSleepQuality("regular");
+    setSelectedTrigger(null);
+    setCustomTriggerName("");
+    setLoggedAt(null);
+    setShowDatePicker(false);
+  };
+
   const submitCheckIn = (input: SaveCheckInInput) => {
     setIsPending(true);
 
     startTransition(async () => {
-      const result = await saveCheckInAction(input);
+      if (!navigator.onLine) {
+        await queueCheckIn(input);
+        setState({
+          status: "success",
+          message: "Guardado sin conexión. Se sincronizará al reconectar.",
+        });
+        resetForm();
+        setIsPending(false);
+        return;
+      }
 
-      setState({
-        status: result.ok ? "success" : "error",
-        message: result.message,
-      });
+      try {
+        const result = await saveCheckInAction(input);
 
-      if (result.ok) {
-        setPain(defaultPainState);
-        setSleepHours("6");
-        setSleepQuality("regular");
-        setSelectedTrigger(null);
-        setCustomTriggerName("");
-        setLoggedAt(null);
-        setShowDatePicker(false);
+        setState({
+          status: result.ok ? "success" : "error",
+          message: result.message,
+        });
+
+        if (result.ok) {
+          resetForm();
+        }
+      } catch {
+        await queueCheckIn(input);
+        setState({
+          status: "success",
+          message: "Guardado sin conexión. Se sincronizará al reconectar.",
+        });
+        resetForm();
       }
 
       setIsPending(false);
@@ -341,7 +379,15 @@ export function CheckInForm() {
       </div>
 
       <div className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-20 border-t border-[var(--border)] bg-[rgba(18,16,8,0.94)] px-5 py-4 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-[480px]">
+        <div className="mx-auto w-full max-w-[480px] space-y-2">
+          {!isOnline ? (
+            <div className="flex items-center justify-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: "var(--text-muted)" }} />
+              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+                Sin conexión — se guardará al reconectar
+              </p>
+            </div>
+          ) : null}
           <Button
             className="w-full"
             disabled={isPending || !isTriggerValid}
