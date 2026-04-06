@@ -147,9 +147,9 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
   return (
     <div className="space-y-5">
-      {state.message || error ? (
+      {(state.status !== "idle" && state.message) || error ? (
         <StatusBanner
-          message={state.message || error || ""}
+          message={(state.status !== "idle" ? state.message : null) || error || ""}
           tone={
             state.status === "error" || (error && state.status === "idle")
               ? "error"

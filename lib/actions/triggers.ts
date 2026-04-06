@@ -39,7 +39,6 @@ export async function saveTriggerAction(input: SaveTriggerInput) {
     }
 
     revalidatePath("/history");
-    revalidatePath("/register");
     revalidatePath("/dashboard");
 
     return { ok: true, message: "Trigger guardado." };

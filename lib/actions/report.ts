@@ -1,8 +1,8 @@
 "use server";
 
-import { sampleCorrelation } from "simple-statistics";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSpearmanCorrelation } from "@/lib/stats";
 import { getSafeTimezone, getDayKey } from "@/lib/utils/timezone";
 import type { TriggerType } from "@/types/domain";
 
@@ -53,33 +53,6 @@ export type ReportDataResult =
 const MIN_RECORDS = 14;
 
 
-function getAverageRank(values: number[]) {
-  const indexed = values
-    .map((value, index) => ({ value, index }))
-    .sort((a, b) => a.value - b.value);
-  const ranks = new Array<number>(values.length);
-  let cursor = 0;
-  while (cursor < indexed.length) {
-    let end = cursor + 1;
-    while (
-      end < indexed.length &&
-      indexed[end].value === indexed[cursor].value
-    ) {
-      end += 1;
-    }
-    const averageRank = (cursor + 1 + end) / 2;
-    for (let i = cursor; i < end; i += 1) {
-      ranks[indexed[i].index] = averageRank;
-    }
-    cursor = end;
-  }
-  return ranks;
-}
-
-function getSpearmanCorrelation(x: number[], y: number[]) {
-  if (x.length !== y.length || x.length < 2) return null;
-  return sampleCorrelation(getAverageRank(x), getAverageRank(y));
-}
 
 function formatDateRange(from: string, to: string) {
   const months = [

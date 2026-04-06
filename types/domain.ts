@@ -69,7 +69,7 @@ export type SymptomRecord = {
   notes: string | null;
 };
 
-export type ActionState = {
-  status: "idle" | "success" | "error";
-  message?: string;
-};
+export type ActionState =
+  | { status: "idle" }
+  | { status: "success"; message: string }
+  | { status: "error"; message: string };

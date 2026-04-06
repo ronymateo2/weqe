@@ -36,8 +36,6 @@ export async function saveSymptomAction(input: SaveSymptomInput) {
     }
 
     revalidatePath("/history");
-    revalidatePath("/register");
-    revalidatePath("/dashboard");
 
     return { ok: true, message: "Sintoma guardado." };
   } catch (error) {
