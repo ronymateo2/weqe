@@ -32,7 +32,7 @@ export function BottomNav() {
               )}
               href={tab.href}
             >
-              <Icon size={20} strokeWidth={1.8} />
+              <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
               <span>{tab.label}</span>
             </Link>
           );
