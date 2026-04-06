@@ -9,6 +9,7 @@ import { SleepQualitySelector } from "@/components/ui/sleep-quality-selector";
 import { TextInput } from "@/components/ui/text-input";
 import { Toast } from "@/components/ui/toast";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
+import { DateTimeWheelPicker } from "@/components/ui/datetime-wheel-picker";
 import { TIME_OF_DAY_OPTIONS, TRIGGER_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
@@ -82,9 +83,6 @@ export function CheckInForm() {
     }));
   };
 
-  const toDatetimeLocal = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-
   const resolvedTriggerType = (): TriggerType | null => {
     if (timeOfDay !== "trigger" || !selectedTrigger) return null;
     const option = TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger);
@@ -98,9 +96,7 @@ export function CheckInForm() {
 
   const buildPayload = (): SaveCheckInInput => ({
     id: crypto.randomUUID(),
-    loggedAt: loggedAt
-      ? new Date(loggedAt).toISOString()
-      : new Date().toISOString(),
+    loggedAt: loggedAt ?? new Date().toISOString(),
     timeOfDay,
     eyelidPain: pain.eyelidPain,
     templePain: pain.templePain,
@@ -227,7 +223,7 @@ export function CheckInForm() {
                 className="text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)]"
                 onClick={() => {
                   setShowDatePicker(true);
-                  setLoggedAt(toDatetimeLocal(new Date()));
+                  setLoggedAt(new Date().toISOString());
                 }}
               >
                 ¿Olvidaste registrarlo? Cambiar fecha
@@ -247,12 +243,10 @@ export function CheckInForm() {
                     Usar hora actual
                   </button>
                 </div>
-                <input
-                  type="datetime-local"
-                  className="h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 font-mono text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
-                  max={toDatetimeLocal(new Date())}
-                  value={loggedAt ?? ""}
-                  onChange={(e) => setLoggedAt(e.target.value)}
+                <DateTimeWheelPicker
+                  max={new Date()}
+                  value={loggedAt ?? new Date().toISOString()}
+                  onChange={setLoggedAt}
                 />
               </div>
             )}
