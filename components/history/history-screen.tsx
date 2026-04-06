@@ -26,7 +26,7 @@ const EYE_LABELS = {
 } as const;
 
 // Grouped display types produced by collapseEntries
-type DisplayCheckIn = { kind: "check_in"; id: string; loggedAt: string; eyelidPain: number; templePain: number; masseterPain: number; cervicalPain: number; orbitalPain: number; sleepHours: number | null };
+type DisplayCheckIn = { kind: "check_in"; id: string; loggedAt: string; eyelidPain: number; templePain: number; masseterPain: number; cervicalPain: number; orbitalPain: number; sleepHours: number | null; triggerType: TriggerType | null; notes: string | null };
 type DisplayDrop = { kind: "drop"; id: string; loggedAt: string; name: string; quantity: number; eye: "left" | "right" | "both" };
 type DisplayTriggerGroup = { kind: "trigger_group"; id: string; loggedAt: string; triggers: { triggerType: TriggerType; intensity: 1 | 2 | 3 }[] };
 type DisplaySymptomGroup = { kind: "symptom_group"; id: string; loggedAt: string; symptomTypes: string[] };
@@ -112,7 +112,14 @@ function renderDayEntries(group: HistoryDayGroup, timezone: string) {
       return (
         <article key={item.id} className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.72)] p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[var(--text-primary)]">Check-in rapido</span>
+            {item.triggerType ? (
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent)]">
+                <Zap size={13} />
+                <span>Trigger: {item.triggerType === "other" && item.notes ? item.notes : TRIGGER_LABELS[item.triggerType]}</span>
+              </div>
+            ) : (
+              <span className="text-[13px] font-medium text-[var(--text-primary)]">Check-in rapido</span>
+            )}
             <span className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</span>
           </div>
           <div className="grid grid-cols-2 gap-3 text-[13px] text-[var(--text-muted)]">

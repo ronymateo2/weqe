@@ -15,6 +15,8 @@ type HistoryCheckInEntry = {
   cervicalPain: number;
   orbitalPain: number;
   sleepHours: number | null;
+  triggerType: TriggerType | null;
+  notes: string | null;
 };
 
 type HistoryDropEntry = {
@@ -100,7 +102,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         supabase
           .from("dy_check_ins")
           .select(
-            "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours",
+            "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
           )
           .eq("user_id", session.user.id)
           .order("logged_at", { ascending: false })
@@ -162,6 +164,8 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         cervicalPain: checkIn.cervical_pain,
         orbitalPain: checkIn.orbital_pain,
         sleepHours: checkIn.sleep_hours,
+        triggerType: (checkIn.trigger_type as TriggerType) ?? null,
+        notes: checkIn.notes ?? null,
       }),
     );
 

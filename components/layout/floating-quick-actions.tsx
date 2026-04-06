@@ -2,20 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Activity, Droplets, Plus, Zap } from "lucide-react";
+import { Activity, Droplets, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
-import { TriggerSheet } from "@/components/forms/trigger-sheet";
 import { SymptomSheet } from "@/components/forms/symptom-sheet";
 import { cn } from "@/lib/utils";
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheet, setSheet] = useState<"drop" | "trigger" | "symptom" | null>(
-    null,
-  );
+  const [sheet, setSheet] = useState<"drop" | "symptom" | null>(null);
 
   const isVisible = useMemo(
     () => pathname === "/register" || pathname === "/history",
@@ -50,14 +47,6 @@ export function FloatingQuickActions() {
               <Button
                 className="min-w-[132px] justify-start gap-2"
                 variant="subtle"
-                onClick={() => setSheet("trigger")}
-              >
-                <Zap size={18} />
-                Trigger
-              </Button>
-              <Button
-                className="min-w-[132px] justify-start gap-2"
-                variant="subtle"
                 onClick={() => setSheet("symptom")}
               >
                 <Activity size={18} />
@@ -88,15 +77,6 @@ export function FloatingQuickActions() {
         onClose={closeAll}
       >
         <DropSheet onSaved={closeAll} />
-      </MobileSheet>
-
-      <MobileSheet
-        description="Captura desencadenantes ambientales o de actividad."
-        open={sheet === "trigger"}
-        title="Triggers"
-        onClose={closeAll}
-      >
-        <TriggerSheet onSaved={closeAll} />
       </MobileSheet>
 
       <MobileSheet

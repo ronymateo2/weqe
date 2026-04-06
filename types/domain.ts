@@ -1,4 +1,4 @@
-export type TimeOfDay = "morning" | "evening" | "other";
+export type TimeOfDay = "morning" | "evening" | "other" | "trigger";
 export type SleepQuality = "muy_malo" | "malo" | "regular" | "bueno" | "excelente";
 export type DropEye = "left" | "right" | "both";
 export type TriggerType =
@@ -23,6 +23,7 @@ export type CheckInRecord = {
   stressLevel: number;
   sleepHours: number | null;
   sleepQuality: SleepQuality | null;
+  triggerType: TriggerType | null;
   notes: string | null;
 };
 

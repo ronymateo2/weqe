@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { TimeOfDay, SleepQuality } from "@/types/domain";
+import type { TimeOfDay, SleepQuality, TriggerType } from "@/types/domain";
 
 export type SaveCheckInInput = {
   id: string;
@@ -17,6 +17,7 @@ export type SaveCheckInInput = {
   stressLevel: number;
   sleepHours?: number | null;
   sleepQuality?: SleepQuality | null;
+  triggerType?: TriggerType | null;
   notes?: string;
 };
 
@@ -43,6 +44,7 @@ export async function saveCheckInAction(input: SaveCheckInInput) {
         stress_level: input.stressLevel,
         sleep_hours: input.sleepHours ?? null,
         sleep_quality: input.sleepQuality ?? null,
+        trigger_type: input.triggerType ?? null,
         notes: input.notes ?? null
       },
       { onConflict: "id" }

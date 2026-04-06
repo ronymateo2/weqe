@@ -9,7 +9,7 @@ export const DROP_EYES = ["left", "right", "both"] as const;
 export const TIME_OF_DAY_OPTIONS = [
   { label: "Manana", value: "morning" },
   { label: "Tarde", value: "evening" },
-  { label: "Otro", value: "other" }
+  { label: "Trigger", value: "trigger" }
 ] as const;
 
 export const SLEEP_QUALITY_OPTIONS = [

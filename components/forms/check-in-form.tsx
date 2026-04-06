@@ -6,12 +6,19 @@ import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
 import { SleepQualitySelector } from "@/components/ui/sleep-quality-selector";
+import { TextInput } from "@/components/ui/text-input";
 import { Toast } from "@/components/ui/toast";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
-import { TIME_OF_DAY_OPTIONS } from "@/lib/constants";
+import { TIME_OF_DAY_OPTIONS, TRIGGER_OPTIONS } from "@/lib/constants";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
-import type { ActionState, TimeOfDay, SleepQuality } from "@/types/domain";
+import type {
+  ActionState,
+  TimeOfDay,
+  SleepQuality,
+  TriggerType,
+} from "@/types/domain";
+import { cn } from "@/lib/utils";
 
 const defaultPainState = {
   eyelidPain: 0,
@@ -43,6 +50,10 @@ export function CheckInForm() {
   const [pain, setPain] = useState(defaultPainState);
   const [sleepHours, setSleepHours] = useState("6");
   const [sleepQuality, setSleepQuality] = useState<SleepQuality>("regular");
+  const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
+  const [customTriggerName, setCustomTriggerName] = useState("");
+  const [loggedAt, setLoggedAt] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
@@ -71,9 +82,25 @@ export function CheckInForm() {
     }));
   };
 
+  const toDatetimeLocal = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+  const resolvedTriggerType = (): TriggerType | null => {
+    if (timeOfDay !== "trigger" || !selectedTrigger) return null;
+    const option = TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger);
+    return (option?.value ?? "other") as TriggerType;
+  };
+
+  const isTriggerValid =
+    timeOfDay !== "trigger" ||
+    (selectedTrigger !== null &&
+      (selectedTrigger !== "other" || customTriggerName.trim().length > 0));
+
   const buildPayload = (): SaveCheckInInput => ({
     id: crypto.randomUUID(),
-    loggedAt: new Date().toISOString(),
+    loggedAt: loggedAt
+      ? new Date(loggedAt).toISOString()
+      : new Date().toISOString(),
     timeOfDay,
     eyelidPain: pain.eyelidPain,
     templePain: pain.templePain,
@@ -83,6 +110,13 @@ export function CheckInForm() {
     stressLevel: pain.stressLevel,
     sleepHours: timeOfDay === "morning" ? parseSleepHours(sleepHours) : null,
     sleepQuality: timeOfDay === "morning" ? sleepQuality : null,
+    triggerType: resolvedTriggerType(),
+    notes:
+      timeOfDay === "trigger" &&
+      selectedTrigger === "other" &&
+      customTriggerName.trim()
+        ? customTriggerName.trim()
+        : undefined,
   });
 
   const getZeroValueWarning = (input: SaveCheckInInput): string | null => {
@@ -129,6 +163,10 @@ export function CheckInForm() {
         setPain(defaultPainState);
         setSleepHours("6");
         setSleepQuality("regular");
+        setSelectedTrigger(null);
+        setCustomTriggerName("");
+        setLoggedAt(null);
+        setShowDatePicker(false);
       }
 
       setIsPending(false);
@@ -181,6 +219,80 @@ export function CheckInForm() {
           value={timeOfDay}
           onChange={setTimeOfDay}
         />
+        {timeOfDay === "trigger" ? (
+          <div>
+            {!showDatePicker ? (
+              <button
+                type="button"
+                className="text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)]"
+                onClick={() => {
+                  setShowDatePicker(true);
+                  setLoggedAt(toDatetimeLocal(new Date()));
+                }}
+              >
+                ¿Olvidaste registrarlo? Cambiar fecha
+              </button>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="section-label mb-0">Fecha y hora</p>
+                  <button
+                    type="button"
+                    className="text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)]"
+                    onClick={() => {
+                      setShowDatePicker(false);
+                      setLoggedAt(null);
+                    }}
+                  >
+                    Usar hora actual
+                  </button>
+                </div>
+                <input
+                  type="datetime-local"
+                  className="min-h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 font-mono text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
+                  max={toDatetimeLocal(new Date())}
+                  value={loggedAt ?? ""}
+                  onChange={(e) => setLoggedAt(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {timeOfDay === "trigger" ? (
+          <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+            <p className="section-label">Trigger</p>
+            <div className="flex flex-wrap gap-2">
+              {TRIGGER_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={cn(
+                    "min-h-12 rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-colors",
+                    selectedTrigger === option.id
+                      ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
+                      : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
+                  )}
+                  onClick={() => {
+                    setSelectedTrigger(
+                      selectedTrigger === option.id ? null : option.id,
+                    );
+                    if (option.id !== "other") setCustomTriggerName("");
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            {selectedTrigger === "other" ? (
+              <TextInput
+                placeholder="Nombre del trigger (ej. polvo, humo)"
+                value={customTriggerName}
+                onChange={(e) => setCustomTriggerName(e.target.value)}
+              />
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
           <p className="section-label">Mapa de dolor</p>
@@ -238,7 +350,7 @@ export function CheckInForm() {
         <div className="mx-auto w-full max-w-[480px]">
           <Button
             className="w-full"
-            disabled={isPending}
+            disabled={isPending || !isTriggerValid}
             type="button"
             onClick={handleSave}
           >
