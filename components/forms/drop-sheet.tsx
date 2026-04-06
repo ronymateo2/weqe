@@ -27,8 +27,13 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   const [customDropName, setCustomDropName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [eye, setEye] = useState<DropEye>("left");
+  const [loggedAt, setLoggedAt] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, startTransition] = useTransition();
+
+  const toDatetimeLocal = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
   // Sync initial selection when dropTypes load
   useEffect(() => {
@@ -64,7 +69,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
     startTransition(async () => {
       const result = await saveDropAction({
         id: crypto.randomUUID(),
-        loggedAt: new Date().toISOString(),
+        loggedAt: loggedAt ? new Date(loggedAt).toISOString() : new Date().toISOString(),
         name: selectedDropName,
         quantity: Number(quantity),
         eye,
@@ -146,6 +151,44 @@ export function DropSheet({ onSaved }: DropSheetProps) {
               />
             ) : null}
           </>
+        )}
+      </div>
+
+      <div>
+        {!showDatePicker ? (
+          <button
+            type="button"
+            className="text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]"
+            onClick={() => {
+              setShowDatePicker(true);
+              setLoggedAt(toDatetimeLocal(new Date()));
+            }}
+          >
+            ¿Olvidaste registrarla? Cambiar fecha
+          </button>
+        ) : (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="section-label mb-0">Fecha y hora</p>
+              <button
+                type="button"
+                className="text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                onClick={() => {
+                  setShowDatePicker(false);
+                  setLoggedAt(null);
+                }}
+              >
+                Usar hora actual
+              </button>
+            </div>
+            <input
+              type="datetime-local"
+              className="min-h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 font-mono text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
+              max={toDatetimeLocal(new Date())}
+              value={loggedAt ?? ""}
+              onChange={(e) => setLoggedAt(e.target.value)}
+            />
+          </div>
         )}
       </div>
 
