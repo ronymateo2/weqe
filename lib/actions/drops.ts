@@ -18,6 +18,10 @@ type SaveDropTypeInput = {
   name: string;
 };
 
+type ReorderDropTypesInput = {
+  ids: string[];
+};
+
 function normalizeDropTypeName(name: string) {
   return name.trim().toLowerCase();
 }
@@ -49,6 +53,23 @@ async function upsertDropType(userId: string, name: string) {
   } as DropTypeRecord;
 }
 
+export async function reorderDropTypesAction(input: ReorderDropTypesInput) {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
+  const supabase = getSupabaseAdmin();
+
+  await Promise.all(
+    input.ids.map((id, index) =>
+      supabase
+        .from("dy_drop_types")
+        .update({ sort_order: index })
+        .eq("id", id)
+        .eq("user_id", session.user!.id!)
+    )
+  );
+}
+
 export async function getDropTypesAction() {
   const session = await auth();
 
@@ -64,8 +85,9 @@ export async function getDropTypesAction() {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("dy_drop_types")
-      .select("id, name")
+      .select("id, name, sort_order")
       .eq("user_id", session.user.id)
+      .order("sort_order", { ascending: true, nullsFirst: false })
       .order("name", { ascending: true })
       .limit(100);
 

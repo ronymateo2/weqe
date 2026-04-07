@@ -24,7 +24,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
-import { saveDropTypeAction } from "@/lib/actions/drops";
+import { saveDropTypeAction, reorderDropTypesAction } from "@/lib/actions/drops";
 import { applyDropTypeOrder, DROP_TYPES_ORDER_KEY } from "@/lib/hooks/use-drop-types";
 import type { ActionState, DropTypeRecord } from "@/types/domain";
 
@@ -124,22 +124,22 @@ export function DropTypesScreen({ initialDropTypes, initialErrorMessage }: DropT
   }, []);
 
   const persistOrder = (items: DropTypeRecord[]) => {
-    set(DROP_TYPES_ORDER_KEY, items.map((item) => item.id)).catch((err) => {
-      console.warn("Failed to save drop type order", err);
-    });
+    const ids = items.map((item) => item.id);
+    // IndexedDB — instant
+    set(DROP_TYPES_ORDER_KEY, ids).catch(() => {});
+    // DB — background, fire and forget
+    reorderDropTypesAction({ ids }).catch(() => {});
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setDropTypes((prev) => {
-      const oldIndex = prev.findIndex((item) => item.id === active.id);
-      const newIndex = prev.findIndex((item) => item.id === over.id);
-      const next = arrayMove(prev, oldIndex, newIndex);
-      persistOrder(next);
-      return next;
-    });
+    const oldIndex = dropTypes.findIndex((item) => item.id === active.id);
+    const newIndex = dropTypes.findIndex((item) => item.id === over.id);
+    const next = arrayMove(dropTypes, oldIndex, newIndex);
+    setDropTypes(next);
+    persistOrder(next);
   };
 
   const saveDropType = () => {
