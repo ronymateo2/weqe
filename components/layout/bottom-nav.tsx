@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChartLine, ClipboardPlus, FileText, History } from "lucide-react";
 import { APP_TABS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 const icons = {
   "/register": ClipboardPlus,
@@ -26,10 +25,8 @@ export function BottomNav() {
           return (
             <Link
               key={tab.href}
-              className={cn(
-                "flex min-h-[72px] flex-col items-center justify-center gap-1 text-[10px] font-medium",
-                isActive ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
-              )}
+              className="flex min-h-[72px] flex-col items-center justify-center gap-1 text-[10px] font-medium"
+              style={{ color: isActive ? "var(--accent-bright)" : "var(--text-muted)" }}
               href={tab.href}
             >
               <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
