@@ -1,4 +1,4 @@
-import { Activity, Droplets, Moon, Zap } from "lucide-react";
+import { Activity, Check, ChevronRight, Droplets, Moon, Sun, Zap } from "lucide-react";
 import { SYMPTOM_OPTIONS } from "@/lib/constants";
 import type { GetHistoryFeedResult, HistoryDayGroup, HistoryEntry } from "@/lib/actions/history";
 import type { TriggerType } from "@/types/domain";
@@ -20,9 +20,9 @@ const TRIGGER_LABELS: Record<TriggerType, string> = {
 };
 
 const EYE_LABELS = {
-  left: "ojo izquierdo",
-  right: "ojo derecho",
-  both: "ambos ojos"
+  left: "Izquierdo",
+  right: "Derecho",
+  both: "Ambos"
 } as const;
 
 // Grouped display types produced by collapseEntries
@@ -83,128 +83,252 @@ function formatTime(loggedAt: string, timezone: string) {
   }).format(new Date(loggedAt));
 }
 
-function getDayLabel(dayKey: string, timezone: string) {
-  const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: timezone });
-  const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString("en-CA", { timeZone: timezone });
-
-  if (dayKey === todayKey) return "Hoy";
-  if (dayKey === yesterdayKey) return "Ayer";
-
-  const dayParts = dayKey.split("-").map((value) => Number(value));
-  if (dayParts.length !== 3 || dayParts.some((value) => Number.isNaN(value))) return dayKey;
-
-  const [year, month, day] = dayParts;
-  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
-
+function formatShortDate(dayKey: string): string {
+  const [year, month, day] = dayKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
   return new Intl.DateTimeFormat("es-CO", {
     day: "numeric",
-    month: "long",
-    year: "numeric",
+    month: "short",
     timeZone: "UTC"
-  }).format(normalizedDate);
+  }).format(date).toUpperCase().replace(".", "");
 }
 
-function renderDayEntries(group: HistoryDayGroup, timezone: string) {
-  const items = collapseEntries(group.entries);
+function getDayPillLabel(dayKey: string, timezone: string): string | null {
+  const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: timezone });
+  const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString("en-CA", { timeZone: timezone });
+  if (dayKey === todayKey) return "HOY";
+  if (dayKey === yesterdayKey) return "AYER";
+  return null;
+}
 
-  return items.map((item) => {
-    if (item.kind === "check_in") {
-      return (
-        <article key={item.id} className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.72)] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            {item.triggerType ? (
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent)]">
-                <Zap size={13} />
-                <span>Trigger: {item.triggerType === "other" && item.notes ? item.notes : TRIGGER_LABELS[item.triggerType]}</span>
-              </div>
-            ) : (
-              <span className="text-[13px] font-medium text-[var(--text-primary)]">Check-in rapido</span>
-            )}
-            <span className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-[13px] text-[var(--text-muted)]">
-            <span>Parpados {item.eyelidPain}</span>
-            <span>Sienes {item.templePain}</span>
-            <span>Masetero {item.masseterPain}</span>
-            <span>Cervical {item.cervicalPain}</span>
-            <span>Orbital {item.orbitalPain}</span>
-          </div>
-          {item.sleepHours !== null ? (
-            <div className="mt-4 flex items-center gap-2 text-[12px] text-[var(--text-muted)]">
-              <Moon size={14} />
-              {item.sleepHours}h de sueno
-            </div>
-          ) : null}
-        </article>
-      );
-    }
+function getTimeOfDay(loggedAt: string, timezone: string): { label: string; isMoon: boolean } {
+  const hour = parseInt(
+    new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: timezone }).format(new Date(loggedAt)),
+    10
+  );
+  if (hour >= 6 && hour < 12) return { label: "Mañana", isMoon: false };
+  if (hour >= 12 && hour < 19) return { label: "Tarde", isMoon: false };
+  return { label: "Noche", isMoon: true };
+}
 
-    if (item.kind === "drop") {
-      const dropLabel = `${item.name}, ${item.quantity} ${item.quantity === 1 ? "gota" : "gotas"}, ${EYE_LABELS[item.eye]}`;
+function painColor(score: number): string {
+  if (score >= 7) return "var(--pain-high)";
+  if (score >= 4) return "var(--pain-mid)";
+  return "var(--pain-low)";
+}
 
-      return (
-        <article
-          key={item.id}
-          className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)] p-4 text-[13px] text-[var(--text-muted)]"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Droplets size={14} />
-              <span>{dropLabel}</span>
-            </div>
-            <span className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</span>
-          </div>
-        </article>
-      );
-    }
+function intensityColor(intensity: 1 | 2 | 3): string {
+  if (intensity === 3) return "var(--pain-high)";
+  if (intensity === 2) return "var(--pain-mid)";
+  return "var(--accent)";
+}
 
-    if (item.kind === "trigger_group") {
-      return (
-        <article
-          key={item.id}
-          className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)] p-4 text-[13px] text-[var(--text-muted)]"
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap size={14} />
-              <span className="font-medium text-[var(--text-primary)]">Triggers</span>
-            </div>
-            <span className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</span>
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            {item.triggers.map((t, i) => (
-              <span key={i}>
-                {TRIGGER_LABELS[t.triggerType]}{" "}
-                <span className="opacity-60">{String.fromCharCode(9311 + t.intensity)}</span>
-              </span>
-            ))}
-          </div>
-        </article>
-      );
-    }
+function getDotColor(item: DisplayItem): string {
+  if (item.kind === "check_in") return "var(--accent)";
+  if (item.kind === "trigger_group") {
+    const max = Math.max(...item.triggers.map((t) => t.intensity)) as 1 | 2 | 3;
+    return intensityColor(max);
+  }
+  if (item.kind === "drop") return "var(--pain-low)";
+  return "var(--text-muted)";
+}
 
-    // symptom_group
-    return (
-      <article
-        key={item.id}
-        className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)] p-4 text-[13px] text-[var(--text-muted)]"
-      >
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity size={14} />
-            <span className="font-medium text-[var(--text-primary)]">Sintomas</span>
+const SCORE_FIELDS: { key: keyof DisplayCheckIn; label: string }[] = [
+  { key: "eyelidPain", label: "PA" },
+  { key: "templePain", label: "SI" },
+  { key: "masseterPain", label: "MA" },
+  { key: "cervicalPain", label: "CE" },
+  { key: "orbitalPain", label: "OR" }
+];
+
+function avgPainScore(item: DisplayCheckIn): number {
+  const scores = [item.eyelidPain, item.templePain, item.masseterPain, item.cervicalPain, item.orbitalPain];
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
+}
+
+function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: string }) {
+  const { label, isMoon } = getTimeOfDay(item.loggedAt, timezone);
+  const avg = avgPainScore(item);
+  const barPct = avg * 10;
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 pt-4 pb-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(212,162,76,0.12)]">
+            {isMoon ? <Moon size={15} color="var(--accent)" /> : <Sun size={15} color="var(--accent)" />}
           </div>
-          <span className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</span>
+          <div>
+            <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
+              {item.triggerType
+                ? `Trigger: ${item.triggerType === "other" && item.notes ? item.notes : TRIGGER_LABELS[item.triggerType]}`
+                : label}
+            </p>
+            <p className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          {item.symptomTypes.map((type, i) => {
-            const label = SYMPTOM_OPTIONS.find((o) => o.value === type)?.label ?? type;
-            return <span key={i}>{label}</span>;
+        <div className="flex shrink-0 gap-3">
+          {SCORE_FIELDS.map(({ key, label: fieldLabel }) => {
+            const score = item[key] as number;
+            return (
+              <div key={key} className="flex flex-col items-center gap-0.5">
+                <span className="mono text-[15px] font-medium leading-none" style={{ color: painColor(score) }}>
+                  {score}
+                </span>
+                <span className="text-[9px] font-medium tracking-[0.08em] text-[var(--text-faint)]">
+                  {fieldLabel}
+                </span>
+              </div>
+            );
           })}
         </div>
-      </article>
-    );
-  });
+      </div>
+
+      <div className="mt-3 flex items-center gap-2.5">
+        <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--surface-el)]">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${barPct}%`, background: painColor(avg) }}
+          />
+        </div>
+        <span className="mono text-[11px] text-[var(--text-muted)]">{avg.toFixed(2)}/10</span>
+      </div>
+
+      {item.sleepHours !== null ? (
+        <div className="mt-2 flex items-center gap-1.5">
+          <Moon size={11} color="var(--text-faint)" />
+          <span className="mono text-[10px] text-[var(--text-faint)]">{item.sleepHours}h sueño</span>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: string }) {
+  const single = item.triggers.length === 1 ? item.triggers[0] : null;
+  const maxIntensity = Math.max(...item.triggers.map((t) => t.intensity)) as 1 | 2 | 3;
+  const iconColor = intensityColor(maxIntensity);
+  const time = formatTime(item.loggedAt, timezone);
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      {single ? (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+              style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
+            >
+              <Zap size={15} style={{ color: iconColor }} />
+            </div>
+            <div>
+              <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
+                {single.triggerType === "other" ? (item as DisplayTriggerGroup & { notes?: string }).notes ?? TRIGGER_LABELS[single.triggerType] : TRIGGER_LABELS[single.triggerType]}
+              </p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Intensidad {single.intensity} · {time}
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={14} color="var(--text-faint)" />
+        </div>
+      ) : (
+        <>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
+              >
+                <Zap size={15} style={{ color: iconColor }} />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-[var(--text-primary)]">Triggers</p>
+                <p className="mono text-[10px] text-[var(--text-muted)]">{time}</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1 pl-[42px]">
+            {item.triggers.map((t, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <span className="text-[13px] text-[var(--text-primary)]">{TRIGGER_LABELS[t.triggerType]}</span>
+                <span
+                  className="text-[10px] font-medium uppercase tracking-[0.1em]"
+                  style={{ color: intensityColor(t.intensity) }}
+                >
+                  Int. {t.intensity}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </article>
+  );
+}
+
+function DropCard({ item, timezone }: { item: DisplayDrop; timezone: string }) {
+  const time = formatTime(item.loggedAt, timezone);
+  const eyeLabel = EYE_LABELS[item.eye].toUpperCase();
+  const quantityLabel = `${item.quantity} ${item.quantity === 1 ? "gota" : "gotas"}`;
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
+            <Droplets size={15} color="var(--text-muted)" />
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
+              {item.name} {quantityLabel}
+            </p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]">
+              ({eyeLabel}) · {time}
+            </p>
+          </div>
+        </div>
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(92,184,90,0.15)]">
+          <Check size={12} color="var(--pain-low)" strokeWidth={2.5} />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SymptomCard({ item, timezone }: { item: DisplaySymptomGroup; timezone: string }) {
+  const time = formatTime(item.loggedAt, timezone);
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      <div className="mb-2 flex items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
+          <Activity size={15} color="var(--text-muted)" />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Sintomas</p>
+          <p className="mono text-[10px] text-[var(--text-muted)]">{time}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 pl-[42px]">
+        {item.symptomTypes.map((type, i) => {
+          const label = SYMPTOM_OPTIONS.find((o) => o.value === type)?.label ?? type;
+          return (
+            <span key={i} className="text-[12px] text-[var(--text-muted)]">
+              {label}
+            </span>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function renderItem(item: DisplayItem, timezone: string) {
+  if (item.kind === "check_in") return <CheckInCard item={item} timezone={timezone} />;
+  if (item.kind === "drop") return <DropCard item={item} timezone={timezone} />;
+  if (item.kind === "trigger_group") return <TriggerCard item={item} timezone={timezone} />;
+  return <SymptomCard item={item} timezone={timezone} />;
 }
 
 export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
@@ -228,14 +352,52 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
   }
 
   return (
-    <section className="space-y-8">
-      <div className="space-y-6">
-        {historyFeed.groups.map((group) => (
-          <div key={group.dayKey}>
-            <p className="section-label">{getDayLabel(group.dayKey, historyFeed.timezone)}</p>
-            <div className="space-y-3">{renderDayEntries(group, historyFeed.timezone)}</div>
-          </div>
-        ))}
+    <section>
+      <div className="relative">
+        {/* Vertical timeline line */}
+        <div className="absolute bottom-0 left-[15px] top-2 w-px bg-[var(--border)]" />
+
+        <div className="space-y-6">
+          {historyFeed.groups.map((group) => {
+            const items = collapseEntries(group.entries);
+            const pillLabel = getDayPillLabel(group.dayKey, historyFeed.timezone);
+            const shortDate = formatShortDate(group.dayKey);
+
+            return (
+              <div key={group.dayKey}>
+                {/* Day header */}
+                <div className="relative mb-3 flex items-center gap-2 py-1">
+                  <span className="relative z-10 inline-flex h-7 items-center rounded-full border border-[var(--border)] bg-[var(--surface-el)] px-3 text-[10px] font-semibold tracking-[0.12em] text-[var(--text-primary)]">
+                    {pillLabel ?? shortDate}
+                  </span>
+                  {pillLabel ? (
+                    <span className="text-[11px] font-medium tracking-[0.1em] text-[var(--text-muted)]">
+                      {shortDate}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Entries */}
+                <div className="space-y-2.5">
+                  {items.map((item) => (
+                    <div key={item.id} className="relative flex items-start gap-3 pl-8">
+                      {/* Timeline dot */}
+                      <div
+                        className="absolute left-[11px] top-[19px] z-10 h-[9px] w-[9px] rounded-full"
+                        style={{
+                          background: getDotColor(item),
+                          boxShadow: "0 0 0 2px var(--bg)"
+                        }}
+                      />
+                      {/* Card */}
+                      <div className="min-w-0 flex-1">{renderItem(item, historyFeed.timezone)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

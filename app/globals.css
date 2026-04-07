@@ -190,6 +190,9 @@ svg {
   background: rgba(28, 24, 16, 0.94);
   border-top: 1px solid rgba(46, 39, 24, 0.96);
   backdrop-filter: blur(18px);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .bottom-nav__inner {
