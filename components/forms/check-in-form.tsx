@@ -1,6 +1,7 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -8,9 +9,8 @@ import { SleepHoursInput } from "@/components/ui/sleep-hours-input";
 import { SleepQualitySelector } from "@/components/ui/sleep-quality-selector";
 import { TextInput } from "@/components/ui/text-input";
 import { Toast } from "@/components/ui/toast";
-import { MobileSheet } from "@/components/layout/mobile-sheet";
-import { DateTimeWheelPicker } from "@/components/ui/datetime-wheel-picker";
 import { TIME_OF_DAY_OPTIONS, TRIGGER_OPTIONS } from "@/lib/constants";
+
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
 import { queueCheckIn } from "@/lib/offline/check-ins-queue";
@@ -21,6 +21,16 @@ import type {
   TriggerType,
 } from "@/types/domain";
 import { cn } from "@/lib/utils";
+
+const MobileSheet = dynamic(
+  () => import("@/components/layout/mobile-sheet").then((m) => ({ default: m.MobileSheet })),
+  { ssr: false },
+);
+
+const DateTimeWheelPicker = dynamic(
+  () => import("@/components/ui/datetime-wheel-picker").then((m) => ({ default: m.DateTimeWheelPicker })),
+  { ssr: false },
+);
 
 const defaultPainState = {
   eyelidPain: 0,
@@ -90,12 +100,12 @@ export function CheckInForm() {
     }
   }, [zeroWarning]);
 
-  const updatePain = (key: keyof typeof pain, value: number) => {
-    setPain((current) => ({
-      ...current,
-      [key]: value,
-    }));
-  };
+  const updateEyelidPain = useCallback((v: number) => setPain((p) => ({ ...p, eyelidPain: v })), []);
+  const updateTemplePain = useCallback((v: number) => setPain((p) => ({ ...p, templePain: v })), []);
+  const updateOrbitalPain = useCallback((v: number) => setPain((p) => ({ ...p, orbitalPain: v })), []);
+  const updateMasseterPain = useCallback((v: number) => setPain((p) => ({ ...p, masseterPain: v })), []);
+  const updateCervicalPain = useCallback((v: number) => setPain((p) => ({ ...p, cervicalPain: v })), []);
+  const updateStressLevel = useCallback((v: number) => setPain((p) => ({ ...p, stressLevel: v })), []);
 
   const resolvedTriggerType = (): TriggerType | null => {
     if (timeOfDay !== "trigger" || !selectedTrigger) return null;
@@ -103,10 +113,13 @@ export function CheckInForm() {
     return (option?.value ?? "other") as TriggerType;
   };
 
-  const isTriggerValid =
-    timeOfDay !== "trigger" ||
-    (selectedTrigger !== null &&
-      (selectedTrigger !== "other" || customTriggerName.trim().length > 0));
+  const isTriggerValid = useMemo(
+    () =>
+      timeOfDay !== "trigger" ||
+      (selectedTrigger !== null &&
+        (selectedTrigger !== "other" || customTriggerName.trim().length > 0)),
+    [timeOfDay, selectedTrigger, customTriggerName],
+  );
 
   const buildPayload = (): SaveCheckInInput => ({
     id: crypto.randomUUID(),
@@ -332,27 +345,27 @@ export function CheckInForm() {
             <PainSlider
               label="👁️ Parpados"
               value={pain.eyelidPain}
-              onChange={(value) => updatePain("eyelidPain", value)}
+              onChange={updateEyelidPain}
             />
             <PainSlider
               label="🧠 Sienes"
               value={pain.templePain}
-              onChange={(value) => updatePain("templePain", value)}
+              onChange={updateTemplePain}
             />
             <PainSlider
               label="🎯 Zona Orbital"
               value={pain.orbitalPain}
-              onChange={(value) => updatePain("orbitalPain", value)}
+              onChange={updateOrbitalPain}
             />
             <PainSlider
               label="🦷 Masetero"
               value={pain.masseterPain}
-              onChange={(value) => updatePain("masseterPain", value)}
+              onChange={updateMasseterPain}
             />
             <PainSlider
               label="🦴 Cuello / Cervical"
               value={pain.cervicalPain}
-              onChange={(value) => updatePain("cervicalPain", value)}
+              onChange={updateCervicalPain}
             />
           </div>
         </div>
@@ -362,7 +375,7 @@ export function CheckInForm() {
           <PainSlider
             label="🧠 Nivel de estrés"
             value={pain.stressLevel}
-            onChange={(value) => updatePain("stressLevel", value)}
+            onChange={updateStressLevel}
           />
         </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { painColor, qualityColor, painGradient, qualityGradient } from "@/lib/pain";
 
 type PainSliderProps = {
@@ -9,7 +10,7 @@ type PainSliderProps = {
   variant?: "pain" | "quality";
 };
 
-export function PainSlider({
+export const PainSlider = memo(function PainSlider({
   label,
   value,
   onChange,
@@ -46,4 +47,4 @@ export function PainSlider({
       />
     </div>
   );
-}
+});
