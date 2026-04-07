@@ -3,6 +3,21 @@ import { get, set } from "idb-keyval";
 import type { DropTypeRecord } from "@/types/domain";
 
 export const DROP_TYPES_CACHE_KEY = "neuroeye_drop_types";
+export const DROP_TYPES_ORDER_KEY = "neuroeye_drop_types_order";
+
+export function applyDropTypeOrder(items: DropTypeRecord[], order: string[]): DropTypeRecord[] {
+  if (!order.length) return items;
+  const map = new Map(items.map((item) => [item.id, item]));
+  const ordered: DropTypeRecord[] = [];
+  for (const id of order) {
+    const item = map.get(id);
+    if (item) ordered.push(item);
+  }
+  for (const item of items) {
+    if (!order.includes(item.id)) ordered.push(item);
+  }
+  return ordered;
+}
 
 export function useDropTypes() {
   const [dropTypes, setDropTypes] = useState<DropTypeRecord[]>([]);
@@ -15,12 +30,19 @@ export function useDropTypes() {
     let isMounted = true;
 
     async function fetchData() {
+      let savedOrder: string[] = [];
+      try {
+        savedOrder = (await get<string[]>(DROP_TYPES_ORDER_KEY)) ?? [];
+      } catch {
+        // ignore
+      }
+
       // 1. Try Cache
       try {
         const cached = await get<DropTypeRecord[]>(DROP_TYPES_CACHE_KEY);
         if (cached && isMounted) {
           hasCachedData.current = true;
-          setDropTypes(cached);
+          setDropTypes(applyDropTypeOrder(cached, savedOrder));
           setLoading(false);
         }
       } catch (err) {
@@ -38,7 +60,8 @@ export function useDropTypes() {
 
         if (isMounted) {
           if (result.ok) {
-            setDropTypes(result.dropTypes);
+            const ordered = applyDropTypeOrder(result.dropTypes, savedOrder);
+            setDropTypes(ordered);
             setLoading(false);
             setError(null);
             await set(DROP_TYPES_CACHE_KEY, result.dropTypes);
