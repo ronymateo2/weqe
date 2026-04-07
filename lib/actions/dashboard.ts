@@ -30,6 +30,13 @@ type TriggerStat = {
   days: number;
 };
 
+type TriggerZoneStat = {
+  triggerType: TriggerType;
+  avgEyelidPain: number;
+  avgTemplePain: number;
+  days: number;
+};
+
 type DashboardSuccess = {
   ok: true;
   timezone: string;
@@ -47,6 +54,7 @@ type DashboardSuccess = {
     points: CorrelationPoint[];
   };
   highPainTriggerStats: TriggerStat[];
+  triggerZonePainStats: TriggerZoneStat[];
 };
 
 type DashboardError = {
@@ -67,6 +75,7 @@ type DashboardError = {
     points: [];
   };
   highPainTriggerStats: [];
+  triggerZonePainStats: [];
 };
 
 export type DashboardDataResult = DashboardSuccess | DashboardError;
@@ -140,6 +149,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         points: [],
       },
       highPainTriggerStats: [],
+      triggerZonePainStats: [],
     };
   }
 
@@ -200,6 +210,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       }
     >();
 
+    const dayPainMap = new Map<string, { eyelidSum: number; templeSum: number; count: number }>();
     const highPainDaySet = new Set<string>();
     const correlationPoints: CorrelationPoint[] = [];
 
@@ -224,6 +235,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         current.orbitalPain += checkIn.orbital_pain;
         trendBucket.set(dayKey, current);
       }
+
+      const dayPain = dayPainMap.get(dayKey) ?? { eyelidSum: 0, templeSum: 0, count: 0 };
+      dayPain.eyelidSum += checkIn.eyelid_pain;
+      dayPain.templeSum += checkIn.temple_pain;
+      dayPain.count += 1;
+      dayPainMap.set(dayKey, dayPain);
 
       const meanPain =
         (checkIn.eyelid_pain + checkIn.temple_pain + checkIn.masseter_pain + checkIn.cervical_pain + checkIn.orbital_pain) / 5;
@@ -322,6 +339,32 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       .sort((a, b) => b.days - a.days)
       .slice(0, 5);
 
+    const triggerZoneMap = new Map<TriggerType, { dayKeys: Set<string>; eyelidSum: number; templeSum: number }>();
+
+    for (const trigger of triggers) {
+      const dayKey = getDayKey(trigger.logged_at, timezone);
+      const dayPain = dayPainMap.get(dayKey);
+      if (!dayPain || dayPain.count === 0) continue;
+
+      const triggerType = trigger.trigger_type as TriggerType;
+      const existing = triggerZoneMap.get(triggerType) ?? { dayKeys: new Set<string>(), eyelidSum: 0, templeSum: 0 };
+      if (!existing.dayKeys.has(dayKey)) {
+        existing.dayKeys.add(dayKey);
+        existing.eyelidSum += dayPain.eyelidSum / dayPain.count;
+        existing.templeSum += dayPain.templeSum / dayPain.count;
+      }
+      triggerZoneMap.set(triggerType, existing);
+    }
+
+    const triggerZonePainStats: TriggerZoneStat[] = Array.from(triggerZoneMap.entries())
+      .map(([triggerType, data]) => ({
+        triggerType,
+        avgEyelidPain: Number((data.eyelidSum / data.dayKeys.size).toFixed(2)),
+        avgTemplePain: Number((data.templeSum / data.dayKeys.size).toFixed(2)),
+        days: data.dayKeys.size,
+      }))
+      .sort((a, b) => b.avgEyelidPain + b.avgTemplePain - (a.avgEyelidPain + a.avgTemplePain));
+
     return {
       ok: true,
       timezone,
@@ -339,6 +382,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         points: correlationPoints,
       },
       highPainTriggerStats,
+      triggerZonePainStats,
     };
   } catch (error) {
     return {
@@ -357,6 +401,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         points: [],
       },
       highPainTriggerStats: [],
+      triggerZonePainStats: [],
     };
   }
 }

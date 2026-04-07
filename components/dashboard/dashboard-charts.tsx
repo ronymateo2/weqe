@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -13,6 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { TriggerType } from "@/types/domain";
 
 type TrendPoint = {
   dayKey: string;
@@ -29,9 +32,27 @@ type CorrelationPoint = {
   masseterPain: number;
 };
 
+type TriggerZoneStat = {
+  triggerType: TriggerType;
+  avgEyelidPain: number;
+  avgTemplePain: number;
+  days: number;
+};
+
 type DashboardChartsProps = {
   trendPoints: TrendPoint[];
   correlationPoints: CorrelationPoint[];
+};
+
+const TRIGGER_LABELS: Record<TriggerType, string> = {
+  climate: "Clima",
+  humidifier: "Humidif.",
+  stress: "Estres",
+  screens: "Pantallas",
+  tv: "TV",
+  ergonomics: "Ergonom.",
+  exercise: "Ejercicio",
+  other: "Otro",
 };
 
 const tooltipStyle = {
@@ -252,6 +273,44 @@ export function DashboardCorrelationChart({
           <ReferenceLine stroke="rgba(212,162,76,0.5)" x={6} />
           <Scatter data={correlationPoints} fill="var(--accent)" name="Sueno" />
         </ScatterChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function DashboardTriggerPainChart({ stats }: { stats: TriggerZoneStat[] }) {
+  const chartData = stats.map((item) => ({
+    label: TRIGGER_LABELS[item.triggerType],
+    parpados: item.avgEyelidPain,
+    sienes: item.avgTemplePain,
+    days: item.days,
+  }));
+
+  return (
+    <div className="h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))] p-2">
+      <ResponsiveContainer height="100%" width="100%">
+        <BarChart data={chartData} margin={{ top: 12, right: 12, left: -14, bottom: 0 }}>
+          <CartesianGrid stroke="rgba(46,39,24,0.8)" strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="label"
+            stroke="var(--text-faint)"
+            tick={{ fill: "var(--text-faint)", fontSize: 11 }}
+          />
+          <YAxis
+            domain={[0, 10]}
+            stroke="var(--text-faint)"
+            tick={{ fill: "var(--text-faint)", fontSize: 11 }}
+            tickCount={6}
+          />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={{ fill: "rgba(255,255,255,0.04)" }}
+            formatter={(value: number) => value.toFixed(1)}
+            labelStyle={{ color: "var(--text-muted)", marginBottom: 4 }}
+          />
+          <Bar dataKey="parpados" fill="var(--pain-low)" name="Parpados" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="sienes" fill="var(--pain-mid)" name="Sienes" radius={[3, 3, 0, 0]} />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

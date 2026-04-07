@@ -1,4 +1,4 @@
-import { DashboardCorrelationChart, DashboardTrendChart } from "@/components/dashboard/dashboard-charts";
+import { DashboardCorrelationChart, DashboardTrendChart, DashboardTriggerPainChart } from "@/components/dashboard/dashboard-charts";
 import { StatusBanner } from "@/components/ui/status-banner";
 import type { DashboardDataResult } from "@/lib/actions/dashboard";
 import type { TriggerType } from "@/types/domain";
@@ -38,6 +38,7 @@ export function DashboardScreen({ dashboardData }: DashboardScreenProps) {
   const hasTrendData = dashboardData.trend.daysWithData > 0;
   const hasCorrelationChart = dashboardData.correlation.sampleSize >= dashboardData.correlation.minimumRequired;
   const hasTriggerStats = dashboardData.highPainTriggerStats.length > 0;
+  const hasTriggerZoneStats = dashboardData.triggerZonePainStats.length > 0;
 
   return (
     <section className="space-y-10">
@@ -76,6 +77,22 @@ export function DashboardScreen({ dashboardData }: DashboardScreenProps) {
               ? `rho = ${dashboardData.correlation.spearman.toFixed(3)}`
               : "rho = --"}{" "}
             · n = {dashboardData.correlation.sampleSize} · minimo {dashboardData.correlation.minimumRequired}
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <p className="section-label">Triggers ↔ parpados y sienes</p>
+        <div className="rounded-[16px] bg-[rgba(28,24,16,0.72)] p-5">
+          {hasTriggerZoneStats ? (
+            <DashboardTriggerPainChart stats={dashboardData.triggerZonePainStats} />
+          ) : (
+            <div className="mb-4 h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))]" />
+          )}
+          <p className="mt-3 text-[13px] text-[var(--text-muted)]">
+            {hasTriggerZoneStats
+              ? "Dolor promedio en parpados y sienes por tipo de trigger."
+              : "Registra triggers para ver su impacto en parpados y sienes."}
           </p>
         </div>
       </section>
