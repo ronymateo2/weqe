@@ -351,3 +351,18 @@ svg {
     transform: translateX(100%);
   }
 }
+
+/* ── Mobile readability: larger text on small screens ────────────────────── */
+@media screen and (max-width: 480px) {
+  .section-label {
+    font-size: 12px;
+  }
+
+  .screen-subtitle {
+    font-size: 17px;
+  }
+
+  .screen-title {
+    font-size: 24px;
+  }
+}
