@@ -28,11 +28,11 @@ import type {
 } from "@/types/domain";
 import {
   BoneIcon,
-  BrainIcon,
   CrosshairIcon,
   EyeIcon,
-  SmileyIcon,
+  SmileyMeltingIcon,
   LightningIcon,
+  HeadCircuitIcon,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -387,7 +387,7 @@ export function CheckInForm() {
               onChange={updateEyelidPain}
             />
             <PainSlider
-              icon={<BrainIcon size={15} />}
+              icon={<HeadCircuitIcon size={15} />}
               label="Sienes"
               value={pain.templePain}
               onChange={updateTemplePain}
@@ -399,7 +399,7 @@ export function CheckInForm() {
               onChange={updateOrbitalPain}
             />
             <PainSlider
-              icon={<SmileyIcon size={15} />}
+              icon={<SmileyMeltingIcon size={15} />}
               label="Masetero"
               value={pain.masseterPain}
               onChange={updateMasseterPain}
