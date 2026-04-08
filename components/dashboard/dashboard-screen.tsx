@@ -1,4 +1,4 @@
-import { DashboardCorrelationChart, DashboardTrendChart, DashboardTriggerPainChart } from "@/components/dashboard/dashboard-charts";
+import { DashboardCorrelationChart, DashboardDropsChart, DashboardTrendChart, DashboardTriggerPainChart } from "@/components/dashboard/dashboard-charts";
 import { StatusBanner } from "@/components/ui/status-banner";
 import type { DashboardDataResult } from "@/lib/actions/dashboard";
 import type { TriggerType } from "@/types/domain";
@@ -36,6 +36,7 @@ export function DashboardScreen({ dashboardData }: DashboardScreenProps) {
   }
 
   const hasTrendData = dashboardData.trend.daysWithData > 0;
+  const hasDropsData = dashboardData.drops.dropTypes.length > 0;
   const hasCorrelationChart = dashboardData.correlation.sampleSize >= dashboardData.correlation.minimumRequired;
   const hasTriggerStats = dashboardData.highPainTriggerStats.length > 0;
   const hasTriggerZoneStats = dashboardData.triggerZonePainStats.length > 0;
@@ -59,6 +60,25 @@ export function DashboardScreen({ dashboardData }: DashboardScreenProps) {
             {hasTrendData
               ? `Datos en ${dashboardData.trend.daysWithData} dias dentro de la ventana de 30 dias.`
               : "Registra al menos 1 dia para activar la tendencia de dolor por zona."}
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <p className="section-label">Gotas por dia</p>
+        <div className="rounded-[16px] bg-[rgba(28,24,16,0.72)] p-5">
+          {hasDropsData ? (
+            <DashboardDropsChart
+              dropTypes={dashboardData.drops.dropTypes}
+              points={dashboardData.drops.points}
+            />
+          ) : (
+            <div className="mb-4 h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))]" />
+          )}
+          <p className="mt-3 text-[13px] text-[var(--text-muted)]">
+            {hasDropsData
+              ? "Gotas registradas por tipo."
+              : "Registra gotas para ver el consumo por tipo."}
           </p>
         </div>
       </section>

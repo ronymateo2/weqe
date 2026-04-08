@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -274,6 +274,229 @@ export function DashboardCorrelationChart({
           <Scatter data={correlationPoints} fill="var(--accent)" name="Sueno" />
         </ScatterChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+type DropsDayPoint = {
+  dayKey: string;
+  label: string;
+  quantities: Record<string, number>;
+};
+
+const DROP_TYPE_COLORS = [
+  "var(--accent)",
+  "var(--pain-low)",
+  "var(--pain-mid)",
+  "#c97b4b",
+  "#8b9e5c",
+  "#bf7db0",
+];
+
+type DropsWindowOption = "7d" | "30d";
+
+export function DashboardDropsChart({
+  dropTypes,
+  points,
+}: {
+  dropTypes: string[];
+  points: DropsDayPoint[];
+}) {
+  const [window, setWindow] = useState<DropsWindowOption>("7d");
+  const [activeTypes, setActiveTypes] = useState<Set<string>>(() => new Set(dropTypes));
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
+
+  function toggleType(typeName: string) {
+    setActiveTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(typeName)) {
+        next.delete(typeName);
+      } else {
+        next.add(typeName);
+      }
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setActiveTypes((prev) => (prev.size === dropTypes.length ? new Set() : new Set(dropTypes)));
+  }
+
+  const allSelected = activeTypes.size === dropTypes.length;
+  const noneSelected = activeTypes.size === 0;
+  const visibleDropTypes = dropTypes.filter((t) => activeTypes.has(t));
+  const visiblePoints = window === "7d" ? points.slice(-7) : points;
+  const chartData: Array<Record<string, string | number>> = visiblePoints.map((p) => ({ label: p.label, ...p.quantities }));
+
+  const maxTotal = chartData.reduce((max, row) => {
+    const total = visibleDropTypes.reduce((s, t) => s + (typeof row[t] === "number" ? (row[t] as number) : 0), 0);
+    return Math.max(max, total);
+  }, 0);
+  const yMax = Math.max(4, Math.ceil(maxTotal) + 1);
+
+  const filterLabel = noneSelected
+    ? "Ninguno"
+    : allSelected
+      ? "Todos"
+      : activeTypes.size === 1
+        ? Array.from(activeTypes)[0]
+        : `${activeTypes.size} tipos`;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1">
+        {(["7d", "30d"] as DropsWindowOption[]).map((opt) => (
+          <button
+            key={opt}
+            className="mono flex h-[48px] min-w-[44px] items-center justify-center rounded-[var(--radius-full)] border px-3 text-[12px] transition-colors"
+            style={
+              window === opt
+                ? { borderColor: "var(--accent)", background: "var(--accent-dim)", color: "var(--accent)" }
+                : { borderColor: "var(--border)", color: "var(--text-muted)" }
+            }
+            onClick={() => setWindow(opt)}
+          >
+            {opt}
+          </button>
+        ))}
+
+        <div className="relative ml-auto" ref={dropdownRef}>
+          <button
+            className="flex h-[48px] items-center gap-2 rounded-[var(--radius-full)] border px-3 text-[12px] transition-colors"
+            style={
+              !allSelected || noneSelected
+                ? { borderColor: "var(--accent)", background: "var(--accent-dim)", color: "var(--accent)" }
+                : { borderColor: "var(--border)", color: "var(--text-muted)" }
+            }
+            onClick={() => setDropdownOpen((v) => !v)}
+          >
+            <span>{filterLabel}</span>
+            <svg
+              fill="none"
+              height="10"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 10 10"
+              width="10"
+              style={{ transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+            >
+              <polyline points="1,3 5,7 9,3" />
+            </svg>
+          </button>
+
+          {dropdownOpen && (
+            <div
+              className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[180px] rounded-[14px] border py-1 shadow-xl"
+              style={{
+                background: "rgba(18,16,8,0.97)",
+                borderColor: "var(--border)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <button
+                className="flex h-[44px] w-full items-center gap-3 px-4 text-[12px] transition-colors"
+                style={{ color: allSelected ? "var(--accent)" : "var(--text-muted)" }}
+                onClick={toggleAll}
+              >
+                <span
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border"
+                  style={{
+                    borderColor: allSelected ? "var(--accent)" : "var(--border)",
+                    background: allSelected ? "var(--accent-dim)" : "transparent",
+                  }}
+                >
+                  {allSelected && (
+                    <svg fill="none" height="8" stroke="var(--accent)" strokeWidth="2.5" viewBox="0 0 8 8" width="8">
+                      <polyline points="1,4 3,6 7,2" />
+                    </svg>
+                  )}
+                </span>
+                Todos
+              </button>
+
+              <div className="my-1 border-t" style={{ borderColor: "var(--border)" }} />
+
+              {dropTypes.map((typeName, i) => {
+                const color = DROP_TYPE_COLORS[i % DROP_TYPE_COLORS.length];
+                const isActive = activeTypes.has(typeName);
+                return (
+                  <button
+                    key={typeName}
+                    className="flex h-[44px] w-full items-center gap-3 px-4 text-[12px] transition-colors"
+                    style={{ color: isActive ? "var(--text-primary)" : "var(--text-faint)" }}
+                    onClick={() => toggleType(typeName)}
+                  >
+                    <span
+                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors"
+                      style={{
+                        borderColor: isActive ? color : "var(--border)",
+                        background: isActive ? `${color}33` : "transparent",
+                      }}
+                    >
+                      {isActive && (
+                        <svg fill="none" height="8" stroke={color} strokeWidth="2.5" viewBox="0 0 8 8" width="8">
+                          <polyline points="1,4 3,6 7,2" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+                    <span className="truncate">{typeName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))] p-2">
+        <ResponsiveContainer height="100%" width="100%">
+          <BarChart data={chartData} margin={{ top: 12, right: 12, left: -14, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(46,39,24,0.8)" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="label"
+              stroke="var(--text-faint)"
+              tick={{ fill: "var(--text-faint)", fontSize: 11 }}
+              interval={window === "30d" ? 4 : 0}
+            />
+            <YAxis
+              domain={[0, yMax]}
+              stroke="var(--text-faint)"
+              tick={{ fill: "var(--text-faint)", fontSize: 11 }}
+              tickCount={Math.min(6, yMax + 1)}
+              allowDecimals={false}
+            />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              formatter={(value: number) => value}
+              labelStyle={{ color: "var(--text-muted)", marginBottom: 4 }}
+            />
+            {visibleDropTypes.map((typeName, i) => (
+              <Bar
+                key={typeName}
+                dataKey={typeName}
+                fill={DROP_TYPE_COLORS[dropTypes.indexOf(typeName) % DROP_TYPE_COLORS.length]}
+                name={typeName}
+                stackId="drops"
+                radius={i === visibleDropTypes.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

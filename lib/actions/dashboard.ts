@@ -20,6 +20,12 @@ type TrendPoint = {
   orbitalPain: number | null;
 };
 
+type DropsDayPoint = {
+  dayKey: string;
+  label: string;
+  quantities: Record<string, number>;
+};
+
 type CorrelationPoint = {
   sleepHours: number;
   masseterPain: number;
@@ -55,6 +61,10 @@ type DashboardSuccess = {
   };
   highPainTriggerStats: TriggerStat[];
   triggerZonePainStats: TriggerZoneStat[];
+  drops: {
+    dropTypes: string[];
+    points: DropsDayPoint[];
+  };
 };
 
 type DashboardError = {
@@ -76,6 +86,7 @@ type DashboardError = {
   };
   highPainTriggerStats: [];
   triggerZonePainStats: [];
+  drops: { dropTypes: []; points: [] };
 };
 
 export type DashboardDataResult = DashboardSuccess | DashboardError;
@@ -150,6 +161,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       },
       highPainTriggerStats: [],
       triggerZonePainStats: [],
+      drops: { dropTypes: [], points: [] },
     };
   }
 
@@ -167,7 +179,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
 
     const timezone = getSafeTimezone(user?.timezone);
 
-    const [checkInsResponse, triggersResponse] = await Promise.all([
+    const [checkInsResponse, triggersResponse, dropsResponse] = await Promise.all([
       supabase
         .from("dy_check_ins")
         .select(
@@ -182,6 +194,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
         .limit(500),
+      supabase
+        .from("dy_drops")
+        .select("logged_at, quantity, drop_type:dy_drop_types(name)")
+        .eq("user_id", session.user.id)
+        .order("logged_at", { ascending: false })
+        .limit(500),
     ]);
 
     if (checkInsResponse.error) {
@@ -192,8 +210,13 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       throw triggersResponse.error;
     }
 
+    if (dropsResponse.error) {
+      throw dropsResponse.error;
+    }
+
     const checkIns = checkInsResponse.data ?? [];
     const triggers = triggersResponse.data ?? [];
+    const drops = dropsResponse.data ?? [];
 
     const last30DayKeys = buildLastDayKeys(timezone, 30);
     const last30Set = new Set(last30DayKeys);
@@ -365,6 +388,30 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       }))
       .sort((a, b) => b.avgEyelidPain + b.avgTemplePain - (a.avgEyelidPain + a.avgTemplePain));
 
+    const dropsBucket = new Map<string, Map<string, number>>();
+
+    for (const drop of drops) {
+      const dayKey = getDayKey(drop.logged_at, timezone);
+      if (!last30Set.has(dayKey)) continue;
+
+      const dropType = drop.drop_type as unknown as { name: string } | null;
+      const typeName = dropType?.name ?? "otro";
+      const dayMap = dropsBucket.get(dayKey) ?? new Map<string, number>();
+      dayMap.set(typeName, (dayMap.get(typeName) ?? 0) + drop.quantity);
+      dropsBucket.set(dayKey, dayMap);
+    }
+
+    const allDropTypes = Array.from(
+      new Set(Array.from(dropsBucket.values()).flatMap((m) => Array.from(m.keys()))),
+    ).sort();
+
+    const dropsPoints: DropsDayPoint[] = last30DayKeys.map((dayKey) => {
+      const dayMap = dropsBucket.get(dayKey);
+      const quantities: Record<string, number> = {};
+      for (const t of allDropTypes) quantities[t] = dayMap?.get(t) ?? 0;
+      return { dayKey, label: formatShortDayLabel(dayKey), quantities };
+    });
+
     return {
       ok: true,
       timezone,
@@ -383,6 +430,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       },
       highPainTriggerStats,
       triggerZonePainStats,
+      drops: { dropTypes: allDropTypes, points: dropsPoints },
     };
   } catch (error) {
     return {
@@ -402,6 +450,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       },
       highPainTriggerStats: [],
       triggerZonePainStats: [],
+      drops: { dropTypes: [], points: [] },
     };
   }
 }
