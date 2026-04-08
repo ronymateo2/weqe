@@ -5,6 +5,7 @@ import { painColor, qualityColor, painGradient, qualityGradient } from "@/lib/pa
 
 type PainSliderProps = {
   label: string;
+  icon?: React.ReactNode;
   value: number;
   onChange: (value: number) => void;
   variant?: "pain" | "quality";
@@ -12,6 +13,7 @@ type PainSliderProps = {
 
 export const PainSlider = memo(function PainSlider({
   label,
+  icon,
   value,
   onChange,
   variant = "pain",
@@ -22,7 +24,8 @@ export const PainSlider = memo(function PainSlider({
   return (
     <div className="space-y-3">
       <div className="flex items-end justify-between gap-4">
-        <span className="text-[13px] font-medium text-[var(--text-primary)]">
+        <span className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--text-primary)]">
+          {icon}
           {label}
         </span>
         <span

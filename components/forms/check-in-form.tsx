@@ -20,6 +20,7 @@ import type {
   SleepQuality,
   TriggerType,
 } from "@/types/domain";
+import { Bone, Brain, Crosshair, Eye, Smile, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MobileSheet = dynamic(
@@ -343,27 +344,32 @@ export function CheckInForm() {
           <p className="section-label">Mapa de dolor</p>
           <div className="space-y-5">
             <PainSlider
-              label="👁️ Parpados"
+              icon={<Eye size={15} />}
+              label="Parpados"
               value={pain.eyelidPain}
               onChange={updateEyelidPain}
             />
             <PainSlider
-              label="🧠 Sienes"
+              icon={<Brain size={15} />}
+              label="Sienes"
               value={pain.templePain}
               onChange={updateTemplePain}
             />
             <PainSlider
-              label="🎯 Zona Orbital"
+              icon={<Crosshair size={15} />}
+              label="Zona Orbital"
               value={pain.orbitalPain}
               onChange={updateOrbitalPain}
             />
             <PainSlider
-              label="🦷 Masetero"
+              icon={<Smile size={15} />}
+              label="Masetero"
               value={pain.masseterPain}
               onChange={updateMasseterPain}
             />
             <PainSlider
-              label="🦴 Cuello / Cervical"
+              icon={<Bone size={15} />}
+              label="Cuello / Cervical"
               value={pain.cervicalPain}
               onChange={updateCervicalPain}
             />
@@ -373,7 +379,8 @@ export function CheckInForm() {
         <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
           <p className="section-label">Estrés</p>
           <PainSlider
-            label="🧠 Nivel de estrés"
+            icon={<Zap size={15} />}
+            label="Nivel de estrés"
             value={pain.stressLevel}
             onChange={updateStressLevel}
           />
