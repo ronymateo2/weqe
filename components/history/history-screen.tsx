@@ -1,6 +1,18 @@
-import { Pulse, Check, CaretRight, Drop, Moon, Sun, Lightning } from "@phosphor-icons/react/dist/ssr";
+import {
+  PulseIcon,
+  CheckIcon,
+  CaretRightIcon,
+  DropIcon,
+  MoonIcon,
+  SunIcon,
+  LightningIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { SYMPTOM_OPTIONS } from "@/lib/constants";
-import type { GetHistoryFeedResult, HistoryDayGroup, HistoryEntry } from "@/lib/actions/history";
+import type {
+  GetHistoryFeedResult,
+  HistoryDayGroup,
+  HistoryEntry,
+} from "@/lib/actions/history";
 import type { TriggerType } from "@/types/domain";
 import { StatusBanner } from "@/components/ui/status-banner";
 
@@ -16,21 +28,54 @@ const TRIGGER_LABELS: Record<TriggerType, string> = {
   tv: "TV",
   ergonomics: "Ergonomia",
   exercise: "Ejercicio",
-  other: "Otro"
+  other: "Otro",
 };
 
 const EYE_LABELS = {
   left: "Izquierdo",
   right: "Derecho",
-  both: "Ambos"
+  both: "Ambos",
 } as const;
 
 // Grouped display types produced by collapseEntries
-type DisplayCheckIn = { kind: "check_in"; id: string; loggedAt: string; eyelidPain: number; templePain: number; masseterPain: number; cervicalPain: number; orbitalPain: number; sleepHours: number | null; triggerType: TriggerType | null; notes: string | null };
-type DisplayDrop = { kind: "drop"; id: string; loggedAt: string; name: string; quantity: number; eye: "left" | "right" | "both" };
-type DisplayTriggerGroup = { kind: "trigger_group"; id: string; loggedAt: string; triggers: { triggerType: TriggerType; intensity: 1 | 2 | 3 }[] };
-type DisplaySymptomGroup = { kind: "symptom_group"; id: string; loggedAt: string; symptomTypes: string[] };
-type DisplayItem = DisplayCheckIn | DisplayDrop | DisplayTriggerGroup | DisplaySymptomGroup;
+type DisplayCheckIn = {
+  kind: "check_in";
+  id: string;
+  loggedAt: string;
+  eyelidPain: number;
+  templePain: number;
+  masseterPain: number;
+  cervicalPain: number;
+  orbitalPain: number;
+  sleepHours: number | null;
+  triggerType: TriggerType | null;
+  notes: string | null;
+};
+type DisplayDrop = {
+  kind: "drop";
+  id: string;
+  loggedAt: string;
+  name: string;
+  quantity: number;
+  eye: "left" | "right" | "both";
+};
+type DisplayTriggerGroup = {
+  kind: "trigger_group";
+  id: string;
+  loggedAt: string;
+  triggers: { triggerType: TriggerType; intensity: 1 | 2 | 3 }[];
+};
+type DisplaySymptomGroup = {
+  kind: "symptom_group";
+  id: string;
+  loggedAt: string;
+  symptomTypes: string[];
+};
+type DisplayItem =
+  | DisplayCheckIn
+  | DisplayDrop
+  | DisplayTriggerGroup
+  | DisplaySymptomGroup;
 
 function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
   const result: DisplayItem[] = [];
@@ -44,13 +89,18 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
     if (entry.kind === "trigger") {
       const last = result[result.length - 1];
       if (last?.kind === "trigger_group" && last.loggedAt === entry.loggedAt) {
-        last.triggers.push({ triggerType: entry.triggerType, intensity: entry.intensity });
+        last.triggers.push({
+          triggerType: entry.triggerType,
+          intensity: entry.intensity,
+        });
       } else {
         result.push({
           kind: "trigger_group",
           id: entry.id,
           loggedAt: entry.loggedAt,
-          triggers: [{ triggerType: entry.triggerType, intensity: entry.intensity }]
+          triggers: [
+            { triggerType: entry.triggerType, intensity: entry.intensity },
+          ],
         });
       }
       continue;
@@ -65,7 +115,7 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
           kind: "symptom_group",
           id: entry.id,
           loggedAt: entry.loggedAt,
-          symptomTypes: [entry.symptomType]
+          symptomTypes: [entry.symptomType],
         });
       }
     }
@@ -79,7 +129,7 @@ function formatTime(loggedAt: string, timezone: string) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: timezone
+    timeZone: timezone,
   }).format(new Date(loggedAt));
 }
 
@@ -89,22 +139,36 @@ function formatShortDate(dayKey: string): string {
   return new Intl.DateTimeFormat("es-CO", {
     day: "numeric",
     month: "short",
-    timeZone: "UTC"
-  }).format(date).toUpperCase().replace(".", "");
+    timeZone: "UTC",
+  })
+    .format(date)
+    .toUpperCase()
+    .replace(".", "");
 }
 
 function getDayPillLabel(dayKey: string, timezone: string): string | null {
-  const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: timezone });
-  const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString("en-CA", { timeZone: timezone });
+  const todayKey = new Date().toLocaleDateString("en-CA", {
+    timeZone: timezone,
+  });
+  const yesterdayKey = new Date(
+    Date.now() - 24 * 60 * 60 * 1000,
+  ).toLocaleDateString("en-CA", { timeZone: timezone });
   if (dayKey === todayKey) return "HOY";
   if (dayKey === yesterdayKey) return "AYER";
   return null;
 }
 
-function getTimeOfDay(loggedAt: string, timezone: string): { label: string; isMoon: boolean } {
+function getTimeOfDay(
+  loggedAt: string,
+  timezone: string,
+): { label: string; isMoon: boolean } {
   const hour = parseInt(
-    new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: timezone }).format(new Date(loggedAt)),
-    10
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: timezone,
+    }).format(new Date(loggedAt)),
+    10,
   );
   if (hour >= 6 && hour < 12) return { label: "Mañana", isMoon: false };
   if (hour >= 12 && hour < 19) return { label: "Tarde", isMoon: false };
@@ -138,15 +202,27 @@ const SCORE_FIELDS: { key: keyof DisplayCheckIn; label: string }[] = [
   { key: "templePain", label: "SI" },
   { key: "masseterPain", label: "MA" },
   { key: "cervicalPain", label: "CE" },
-  { key: "orbitalPain", label: "OR" }
+  { key: "orbitalPain", label: "OR" },
 ];
 
 function avgPainScore(item: DisplayCheckIn): number {
-  const scores = [item.eyelidPain, item.templePain, item.masseterPain, item.cervicalPain, item.orbitalPain];
+  const scores = [
+    item.eyelidPain,
+    item.templePain,
+    item.masseterPain,
+    item.cervicalPain,
+    item.orbitalPain,
+  ];
   return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
-function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: string }) {
+function CheckInCard({
+  item,
+  timezone,
+}: {
+  item: DisplayCheckIn;
+  timezone: string;
+}) {
   const { label, isMoon } = getTimeOfDay(item.loggedAt, timezone);
   const avg = avgPainScore(item);
   const barPct = avg * 10;
@@ -156,7 +232,11 @@ function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: strin
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(212,162,76,0.12)]">
-            {isMoon ? <Moon size={15} color="var(--accent)" /> : <Sun size={15} color="var(--accent)" />}
+            {isMoon ? (
+              <MoonIcon size={15} color="var(--accent)" />
+            ) : (
+              <SunIcon size={15} color="var(--accent)" />
+            )}
           </div>
           <div>
             <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
@@ -164,7 +244,9 @@ function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: strin
                 ? `Trigger: ${item.triggerType === "other" && item.notes ? item.notes : TRIGGER_LABELS[item.triggerType]}`
                 : label}
             </p>
-            <p className="mono text-[11px] text-[var(--text-muted)]">{formatTime(item.loggedAt, timezone)}</p>
+            <p className="mono text-[11px] text-[var(--text-muted)]">
+              {formatTime(item.loggedAt, timezone)}
+            </p>
           </div>
         </div>
         <div className="flex shrink-0 gap-3">
@@ -172,7 +254,10 @@ function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: strin
             const score = item[key] as number;
             return (
               <div key={key} className="flex flex-col items-center gap-0.5">
-                <span className="mono text-[15px] font-medium leading-none" style={{ color: painColor(score) }}>
+                <span
+                  className="mono text-[15px] font-medium leading-none"
+                  style={{ color: painColor(score) }}
+                >
                   {score}
                 </span>
                 <span className="text-[9px] font-medium tracking-[0.08em] text-[var(--text-faint)]">
@@ -191,22 +276,35 @@ function CheckInCard({ item, timezone }: { item: DisplayCheckIn; timezone: strin
             style={{ width: `${barPct}%`, background: painColor(avg) }}
           />
         </div>
-        <span className="mono text-[11px] text-[var(--text-muted)]">{avg.toFixed(2)}/10</span>
+        <span className="mono text-[11px] text-[var(--text-muted)]">
+          {avg.toFixed(2)}/10
+        </span>
       </div>
 
       {item.sleepHours !== null ? (
         <div className="mt-2 flex items-center gap-1.5">
-          <Moon size={11} color="var(--text-faint)" />
-          <span className="mono text-[10px] text-[var(--text-faint)]">{item.sleepHours}h sueño</span>
+          <MoonIcon size={11} color="var(--text-faint)" />
+          <span className="mono text-[10px] text-[var(--text-faint)]">
+            {item.sleepHours}h sueño
+          </span>
         </div>
       ) : null}
     </article>
   );
 }
 
-function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: string }) {
+function TriggerCard({
+  item,
+  timezone,
+}: {
+  item: DisplayTriggerGroup;
+  timezone: string;
+}) {
   const single = item.triggers.length === 1 ? item.triggers[0] : null;
-  const maxIntensity = Math.max(...item.triggers.map((t) => t.intensity)) as 1 | 2 | 3;
+  const maxIntensity = Math.max(...item.triggers.map((t) => t.intensity)) as
+    | 1
+    | 2
+    | 3;
   const iconColor = intensityColor(maxIntensity);
   const time = formatTime(item.loggedAt, timezone);
 
@@ -217,20 +315,25 @@ function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: 
           <div className="flex items-center gap-2.5">
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-              style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
+              style={{
+                background: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
+              }}
             >
-              <Lightning size={15} style={{ color: iconColor }} />
+              <LightningIcon size={15} style={{ color: iconColor }} />
             </div>
             <div>
               <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
-                {single.triggerType === "other" ? (item as DisplayTriggerGroup & { notes?: string }).notes ?? TRIGGER_LABELS[single.triggerType] : TRIGGER_LABELS[single.triggerType]}
+                {single.triggerType === "other"
+                  ? ((item as DisplayTriggerGroup & { notes?: string }).notes ??
+                    TRIGGER_LABELS[single.triggerType])
+                  : TRIGGER_LABELS[single.triggerType]}
               </p>
               <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]">
                 Intensidad {single.intensity} · {time}
               </p>
             </div>
           </div>
-          <CaretRight size={14} color="var(--text-faint)" />
+          <CaretRightIcon size={14} color="var(--text-faint)" />
         </div>
       ) : (
         <>
@@ -238,20 +341,28 @@ function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: 
             <div className="flex items-center gap-2.5">
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
+                style={{
+                  background: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
+                }}
               >
-                <Lightning size={15} style={{ color: iconColor }} />
+                <LightningIcon size={15} style={{ color: iconColor }} />
               </div>
               <div>
-                <p className="text-[13px] font-semibold text-[var(--text-primary)]">Triggers</p>
-                <p className="mono text-[10px] text-[var(--text-muted)]">{time}</p>
+                <p className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  Triggers
+                </p>
+                <p className="mono text-[10px] text-[var(--text-muted)]">
+                  {time}
+                </p>
               </div>
             </div>
           </div>
           <div className="space-y-1 pl-[42px]">
             {item.triggers.map((t, i) => (
               <div key={i} className="flex items-center justify-between">
-                <span className="text-[13px] text-[var(--text-primary)]">{TRIGGER_LABELS[t.triggerType]}</span>
+                <span className="text-[13px] text-[var(--text-primary)]">
+                  {TRIGGER_LABELS[t.triggerType]}
+                </span>
                 <span
                   className="text-[10px] font-medium uppercase tracking-[0.1em]"
                   style={{ color: intensityColor(t.intensity) }}
@@ -277,7 +388,7 @@ function DropCard({ item, timezone }: { item: DisplayDrop; timezone: string }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
-            <Drop size={15} color="var(--text-muted)" />
+            <DropIcon size={15} color="var(--text-muted)" />
           </div>
           <div>
             <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
@@ -289,30 +400,39 @@ function DropCard({ item, timezone }: { item: DisplayDrop; timezone: string }) {
           </div>
         </div>
         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(92,184,90,0.15)]">
-          <Check size={12} color="var(--pain-low)" strokeWidth={2.5} />
+          <CheckIcon size={12} color="var(--pain-low)" strokeWidth={2.5} />
         </div>
       </div>
     </article>
   );
 }
 
-function SymptomCard({ item, timezone }: { item: DisplaySymptomGroup; timezone: string }) {
+function SymptomCard({
+  item,
+  timezone,
+}: {
+  item: DisplaySymptomGroup;
+  timezone: string;
+}) {
   const time = formatTime(item.loggedAt, timezone);
 
   return (
     <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
       <div className="mb-2 flex items-center gap-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
-          <Pulse size={15} color="var(--text-muted)" />
+          <PulseIcon size={15} color="var(--text-muted)" />
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Sintomas</p>
+          <p className="text-[13px] font-semibold text-[var(--text-primary)]">
+            Sintomas
+          </p>
           <p className="mono text-[10px] text-[var(--text-muted)]">{time}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1 pl-[42px]">
         {item.symptomTypes.map((type, i) => {
-          const label = SYMPTOM_OPTIONS.find((o) => o.value === type)?.label ?? type;
+          const label =
+            SYMPTOM_OPTIONS.find((o) => o.value === type)?.label ?? type;
           return (
             <span key={i} className="text-[12px] text-[var(--text-muted)]">
               {label}
@@ -325,9 +445,11 @@ function SymptomCard({ item, timezone }: { item: DisplaySymptomGroup; timezone: 
 }
 
 function renderItem(item: DisplayItem, timezone: string) {
-  if (item.kind === "check_in") return <CheckInCard item={item} timezone={timezone} />;
+  if (item.kind === "check_in")
+    return <CheckInCard item={item} timezone={timezone} />;
   if (item.kind === "drop") return <DropCard item={item} timezone={timezone} />;
-  if (item.kind === "trigger_group") return <TriggerCard item={item} timezone={timezone} />;
+  if (item.kind === "trigger_group")
+    return <TriggerCard item={item} timezone={timezone} />;
   return <SymptomCard item={item} timezone={timezone} />;
 }
 
@@ -360,7 +482,10 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
         <div className="space-y-6">
           {historyFeed.groups.map((group) => {
             const items = collapseEntries(group.entries);
-            const pillLabel = getDayPillLabel(group.dayKey, historyFeed.timezone);
+            const pillLabel = getDayPillLabel(
+              group.dayKey,
+              historyFeed.timezone,
+            );
             const shortDate = formatShortDate(group.dayKey);
 
             return (
@@ -380,17 +505,22 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
                 {/* Entries */}
                 <div className="space-y-2.5">
                   {items.map((item) => (
-                    <div key={item.id} className="relative flex items-start gap-3 pl-8">
+                    <div
+                      key={item.id}
+                      className="relative flex items-start gap-3 pl-8"
+                    >
                       {/* Timeline dot */}
                       <div
                         className="absolute left-[11px] top-[19px] z-10 h-[9px] w-[9px] rounded-full"
                         style={{
                           background: getDotColor(item),
-                          boxShadow: "0 0 0 2px var(--bg)"
+                          boxShadow: "0 0 0 2px var(--bg)",
                         }}
                       />
                       {/* Card */}
-                      <div className="min-w-0 flex-1">{renderItem(item, historyFeed.timezone)}</div>
+                      <div className="min-w-0 flex-1">
+                        {renderItem(item, historyFeed.timezone)}
+                      </div>
                     </div>
                   ))}
                 </div>
