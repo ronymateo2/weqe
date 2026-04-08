@@ -509,6 +509,9 @@ export function DashboardTriggerPainChart({ stats }: { stats: TriggerZoneStat[] 
     days: item.days,
   }));
 
+  const maxVal = chartData.reduce((max, row) => Math.max(max, row.parpados, row.sienes), 0);
+  const yMax = Math.max(1, Math.ceil(maxVal) + 1);
+
   return (
     <div className="h-[220px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))] p-2">
       <ResponsiveContainer height="100%" width="100%">
@@ -520,10 +523,10 @@ export function DashboardTriggerPainChart({ stats }: { stats: TriggerZoneStat[] 
             tick={{ fill: "var(--text-faint)", fontSize: 11 }}
           />
           <YAxis
-            domain={[0, 10]}
+            domain={[0, yMax]}
             stroke="var(--text-faint)"
             tick={{ fill: "var(--text-faint)", fontSize: 11 }}
-            tickCount={6}
+            tickCount={Math.min(6, yMax + 1)}
           />
           <Tooltip
             contentStyle={tooltipStyle}
