@@ -13,3 +13,31 @@ export function getSafeTimezone(timezone: string | null | undefined): string {
 export function getDayKey(isoDate: string, timezone: string): string {
   return new Date(isoDate).toLocaleDateString("en-CA", { timeZone: timezone });
 }
+
+export function dayKeyToUtcStart(dayKey: string, timezone: string): string {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const utcNoon = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(utcNoon);
+  const get = (type: string) =>
+    parseInt(parts.find((p) => p.type === type)!.value);
+  const localNoonMs = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour"),
+    get("minute"),
+    get("second"),
+  );
+  const offsetMs = utcNoon.getTime() - localNoonMs;
+  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0) + offsetMs).toISOString();
+}

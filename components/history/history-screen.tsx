@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   PulseIcon,
   CheckIcon,
@@ -6,13 +9,14 @@ import {
   MoonIcon,
   SunIcon,
   LightningIcon,
-} from "@phosphor-icons/react/dist/ssr";
+} from "@phosphor-icons/react";
 import { SYMPTOM_OPTIONS } from "@/lib/constants";
 import type {
   GetHistoryFeedResult,
   HistoryDayGroup,
   HistoryEntry,
 } from "@/lib/actions/history";
+import { loadMoreHistoryAction } from "@/lib/actions/history";
 import type { TriggerType } from "@/types/domain";
 import { StatusBanner } from "@/components/ui/status-banner";
 
@@ -454,6 +458,35 @@ function renderItem(item: DisplayItem, timezone: string) {
 }
 
 export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
+  const [groups, setGroups] = useState<HistoryDayGroup[]>(
+    historyFeed.ok ? historyFeed.groups : [],
+  );
+  const [hasMore, setHasMore] = useState<boolean>(
+    historyFeed.ok ? historyFeed.hasMore : false,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  async function handleLoadMore() {
+    if (isLoading || groups.length === 0) return;
+    const beforeDayKey = groups[groups.length - 1].dayKey;
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const result = await loadMoreHistoryAction(beforeDayKey);
+      if (!result.ok) {
+        setLoadError(result.message);
+        return;
+      }
+      setGroups((prev) => [...prev, ...result.groups]);
+      setHasMore(result.hasMore);
+    } catch {
+      setLoadError("No se pudo cargar más registros. Intenta de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   if (!historyFeed.ok) {
     return (
       <section className="space-y-8">
@@ -462,7 +495,7 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
     );
   }
 
-  if (historyFeed.groups.length === 0) {
+  if (groups.length === 0) {
     return (
       <section className="space-y-8">
         <StatusBanner
@@ -473,6 +506,8 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
     );
   }
 
+  const timezone = historyFeed.timezone;
+
   return (
     <section>
       <div className="relative">
@@ -480,12 +515,9 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
         <div className="absolute bottom-0 left-[15px] top-2 w-px bg-[var(--border)]" />
 
         <div className="space-y-6">
-          {historyFeed.groups.map((group) => {
+          {groups.map((group) => {
             const items = collapseEntries(group.entries);
-            const pillLabel = getDayPillLabel(
-              group.dayKey,
-              historyFeed.timezone,
-            );
+            const pillLabel = getDayPillLabel(group.dayKey, timezone);
             const shortDate = formatShortDate(group.dayKey);
 
             return (
@@ -519,7 +551,7 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
                       />
                       {/* Card */}
                       <div className="min-w-0 flex-1">
-                        {renderItem(item, historyFeed.timezone)}
+                        {renderItem(item, timezone)}
                       </div>
                     </div>
                   ))}
@@ -528,6 +560,24 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
             );
           })}
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-3 pb-4">
+        {loadError && <StatusBanner message={loadError} tone="error" />}
+        {hasMore && (
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            className="mono text-[11px] tracking-[0.12em] text-[var(--text-muted)] disabled:opacity-50"
+          >
+            {isLoading ? "CARGANDO..." : "CARGAR MÁS"}
+          </button>
+        )}
+        {!hasMore && (
+          <p className="mono text-[10px] tracking-[0.12em] text-[var(--text-faint)]">
+            INICIO DEL HISTORIAL
+          </p>
+        )}
       </div>
     </section>
   );
