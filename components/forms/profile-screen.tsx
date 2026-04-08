@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Trash, DotsSixVertical, Plus } from "@phosphor-icons/react";
 import {
   DndContext,
   PointerSensor,
@@ -9,14 +10,14 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-  type DragEndEvent
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove
+  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import { TextInput } from "@/components/ui/text-input";
 import {
   saveMedicationAction,
   deleteMedicationAction,
-  reorderMedicationsAction
+  reorderMedicationsAction,
 } from "@/lib/actions/medications";
 import type { ActionState, MedicationRecord } from "@/types/domain";
 
@@ -43,38 +44,12 @@ type FormState = {
   notes: string;
 };
 
-const EMPTY_FORM: FormState = { name: "", dosage: "", frequency: "", notes: "" };
-
-// ─── Drag handle icon ────────────────────────────────────────────────────────
-
-function DragHandle() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
-      <rect x="4" y="3" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="3" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="4" y="7" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="7" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="4" y="11" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="11" width="3" height="3" rx="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-// ─── Trash icon ──────────────────────────────────────────────────────────────
-
-function TrashIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M2.5 4h11M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4m2 0-.75 9a1 1 0 0 1-1 .9H5.25a1 1 0 0 1-1-.9L3.5 4"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+const EMPTY_FORM: FormState = {
+  name: "",
+  dosage: "",
+  frequency: "",
+  notes: "",
+};
 
 // ─── Sortable medication row ─────────────────────────────────────────────────
 
@@ -93,17 +68,24 @@ function SortableMedRow({
   confirmingDelete,
   onDeleteRequest,
   onDeleteCancel,
-  onDeleteConfirm
+  onDeleteConfirm,
 }: MedRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: med.id
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: med.id,
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : undefined,
-    position: isDragging ? ("relative" as const) : undefined
+    position: isDragging ? ("relative" as const) : undefined,
   };
 
   const detail = [med.dosage, med.frequency].filter(Boolean).join(" · ");
@@ -114,14 +96,18 @@ function SortableMedRow({
       style={style}
       className={[
         "border-b border-[var(--border)] px-4 last:border-b-0",
-        isDragging ? "bg-[var(--surface-el)] opacity-90 shadow-[0_4px_20px_rgba(0,0,0,0.4)]" : "bg-transparent"
+        isDragging
+          ? "bg-[var(--surface-el)] opacity-90 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+          : "bg-transparent",
       ]
         .filter(Boolean)
         .join(" ")}
     >
       {confirmingDelete ? (
         <div className="flex min-h-12 items-center gap-3 py-2">
-          <span className="flex-1 text-[13px] text-[var(--text-muted)]">¿Eliminar este medicamento?</span>
+          <span className="flex-1 text-[13px] text-[var(--text-muted)]">
+            ¿Eliminar este medicamento?
+          </span>
           <button
             type="button"
             onClick={onDeleteConfirm}
@@ -140,12 +126,18 @@ function SortableMedRow({
       ) : (
         <div className="flex min-h-12 items-start gap-2 py-3">
           <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            <span className="text-[15px] text-[var(--text-primary)] leading-tight">{med.name}</span>
+            <span className="text-[15px] text-[var(--text-primary)] leading-tight">
+              {med.name}
+            </span>
             {detail ? (
-              <span className="mono text-[11px] text-[var(--text-muted)] leading-tight">{detail}</span>
+              <span className="mono text-[11px] text-[var(--text-muted)] leading-tight">
+                {detail}
+              </span>
             ) : null}
             {med.notes ? (
-              <span className="text-[12px] text-[var(--text-faint)] leading-tight mt-0.5">{med.notes}</span>
+              <span className="text-[12px] text-[var(--text-faint)] leading-tight mt-0.5">
+                {med.notes}
+              </span>
             ) : null}
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -155,7 +147,7 @@ function SortableMedRow({
               aria-label={`Eliminar ${med.name}`}
               className="flex min-h-12 w-10 items-center justify-center text-[var(--text-faint)] hover:text-[var(--error)] transition-colors"
             >
-              <TrashIcon />
+              <Trash size={16} />
             </button>
             {!isOnly && (
               <button
@@ -165,7 +157,7 @@ function SortableMedRow({
                 aria-label={`Reordenar ${med.name}`}
                 className="flex min-h-12 w-10 cursor-grab items-center justify-center text-[var(--text-faint)] active:cursor-grabbing"
               >
-                <DragHandle />
+                <DotsSixVertical size={16} />
               </button>
             )}
           </div>
@@ -177,20 +169,30 @@ function SortableMedRow({
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-export function ProfileScreen({ user, initialMedications, initialErrorMessage }: ProfileScreenProps) {
+export function ProfileScreen({
+  user,
+  initialMedications,
+  initialErrorMessage,
+}: ProfileScreenProps) {
   const [medications, setMedications] = useState(initialMedications);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [state, setState] = useState<ActionState>(
-    initialErrorMessage ? { status: "error", message: initialErrorMessage } : { status: "idle" }
+    initialErrorMessage
+      ? { status: "error", message: initialErrorMessage }
+      : { status: "idle" },
   );
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const persistOrder = (items: MedicationRecord[]) => {
@@ -224,10 +226,13 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
         name: form.name,
         dosage: form.dosage || undefined,
         frequency: form.frequency || undefined,
-        notes: form.notes || undefined
+        notes: form.notes || undefined,
       });
 
-      setState({ status: result.ok ? "success" : "error", message: result.message });
+      setState({
+        status: result.ok ? "success" : "error",
+        message: result.message,
+      });
 
       if (!result.ok || !result.medication) return;
 
@@ -240,7 +245,10 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
   const handleDelete = (id: string) => {
     startTransition(async () => {
       const result = await deleteMedicationAction(id);
-      setState({ status: result.ok ? "success" : "error", message: result.message });
+      setState({
+        status: result.ok ? "success" : "error",
+        message: result.message,
+      });
       if (result.ok) {
         setMedications((prev) => prev.filter((m) => m.id !== id));
         setDeletingId(null);
@@ -252,7 +260,10 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
     <>
       <div className="space-y-8">
         {state.status !== "idle" && state.message && !sheetOpen ? (
-          <StatusBanner message={state.message} tone={state.status === "success" ? "success" : "error"} />
+          <StatusBanner
+            message={state.message}
+            tone={state.status === "success" ? "success" : "error"}
+          />
         ) : null}
 
         {/* ── Información ── */}
@@ -264,7 +275,9 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
                 <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-faint)]">
                   Nombre
                 </span>
-                <span className="text-[15px] text-[var(--text-primary)]">{user.name}</span>
+                <span className="text-[15px] text-[var(--text-primary)]">
+                  {user.name}
+                </span>
               </div>
             ) : null}
             {user.email ? (
@@ -272,7 +285,9 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
                 <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-faint)]">
                   Email
                 </span>
-                <span className="mono truncate text-[13px] text-[var(--text-muted)]">{user.email}</span>
+                <span className="mono truncate text-[13px] text-[var(--text-muted)]">
+                  {user.email}
+                </span>
               </div>
             ) : null}
           </div>
@@ -288,9 +303,7 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
               aria-label="Agregar medicamento"
               className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-el)] text-[var(--accent)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-dim)]"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <Plus size={12} weight="bold" />
             </button>
           </div>
 
@@ -300,9 +313,7 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
               onClick={openSheet}
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[var(--border)] text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <Plus size={14} weight="bold" />
               Agregar primer medicamento
             </button>
           ) : (
@@ -312,7 +323,11 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
                   Mantén presionado para reordenar.
                 </p>
               )}
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
                 <SortableContext
                   items={medications.map((m) => m.id)}
                   strategy={verticalListSortingStrategy}
@@ -362,7 +377,9 @@ export function ProfileScreen({ user, initialMedications, initialErrorMessage }:
           <TextInput
             placeholder="Frecuencia (ej. 2 veces al día)"
             value={form.frequency}
-            onChange={(e) => setForm((f) => ({ ...f, frequency: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, frequency: e.target.value }))
+            }
           />
           <TextInput
             placeholder="Notas (opcional)"
