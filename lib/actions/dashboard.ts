@@ -179,18 +179,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
 
     const timezone = getSafeTimezone(user?.timezone);
 
-    const [checkInsResponse, triggersResponse, dropsResponse] = await Promise.all([
+    const [checkInsResponse, dropsResponse] = await Promise.all([
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours",
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type",
         )
-        .eq("user_id", session.user.id)
-        .order("logged_at", { ascending: false })
-        .limit(500),
-      supabase
-        .from("dy_triggers")
-        .select("id, logged_at, trigger_type")
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
         .limit(500),
@@ -206,16 +200,11 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       throw checkInsResponse.error;
     }
 
-    if (triggersResponse.error) {
-      throw triggersResponse.error;
-    }
-
     if (dropsResponse.error) {
       throw dropsResponse.error;
     }
 
     const checkIns = checkInsResponse.data ?? [];
-    const triggers = triggersResponse.data ?? [];
     const drops = dropsResponse.data ?? [];
 
     const last30DayKeys = buildLastDayKeys(timezone, 30);
@@ -233,7 +222,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       }
     >();
 
-    const dayPainMap = new Map<string, { eyelidSum: number; templeSum: number; count: number }>();
     const highPainDaySet = new Set<string>();
     const correlationPoints: CorrelationPoint[] = [];
 
@@ -258,12 +246,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         current.orbitalPain += checkIn.orbital_pain;
         trendBucket.set(dayKey, current);
       }
-
-      const dayPain = dayPainMap.get(dayKey) ?? { eyelidSum: 0, templeSum: 0, count: 0 };
-      dayPain.eyelidSum += checkIn.eyelid_pain;
-      dayPain.templeSum += checkIn.temple_pain;
-      dayPain.count += 1;
-      dayPainMap.set(dayKey, dayPain);
 
       const meanPain =
         (checkIn.eyelid_pain + checkIn.temple_pain + checkIn.masseter_pain + checkIn.cervical_pain + checkIn.orbital_pain) / 5;
@@ -339,17 +321,25 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     );
 
     const triggerDaysByType = new Map<TriggerType, Set<string>>();
+    const triggerZoneMap = new Map<TriggerType, { count: number; eyelidSum: number; templeSum: number; dayKeys: Set<string> }>();
 
-    for (const trigger of triggers) {
-      const dayKey = getDayKey(trigger.logged_at, timezone);
-      if (!highPainDaySet.has(dayKey)) {
-        continue;
+    for (const checkIn of checkIns) {
+      if (!checkIn.trigger_type) continue;
+      const triggerType = checkIn.trigger_type as TriggerType;
+      const dayKey = getDayKey(checkIn.logged_at, timezone);
+
+      if (highPainDaySet.has(dayKey)) {
+        const daySet = triggerDaysByType.get(triggerType) ?? new Set<string>();
+        daySet.add(dayKey);
+        triggerDaysByType.set(triggerType, daySet);
       }
 
-      const triggerType = trigger.trigger_type as TriggerType;
-      const daySet = triggerDaysByType.get(triggerType) ?? new Set<string>();
-      daySet.add(dayKey);
-      triggerDaysByType.set(triggerType, daySet);
+      const existing = triggerZoneMap.get(triggerType) ?? { count: 0, eyelidSum: 0, templeSum: 0, dayKeys: new Set<string>() };
+      existing.count += 1;
+      existing.eyelidSum += checkIn.eyelid_pain;
+      existing.templeSum += checkIn.temple_pain;
+      existing.dayKeys.add(dayKey);
+      triggerZoneMap.set(triggerType, existing);
     }
 
     const highPainTriggerStats: TriggerStat[] = Array.from(
@@ -362,28 +352,11 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       .sort((a, b) => b.days - a.days)
       .slice(0, 5);
 
-    const triggerZoneMap = new Map<TriggerType, { dayKeys: Set<string>; eyelidSum: number; templeSum: number }>();
-
-    for (const trigger of triggers) {
-      const dayKey = getDayKey(trigger.logged_at, timezone);
-      const dayPain = dayPainMap.get(dayKey);
-      if (!dayPain || dayPain.count === 0) continue;
-
-      const triggerType = trigger.trigger_type as TriggerType;
-      const existing = triggerZoneMap.get(triggerType) ?? { dayKeys: new Set<string>(), eyelidSum: 0, templeSum: 0 };
-      if (!existing.dayKeys.has(dayKey)) {
-        existing.dayKeys.add(dayKey);
-        existing.eyelidSum += dayPain.eyelidSum / dayPain.count;
-        existing.templeSum += dayPain.templeSum / dayPain.count;
-      }
-      triggerZoneMap.set(triggerType, existing);
-    }
-
     const triggerZonePainStats: TriggerZoneStat[] = Array.from(triggerZoneMap.entries())
       .map(([triggerType, data]) => ({
         triggerType,
-        avgEyelidPain: Number((data.eyelidSum / data.dayKeys.size).toFixed(2)),
-        avgTemplePain: Number((data.templeSum / data.dayKeys.size).toFixed(2)),
+        avgEyelidPain: Number((data.eyelidSum / data.count).toFixed(2)),
+        avgTemplePain: Number((data.templeSum / data.count).toFixed(2)),
         days: data.dayKeys.size,
       }))
       .sort((a, b) => b.avgEyelidPain + b.avgTemplePain - (a.avgEyelidPain + a.avgTemplePain));
