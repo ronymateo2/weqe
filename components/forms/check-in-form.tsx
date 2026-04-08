@@ -1,6 +1,12 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
@@ -20,16 +26,29 @@ import type {
   SleepQuality,
   TriggerType,
 } from "@/types/domain";
-import { Bone, Brain, Crosshair, Eye, Smiley, Lightning } from "@phosphor-icons/react";
+import {
+  BoneIcon,
+  BrainIcon,
+  CrosshairIcon,
+  EyeIcon,
+  SmileyIcon,
+  LightningIcon,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const MobileSheet = dynamic(
-  () => import("@/components/layout/mobile-sheet").then((m) => ({ default: m.MobileSheet })),
+  () =>
+    import("@/components/layout/mobile-sheet").then((m) => ({
+      default: m.MobileSheet,
+    })),
   { ssr: false },
 );
 
 const DateTimeWheelPicker = dynamic(
-  () => import("@/components/ui/datetime-wheel-picker").then((m) => ({ default: m.DateTimeWheelPicker })),
+  () =>
+    import("@/components/ui/datetime-wheel-picker").then((m) => ({
+      default: m.DateTimeWheelPicker,
+    })),
   { ssr: false },
 );
 
@@ -101,12 +120,30 @@ export function CheckInForm() {
     }
   }, [zeroWarning]);
 
-  const updateEyelidPain = useCallback((v: number) => setPain((p) => ({ ...p, eyelidPain: v })), []);
-  const updateTemplePain = useCallback((v: number) => setPain((p) => ({ ...p, templePain: v })), []);
-  const updateOrbitalPain = useCallback((v: number) => setPain((p) => ({ ...p, orbitalPain: v })), []);
-  const updateMasseterPain = useCallback((v: number) => setPain((p) => ({ ...p, masseterPain: v })), []);
-  const updateCervicalPain = useCallback((v: number) => setPain((p) => ({ ...p, cervicalPain: v })), []);
-  const updateStressLevel = useCallback((v: number) => setPain((p) => ({ ...p, stressLevel: v })), []);
+  const updateEyelidPain = useCallback(
+    (v: number) => setPain((p) => ({ ...p, eyelidPain: v })),
+    [],
+  );
+  const updateTemplePain = useCallback(
+    (v: number) => setPain((p) => ({ ...p, templePain: v })),
+    [],
+  );
+  const updateOrbitalPain = useCallback(
+    (v: number) => setPain((p) => ({ ...p, orbitalPain: v })),
+    [],
+  );
+  const updateMasseterPain = useCallback(
+    (v: number) => setPain((p) => ({ ...p, masseterPain: v })),
+    [],
+  );
+  const updateCervicalPain = useCallback(
+    (v: number) => setPain((p) => ({ ...p, cervicalPain: v })),
+    [],
+  );
+  const updateStressLevel = useCallback(
+    (v: number) => setPain((p) => ({ ...p, stressLevel: v })),
+    [],
+  );
 
   const resolvedTriggerType = (): TriggerType | null => {
     if (timeOfDay !== "trigger" || !selectedTrigger) return null;
@@ -344,31 +381,31 @@ export function CheckInForm() {
           <p className="section-label">Mapa de dolor</p>
           <div className="space-y-5">
             <PainSlider
-              icon={<Eye size={15} />}
+              icon={<EyeIcon size={15} />}
               label="Parpados"
               value={pain.eyelidPain}
               onChange={updateEyelidPain}
             />
             <PainSlider
-              icon={<Brain size={15} />}
+              icon={<BrainIcon size={15} />}
               label="Sienes"
               value={pain.templePain}
               onChange={updateTemplePain}
             />
             <PainSlider
-              icon={<Crosshair size={15} />}
+              icon={<CrosshairIcon size={15} />}
               label="Zona Orbital"
               value={pain.orbitalPain}
               onChange={updateOrbitalPain}
             />
             <PainSlider
-              icon={<Smiley size={15} />}
+              icon={<SmileyIcon size={15} />}
               label="Masetero"
               value={pain.masseterPain}
               onChange={updateMasseterPain}
             />
             <PainSlider
-              icon={<Bone size={15} />}
+              icon={<BoneIcon size={15} />}
               label="Cuello / Cervical"
               value={pain.cervicalPain}
               onChange={updateCervicalPain}
@@ -379,7 +416,7 @@ export function CheckInForm() {
         <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
           <p className="section-label">Estrés</p>
           <PainSlider
-            icon={<Lightning size={15} />}
+            icon={<LightningIcon size={15} />}
             label="Nivel de estrés"
             value={pain.stressLevel}
             onChange={updateStressLevel}
@@ -402,7 +439,10 @@ export function CheckInForm() {
         <div className="mx-auto w-full max-w-[480px] space-y-2">
           {!isOnline ? (
             <div className="flex items-center justify-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: "var(--text-muted)" }} />
+              <span
+                className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                style={{ background: "var(--text-muted)" }}
+              />
               <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
                 Sin conexión — se guardará al reconectar
               </p>
