@@ -129,7 +129,7 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
 }
 
 function formatTime(loggedAt: string, timezone: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("es-CO", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -167,7 +167,7 @@ function getTimeOfDay(
   timezone: string,
 ): { label: string; isMoon: boolean } {
   const hour = parseInt(
-    new Intl.DateTimeFormat("en-GB", {
+    new Intl.DateTimeFormat("es-CO", {
       hour: "2-digit",
       hour12: false,
       timeZone: timezone,
