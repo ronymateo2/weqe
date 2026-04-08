@@ -6,7 +6,7 @@ function SkeletonHeader() {
       </div>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="skeleton h-12 flex-1" style={{ borderRadius: "var(--radius-full)" }} />
-        <div className="skeleton h-8 w-16" style={{ borderRadius: "var(--radius-sm)" }} />
+        <div className="skeleton h-9 w-20" style={{ borderRadius: "var(--radius-sm)" }} />
       </div>
       <div className="skeleton mb-2 h-6 w-32" />
       <div className="skeleton mt-2 h-3 w-full" />

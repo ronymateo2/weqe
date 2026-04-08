@@ -9,10 +9,10 @@ function CheckInCardSkeleton() {
         <div className="skeleton h-3 w-20" />
         <div className="skeleton h-3 w-16" />
         <div className="skeleton h-3 w-24" />
-        <div className="skeleton h-3 w-18" />
+        <div className="skeleton h-3 w-16" />
       </div>
-      <div className="mt-4 flex items-center gap-2">
-        <div className="skeleton h-3 w-20" />
+      <div className="mt-4">
+        <div className="skeleton h-5 w-full" style={{ borderRadius: "var(--radius-sm)" }} />
       </div>
     </div>
   );

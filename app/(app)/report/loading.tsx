@@ -15,7 +15,7 @@ export default function ReportLoading() {
         <div className="skeleton mt-2 h-3 w-3/5" />
       </header>
 
-      <section className="space-y-8 px-5 pt-4 pb-8">
+      <section className="space-y-8">
         {/* Summary card */}
         <div>
           <div className="skeleton mb-3 h-3 w-36" />
@@ -23,7 +23,7 @@ export default function ReportLoading() {
             className="space-y-6 border border-[var(--border)] p-5"
             style={{
               borderRadius: "var(--radius-lg)",
-              background: "rgba(28,24,16,0.72)"
+              background: "rgba(28,24,16,0.72)",
             }}
           >
             {/* checkInsCount + dateRange */}
@@ -54,7 +54,7 @@ export default function ReportLoading() {
         </div>
 
         {/* PDF button */}
-        <div className="skeleton h-12 w-full" style={{ borderRadius: "var(--radius-md)" }} />
+        <div className="skeleton h-12 w-full" style={{ borderRadius: "var(--radius-full)" }} />
 
         {/* Trend chart */}
         <div>
@@ -63,7 +63,7 @@ export default function ReportLoading() {
             className="border border-[var(--border)] p-5"
             style={{
               borderRadius: "var(--radius-lg)",
-              background: "rgba(28,24,16,0.72)"
+              background: "rgba(28,24,16,0.72)",
             }}
           >
             <div className="skeleton h-[200px]" style={{ borderRadius: "var(--radius-md)" }} />
@@ -77,7 +77,7 @@ export default function ReportLoading() {
             className="border border-[var(--border)] p-5"
             style={{
               borderRadius: "var(--radius-lg)",
-              background: "rgba(28,24,16,0.72)"
+              background: "rgba(28,24,16,0.72)",
             }}
           >
             <div className="skeleton h-[180px]" style={{ borderRadius: "var(--radius-md)" }} />

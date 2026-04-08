@@ -1,11 +1,14 @@
 function SliderSkeleton({ labelWidth }: { labelWidth: number }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="skeleton h-3" style={{ width: `${labelWidth}px` }} />
-        <div className="skeleton h-3 w-4" />
+        <div className="flex items-center gap-2">
+          <div className="skeleton h-4 w-4" style={{ borderRadius: "var(--radius-full)" }} />
+          <div className="skeleton h-3" style={{ width: `${labelWidth}px` }} />
+        </div>
+        <div className="skeleton h-5 w-6" />
       </div>
-      <div className="skeleton h-3 w-full" style={{ borderRadius: "var(--radius-full)" }} />
+      <div className="skeleton h-11 w-full" style={{ borderRadius: "var(--radius-full)" }} />
     </div>
   );
 }
@@ -27,30 +30,51 @@ export default function RegisterLoading() {
         <div className="skeleton mt-2 h-3 w-3/4" />
       </header>
 
-      {/* Segmented control (morning / afternoon / night) */}
+      {/* Segmented control (Mañana / Tarde / Trigger) */}
       <div
         className="skeleton mb-6 h-11 w-full"
         style={{ borderRadius: "var(--radius-md)" }}
       />
 
-      {/* Pain sliders */}
-      <div className="space-y-8">
-        <SliderSkeleton labelWidth={68} />
-        <SliderSkeleton labelWidth={52} />
-        <SliderSkeleton labelWidth={80} />
-        <SliderSkeleton labelWidth={60} />
+      <div className="space-y-4">
+        {/* Card: Mapa de dolor — 5 sliders */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+          <div className="skeleton mb-4 h-3 w-24" />
+          <div className="space-y-5">
+            <SliderSkeleton labelWidth={56} />
+            <SliderSkeleton labelWidth={44} />
+            <SliderSkeleton labelWidth={72} />
+            <SliderSkeleton labelWidth={60} />
+            <SliderSkeleton labelWidth={88} />
+          </div>
+        </div>
 
-        {/* Sleep hours input */}
-        <div className="space-y-3">
-          <div className="skeleton h-3 w-28" />
+        {/* Card: Estrés — 1 slider */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+          <div className="skeleton mb-4 h-3 w-16" />
+          <SliderSkeleton labelWidth={80} />
+        </div>
+
+        {/* Card: Sueño */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
+          <div className="skeleton mb-4 h-3 w-16" />
           <div className="skeleton h-11 w-full" style={{ borderRadius: "var(--radius-md)" }} />
+          <div className="mt-3 flex gap-2">
+            {[52, 60, 48].map((w, i) => (
+              <div
+                key={i}
+                className="skeleton h-9"
+                style={{ width: `${w}px`, borderRadius: "var(--radius-full)" }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Submit button */}
       <div
         className="skeleton mt-8 h-12 w-full"
-        style={{ borderRadius: "var(--radius-md)" }}
+        style={{ borderRadius: "var(--radius-full)" }}
       />
     </section>
   );
