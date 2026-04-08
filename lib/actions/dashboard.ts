@@ -167,23 +167,17 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
 
   try {
     const supabase = getSupabaseAdmin();
-    const { data: user, error: userError } = await supabase
-      .from("dy_users")
-      .select("timezone")
-      .eq("id", session.user.id)
-      .maybeSingle();
 
-    if (userError) {
-      throw userError;
-    }
-
-    const timezone = getSafeTimezone(user?.timezone);
-
-    const [checkInsResponse, dropsResponse] = await Promise.all([
+    const [userResponse, checkInsResponse, dropsResponse] = await Promise.all([
+      supabase
+        .from("dy_users")
+        .select("timezone")
+        .eq("id", session.user.id)
+        .maybeSingle(),
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type",
+          "logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type",
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
@@ -196,6 +190,10 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         .limit(500),
     ]);
 
+    if (userResponse.error) {
+      throw userResponse.error;
+    }
+
     if (checkInsResponse.error) {
       throw checkInsResponse.error;
     }
@@ -204,6 +202,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       throw dropsResponse.error;
     }
 
+    const timezone = getSafeTimezone(userResponse.data?.timezone);
     const checkIns = checkInsResponse.data ?? [];
     const drops = dropsResponse.data ?? [];
 
@@ -224,6 +223,8 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
 
     const highPainDaySet = new Set<string>();
     const correlationPoints: CorrelationPoint[] = [];
+    const triggerDaysByType = new Map<TriggerType, Set<string>>();
+    const triggerZoneMap = new Map<TriggerType, { count: number; eyelidSum: number; templeSum: number; dayKeys: Set<string> }>();
 
     for (const checkIn of checkIns) {
       const dayKey = getDayKey(checkIn.logged_at, timezone);
@@ -237,7 +238,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           cervicalPain: 0,
           orbitalPain: 0,
         };
-
         current.count += 1;
         current.eyelidPain += checkIn.eyelid_pain;
         current.templePain += checkIn.temple_pain;
@@ -259,6 +259,28 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
           masseterPain: checkIn.masseter_pain,
         });
       }
+
+      if (checkIn.trigger_type) {
+        const triggerType = checkIn.trigger_type as TriggerType;
+        const existing = triggerZoneMap.get(triggerType) ?? { count: 0, eyelidSum: 0, templeSum: 0, dayKeys: new Set<string>() };
+        existing.count += 1;
+        existing.eyelidSum += checkIn.eyelid_pain;
+        existing.templeSum += checkIn.temple_pain;
+        existing.dayKeys.add(dayKey);
+        triggerZoneMap.set(triggerType, existing);
+        // highPainDaySet is populated earlier in this same loop — we check it after the full pass
+      }
+    }
+
+    // Second pass only for highPainTriggerStats (needs highPainDaySet complete from first pass)
+    for (const checkIn of checkIns) {
+      if (!checkIn.trigger_type) continue;
+      const triggerType = checkIn.trigger_type as TriggerType;
+      const dayKey = getDayKey(checkIn.logged_at, timezone);
+      if (!highPainDaySet.has(dayKey)) continue;
+      const daySet = triggerDaysByType.get(triggerType) ?? new Set<string>();
+      daySet.add(dayKey);
+      triggerDaysByType.set(triggerType, daySet);
     }
 
     const trendPoints: TrendPoint[] = last30DayKeys.map((dayKey) => {
@@ -319,28 +341,6 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       spearman,
       correlationPoints.length,
     );
-
-    const triggerDaysByType = new Map<TriggerType, Set<string>>();
-    const triggerZoneMap = new Map<TriggerType, { count: number; eyelidSum: number; templeSum: number; dayKeys: Set<string> }>();
-
-    for (const checkIn of checkIns) {
-      if (!checkIn.trigger_type) continue;
-      const triggerType = checkIn.trigger_type as TriggerType;
-      const dayKey = getDayKey(checkIn.logged_at, timezone);
-
-      if (highPainDaySet.has(dayKey)) {
-        const daySet = triggerDaysByType.get(triggerType) ?? new Set<string>();
-        daySet.add(dayKey);
-        triggerDaysByType.set(triggerType, daySet);
-      }
-
-      const existing = triggerZoneMap.get(triggerType) ?? { count: 0, eyelidSum: 0, templeSum: 0, dayKeys: new Set<string>() };
-      existing.count += 1;
-      existing.eyelidSum += checkIn.eyelid_pain;
-      existing.templeSum += checkIn.temple_pain;
-      existing.dayKeys.add(dayKey);
-      triggerZoneMap.set(triggerType, existing);
-    }
 
     const highPainTriggerStats: TriggerStat[] = Array.from(
       triggerDaysByType.entries(),

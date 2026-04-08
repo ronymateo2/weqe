@@ -219,7 +219,7 @@ export function DashboardTrendChart({
               dataKey="cervicalPain"
               dot={false}
               name="Cervical"
-              stroke="#8b6fbf"
+              stroke="#d0c040"
               strokeWidth={1.5}
             />
             <Line
@@ -227,7 +227,7 @@ export function DashboardTrendChart({
               dataKey="orbitalPain"
               dot={false}
               name="Orbital"
-              stroke="#4f9ecf"
+              stroke="#f08050"
               strokeWidth={1.5}
             />
           </LineChart>
@@ -289,8 +289,8 @@ const DROP_TYPE_COLORS = [
   "var(--pain-low)",
   "var(--pain-mid)",
   "#c97b4b",
-  "#8b9e5c",
-  "#bf7db0",
+  "#c8d450",
+  "#d06050",
 ];
 
 type DropsWindowOption = "7d" | "30d";
