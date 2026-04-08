@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartLine, ClipboardPlus, FileText, History } from "lucide-react";
+import { ChartLine, ClipboardText, FileText, ClockCounterClockwise } from "@phosphor-icons/react";
 import { APP_TABS } from "@/lib/constants";
 
 const icons = {
-  "/register": ClipboardPlus,
-  "/history": History,
+  "/register": ClipboardText,
+  "/history": ClockCounterClockwise,
   "/dashboard": ChartLine,
   "/report": FileText
 } as const;
@@ -29,7 +29,7 @@ export function BottomNav() {
               style={{ color: isActive ? "var(--accent-bright)" : "var(--text-muted)" }}
               href={tab.href}
             >
-              <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
+              <Icon size={22} weight={isActive ? "bold" : "regular"} />
               <span>{tab.label}</span>
             </Link>
           );

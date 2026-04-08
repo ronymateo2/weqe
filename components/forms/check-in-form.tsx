@@ -20,7 +20,7 @@ import type {
   SleepQuality,
   TriggerType,
 } from "@/types/domain";
-import { Bone, Brain, Crosshair, Eye, Smile, Zap } from "lucide-react";
+import { Bone, Brain, Crosshair, Eye, Smiley, Lightning } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const MobileSheet = dynamic(
@@ -362,7 +362,7 @@ export function CheckInForm() {
               onChange={updateOrbitalPain}
             />
             <PainSlider
-              icon={<Smile size={15} />}
+              icon={<Smiley size={15} />}
               label="Masetero"
               value={pain.masseterPain}
               onChange={updateMasseterPain}
@@ -379,7 +379,7 @@ export function CheckInForm() {
         <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
           <p className="section-label">Estrés</p>
           <PainSlider
-            icon={<Zap size={15} />}
+            icon={<Lightning size={15} />}
             label="Nivel de estrés"
             value={pain.stressLevel}
             onChange={updateStressLevel}

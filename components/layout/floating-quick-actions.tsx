@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Activity, Droplets, Plus } from "lucide-react";
+import { Pulse, Drop, Plus } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
@@ -41,7 +41,7 @@ export function FloatingQuickActions() {
                 variant="subtle"
                 onClick={() => setSheet("drop")}
               >
-                <Droplets size={18} />
+                <Drop size={18} />
                 Gota
               </Button>
               <Button
@@ -49,7 +49,7 @@ export function FloatingQuickActions() {
                 variant="subtle"
                 onClick={() => setSheet("symptom")}
               >
-                <Activity size={18} />
+                <Pulse size={18} />
                 Sintomas
               </Button>
             </>

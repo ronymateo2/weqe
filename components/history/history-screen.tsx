@@ -1,4 +1,4 @@
-import { Activity, Check, ChevronRight, Droplets, Moon, Sun, Zap } from "lucide-react";
+import { Pulse, Check, CaretRight, Drop, Moon, Sun, Lightning } from "@phosphor-icons/react/dist/ssr";
 import { SYMPTOM_OPTIONS } from "@/lib/constants";
 import type { GetHistoryFeedResult, HistoryDayGroup, HistoryEntry } from "@/lib/actions/history";
 import type { TriggerType } from "@/types/domain";
@@ -219,7 +219,7 @@ function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: 
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
               style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
             >
-              <Zap size={15} style={{ color: iconColor }} />
+              <Lightning size={15} style={{ color: iconColor }} />
             </div>
             <div>
               <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
@@ -230,7 +230,7 @@ function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: 
               </p>
             </div>
           </div>
-          <ChevronRight size={14} color="var(--text-faint)" />
+          <CaretRight size={14} color="var(--text-faint)" />
         </div>
       ) : (
         <>
@@ -240,7 +240,7 @@ function TriggerCard({ item, timezone }: { item: DisplayTriggerGroup; timezone: 
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                 style={{ background: `color-mix(in srgb, ${iconColor} 12%, transparent)` }}
               >
-                <Zap size={15} style={{ color: iconColor }} />
+                <Lightning size={15} style={{ color: iconColor }} />
               </div>
               <div>
                 <p className="text-[13px] font-semibold text-[var(--text-primary)]">Triggers</p>
@@ -277,7 +277,7 @@ function DropCard({ item, timezone }: { item: DisplayDrop; timezone: string }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
-            <Droplets size={15} color="var(--text-muted)" />
+            <Drop size={15} color="var(--text-muted)" />
           </div>
           <div>
             <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
@@ -303,7 +303,7 @@ function SymptomCard({ item, timezone }: { item: DisplaySymptomGroup; timezone: 
     <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
       <div className="mb-2 flex items-center gap-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
-          <Activity size={15} color="var(--text-muted)" />
+          <Pulse size={15} color="var(--text-muted)" />
         </div>
         <div>
           <p className="text-[13px] font-semibold text-[var(--text-primary)]">Sintomas</p>
