@@ -197,7 +197,7 @@ svg {
 
 .bottom-nav__inner {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   width: min(100%, 480px);
   min-height: var(--tabbar-height);
   margin: 0 auto;

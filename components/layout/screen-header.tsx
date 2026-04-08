@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type ScreenHeaderProps = {
   title: string;
   description: string;
@@ -41,7 +43,7 @@ export function ScreenHeader({ title, description, action, user }: ScreenHeaderP
       </div>
       {shouldShowUserChip ? (
         <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex min-h-12 flex-1 items-center gap-3 rounded-[var(--radius-full)] border border-[var(--info-border)] bg-[var(--info-bg)] px-3 py-2">
+          <Link href="/profile" className="flex min-h-12 flex-1 items-center gap-3 rounded-[var(--radius-full)] border border-[var(--info-border)] bg-[var(--info-bg)] px-3 py-2">
             {user?.image ? (
               <img
                 alt={`Foto de ${user.name ?? "usuario"}`}
@@ -58,7 +60,7 @@ export function ScreenHeader({ title, description, action, user }: ScreenHeaderP
               <p className="m-0 text-[10px] font-semibold tracking-[0.12em] text-[var(--text-faint)] uppercase">Sesion</p>
               <p className="m-0 truncate text-[13px] font-medium text-[var(--accent)]">{user?.name ?? "Usuario"}</p>
             </div>
-          </div>
+          </Link>
           {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       ) : null}

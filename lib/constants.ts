@@ -2,7 +2,8 @@ export const APP_TABS = [
   { href: "/register", label: "Registrar" },
   { href: "/history", label: "Historial" },
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/report", label: "Reporte" }
+  { href: "/report", label: "Reporte" },
+  { href: "/profile", label: "Perfil" }
 ] as const;
 
 export const DROP_EYES = ["left", "right", "both"] as const;

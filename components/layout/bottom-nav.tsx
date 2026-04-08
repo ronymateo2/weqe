@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartLine, ClipboardText, FileText, ClockCounterClockwise } from "@phosphor-icons/react";
+import { ChartLine, ClipboardText, FileText, ClockCounterClockwise, UserCircle } from "@phosphor-icons/react";
 import { APP_TABS } from "@/lib/constants";
 
 const icons = {
   "/register": ClipboardText,
   "/history": ClockCounterClockwise,
   "/dashboard": ChartLine,
-  "/report": FileText
+  "/report": FileText,
+  "/profile": UserCircle
 } as const;
 
 export function BottomNav() {

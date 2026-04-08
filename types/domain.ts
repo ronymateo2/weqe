@@ -69,6 +69,23 @@ export type SymptomRecord = {
   notes: string | null;
 };
 
+export type MedicationRecord = {
+  id: string;
+  name: string;
+  dosage: string | null;
+  frequency: string | null;
+  notes: string | null;
+  sort_order: number | null;
+};
+
+export type SaveMedicationInput = {
+  id?: string;
+  name: string;
+  dosage?: string;
+  frequency?: string;
+  notes?: string;
+};
+
 export type ActionState =
   | { status: "idle" }
   | { status: "success"; message: string }
