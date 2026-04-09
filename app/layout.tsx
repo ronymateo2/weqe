@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   title: "NeuroEye Log",
@@ -27,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={GeistMono.variable}>{children}</body>
+      <body className={`${inter.variable} ${GeistMono.variable}`} style={{ fontFamily: "var(--font-inter), sans-serif" }}>{children}</body>
     </html>
   );
 }
