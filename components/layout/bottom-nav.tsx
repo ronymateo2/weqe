@@ -4,19 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartLineIcon,
-  ClipboardTextIcon,
+  ClipboardIcon,
   FileTextIcon,
   ClockCounterClockwiseIcon,
-  UserCircleIcon,
+  UserIcon,
 } from "@phosphor-icons/react";
 import { APP_TABS } from "@/lib/constants";
 
 const icons = {
-  "/register": ClipboardTextIcon,
+  "/register": ClipboardIcon,
   "/history": ClockCounterClockwiseIcon,
   "/dashboard": ChartLineIcon,
   "/report": FileTextIcon,
-  "/profile": UserCircleIcon,
+  "/profile": UserIcon,
 } as const;
 
 export function BottomNav() {
