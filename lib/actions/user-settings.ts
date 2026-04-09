@@ -6,11 +6,17 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getSafeTimezone, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
 
 export async function getUserTimezoneAction(): Promise<
-  { ok: true; timezone: string } | { ok: false; message: string; timezone: string }
+  | { ok: true; timezone: string }
+  | { ok: false; message: string; timezone: string }
 > {
   const session = await auth();
+  console.log(session);
   if (!session?.user?.id) {
-    return { ok: false, message: "Sesión requerida.", timezone: DEFAULT_TIMEZONE };
+    return {
+      ok: false,
+      message: "Sesión requerida.",
+      timezone: DEFAULT_TIMEZONE,
+    };
   }
 
   try {
@@ -25,13 +31,14 @@ export async function getUserTimezoneAction(): Promise<
 
     return { ok: true, timezone: getSafeTimezone(data?.timezone) };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error al obtener zona horaria.";
+    const msg =
+      err instanceof Error ? err.message : "Error al obtener zona horaria.";
     return { ok: false, message: msg, timezone: DEFAULT_TIMEZONE };
   }
 }
 
 export async function updateTimezoneAction(
-  timezone: string
+  timezone: string,
 ): Promise<{ ok: boolean; message: string }> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -59,7 +66,8 @@ export async function updateTimezoneAction(
 
     return { ok: true, message: "Zona horaria actualizada." };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error al actualizar zona horaria.";
+    const msg =
+      err instanceof Error ? err.message : "Error al actualizar zona horaria.";
     return { ok: false, message: msg };
   }
 }

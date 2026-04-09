@@ -87,18 +87,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
 
   try {
     const supabase = getSupabaseAdmin();
-
-    const { data: user, error: userError } = await supabase
-      .from("dy_users")
-      .select("timezone")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    if (userError) {
-      throw userError;
-    }
-
-    const timezone = getSafeTimezone(user?.timezone);
+    const timezone = getSafeTimezone(session.user.timezone);
 
     const twoDaysAgoIso = new Date(
       Date.now() - 2 * 24 * 60 * 60 * 1000,
@@ -106,65 +95,61 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
     const twoDaysAgoDayKey = getDayKey(twoDaysAgoIso, timezone);
     const utcWindowStart = dayKeyToUtcStart(twoDaysAgoDayKey, timezone);
 
-    const [checkInsResponse, dropsResponse, triggersResponse, symptomsResponse] =
-      await Promise.all([
-        supabase
-          .from("dy_check_ins")
-          .select(
-            "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
+    const [
+      checkInsResponse,
+      dropsResponse,
+      triggersResponse,
+      symptomsResponse,
+      olderCheck,
+    ] = await Promise.all([
+      supabase
+        .from("dy_check_ins")
+        .select(
+          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
+        )
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
+        .from("dy_drops")
+        .select(
+          `
+          id,
+          logged_at,
+          quantity,
+          eye,
+          drop_type:dy_drop_types (
+            name
           )
-          .eq("user_id", session.user.id)
-          .gte("logged_at", utcWindowStart)
-          .order("logged_at", { ascending: false })
-          .limit(150),
-        supabase
-          .from("dy_drops")
-          .select(
-            `
-            id,
-            logged_at,
-            quantity,
-            eye,
-            drop_type:dy_drop_types (
-              name
-            )
-          `,
-          )
-          .eq("user_id", session.user.id)
-          .gte("logged_at", utcWindowStart)
-          .order("logged_at", { ascending: false })
-          .limit(150),
-        supabase
-          .from("dy_triggers")
-          .select("id, logged_at, trigger_type, intensity")
-          .eq("user_id", session.user.id)
-          .gte("logged_at", utcWindowStart)
-          .order("logged_at", { ascending: false })
-          .limit(150),
-        supabase
-          .from("dy_symptoms")
-          .select("id, logged_at, symptom_type")
-          .eq("user_id", session.user.id)
-          .gte("logged_at", utcWindowStart)
-          .order("logged_at", { ascending: false })
-          .limit(150),
-      ]);
+        `,
+        )
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
+        .from("dy_triggers")
+        .select("id, logged_at, trigger_type, intensity")
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
+        .from("dy_symptoms")
+        .select("id, logged_at, symptom_type")
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
+        .from("dy_check_ins")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcWindowStart)
+        .limit(1),
+    ]);
 
-    if (checkInsResponse.error) {
-      throw checkInsResponse.error;
-    }
-
-    if (dropsResponse.error) {
-      throw dropsResponse.error;
-    }
-
-    if (triggersResponse.error) {
-      throw triggersResponse.error;
-    }
-
-    if (symptomsResponse.error) {
-      throw symptomsResponse.error;
-    }
+    if (checkInsResponse.error) throw checkInsResponse.error;
+    if (dropsResponse.error) throw dropsResponse.error;
+    if (triggersResponse.error) throw triggersResponse.error;
+    if (symptomsResponse.error) throw symptomsResponse.error;
 
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
       (checkIn) => ({
@@ -243,14 +228,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       }),
     );
 
-    const { data: olderCheck } = await supabase
-      .from("dy_check_ins")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .lt("logged_at", utcWindowStart)
-      .limit(1);
-
-    const hasMore = (olderCheck?.length ?? 0) > 0;
+    const hasMore = (olderCheck.data?.length ?? 0) > 0;
 
     return {
       ok: true,
@@ -290,16 +268,7 @@ export async function loadMoreHistoryAction(
 
   try {
     const supabase = getSupabaseAdmin();
-
-    const { data: user, error: userError } = await supabase
-      .from("dy_users")
-      .select("timezone")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    if (userError) throw userError;
-
-    const timezone = getSafeTimezone(user?.timezone);
+    const timezone = getSafeTimezone(session.user.timezone);
     const utcBefore = dayKeyToUtcStart(beforeDayKey, timezone);
     const rowLimit = limitDays * 30 + 30;
 

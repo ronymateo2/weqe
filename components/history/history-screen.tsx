@@ -128,13 +128,40 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
   return result;
 }
 
+const timeFormatterCache = new Map<string, Intl.DateTimeFormat>();
+const hourFormatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function getTimeFormatter(timezone: string): Intl.DateTimeFormat {
+  if (!timeFormatterCache.has(timezone)) {
+    timeFormatterCache.set(
+      timezone,
+      new Intl.DateTimeFormat("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      }),
+    );
+  }
+  return timeFormatterCache.get(timezone)!;
+}
+
+function getHourFormatter(timezone: string): Intl.DateTimeFormat {
+  if (!hourFormatterCache.has(timezone)) {
+    hourFormatterCache.set(
+      timezone,
+      new Intl.DateTimeFormat("es-CO", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      }),
+    );
+  }
+  return hourFormatterCache.get(timezone)!;
+}
+
 function formatTime(loggedAt: string, timezone: string) {
-  return new Intl.DateTimeFormat("es-CO", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: timezone,
-  }).format(new Date(loggedAt));
+  return getTimeFormatter(timezone).format(new Date(loggedAt));
 }
 
 function formatShortDate(dayKey: string): string {
@@ -167,11 +194,7 @@ function getTimeOfDay(
   timezone: string,
 ): { label: string; isMoon: boolean } {
   const hour = parseInt(
-    new Intl.DateTimeFormat("es-CO", {
-      hour: "2-digit",
-      hour12: false,
-      timeZone: timezone,
-    }).format(new Date(loggedAt)),
+    getHourFormatter(timezone).format(new Date(loggedAt)),
     10,
   );
   if (hour >= 6 && hour < 12) return { label: "Mañana", isMoon: false };

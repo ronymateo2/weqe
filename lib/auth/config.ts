@@ -32,6 +32,9 @@ export const authConfig = {
     async session({ session, user }) {
       if (session.user && user?.id) {
         session.user.id = user.id;
+        if ((user as { timezone?: string }).timezone) {
+          session.user.timezone = (user as { timezone?: string }).timezone;
+        }
       }
 
       return session;

@@ -14,13 +14,15 @@ function mapUser(row: {
   email: string;
   emailVerified: Date | null;
   image: string | null;
-}): AdapterUser {
+  timezone?: string | null;
+}): AdapterUser & { timezone?: string } {
   return {
     id: row.id,
     name: row.name,
     email: row.email as AdapterUser["email"],
     emailVerified: row.emailVerified,
     image: row.image,
+    ...(row.timezone ? { timezone: row.timezone } : {}),
   };
 }
 
@@ -237,7 +239,8 @@ export function DyPostgresAdapter(client: Pool): Adapter {
             u.name,
             u.email,
             u."emailVerified",
-            u.image
+            u.image,
+            u.timezone
           from dy_sessions s
           join dy_users u on u.id = s."userId"
           where s."sessionToken" = $1
