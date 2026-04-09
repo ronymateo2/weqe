@@ -29,7 +29,7 @@ import type {
 import {
   BoneIcon,
   HandEyeIcon,
-  EyeClosedIcon,
+  EyeIcon,
   SmileyMeltingIcon,
   LightningIcon,
   HeadCircuitIcon,
@@ -381,7 +381,7 @@ export function CheckInForm() {
           <p className="section-label">Mapa de dolor</p>
           <div className="space-y-5">
             <PainSlider
-              icon={<EyeClosedIcon size={15} />}
+              icon={<EyeIcon size={15} />}
               label="Parpados"
               value={pain.eyelidPain}
               onChange={updateEyelidPain}

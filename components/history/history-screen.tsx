@@ -9,7 +9,7 @@ import {
   MoonIcon,
   SunIcon,
   LightningIcon,
-  EyeClosedIcon,
+  EyeIcon,
   HeadCircuitIcon,
   HandEyeIcon,
   SmileyMeltingIcon,
@@ -230,7 +230,7 @@ function getDotColor(item: DisplayItem): string {
 }
 
 const SCORE_FIELDS: { key: keyof DisplayCheckIn; icon: React.ReactNode }[] = [
-  { key: "eyelidPain", icon: <EyeClosedIcon size={15} /> },
+  { key: "eyelidPain", icon: <EyeIcon size={15} /> },
   { key: "templePain", icon: <HeadCircuitIcon size={15} /> },
   { key: "orbitalPain", icon: <HandEyeIcon size={15} /> },
   { key: "masseterPain", icon: <SmileyMeltingIcon size={15} /> },
@@ -290,7 +290,7 @@ function CheckInCard({
         {[
           {
             label: "Párpado",
-            icon: <EyeClosedIcon size={13} />,
+            icon: <EyeIcon size={13} />,
             value: item.eyelidPain,
           },
           {
