@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
+import { Toast } from "@/components/ui/toast";
 import {
   saveMedicationAction,
   deleteMedicationAction,
@@ -195,6 +196,7 @@ export function ProfileScreen({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+
   // ── Timezone state ──
   const [timezone, setTimezone] = useState(initialTimezone);
   const [tzSheetOpen, setTzSheetOpen] = useState(false);
@@ -302,9 +304,10 @@ export function ProfileScreen({
     <>
       <div className="space-y-8">
         {state.status !== "idle" && state.message && !sheetOpen ? (
-          <StatusBanner
-            message={state.message}
+          <Toast
             tone={state.status === "success" ? "success" : "error"}
+            message={state.message}
+            onDismiss={() => setState({ status: "idle" })}
           />
         ) : null}
 
