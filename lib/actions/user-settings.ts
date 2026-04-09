@@ -10,7 +10,6 @@ export async function getUserTimezoneAction(): Promise<
   | { ok: false; message: string; timezone: string }
 > {
   const session = await auth();
-  console.log(session);
   if (!session?.user?.id) {
     return {
       ok: false,
