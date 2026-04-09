@@ -279,7 +279,7 @@ function CheckInCard({
                 >
                   {score}
                 </span>
-                <span style={{ color: "var(--text-muted)" }}>{icon}</span>
+                <span style={{ color: "var(--text-primary)" }}>{icon}</span>
               </div>
             );
           })}
@@ -292,7 +292,7 @@ function CheckInCard({
           { label: "Sien", icon: <HeadCircuitIcon size={13} />, value: item.templePain },
         ].map(({ label, icon, value }) => (
           <div key={label} className="flex items-center gap-2">
-            <span className="flex w-[13px] shrink-0 items-center justify-center" style={{ color: "var(--text-muted)" }}>{icon}</span>
+            <span className="flex w-[13px] shrink-0 items-center justify-center" style={{ color: "var(--text-primary)" }}>{icon}</span>
             <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--surface-el)]">
               <div
                 className="h-full rounded-full"
