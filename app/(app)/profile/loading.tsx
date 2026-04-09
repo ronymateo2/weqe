@@ -1,6 +1,6 @@
 export default function ProfileLoading() {
   return (
-    <section>
+    <section style={{ minHeight: "100svh" }}>
       {/* ScreenHeader skeleton */}
       <header className="mb-8">
         <div className="mb-3">
@@ -26,6 +26,21 @@ export default function ProfileLoading() {
             <div className="flex min-h-12 items-center gap-3 px-4">
               <div className="skeleton h-3 w-14" />
               <div className="skeleton h-3 w-48" />
+            </div>
+          </div>
+        </section>
+
+        {/* Configuración */}
+        <section className="space-y-3">
+          <div className="skeleton h-3 w-24" />
+          <div className="overflow-hidden rounded-[16px] border border-[var(--border)]">
+            <div className="flex min-h-[72px] items-center gap-3 px-4">
+              <div className="skeleton h-8 w-8 rounded-[8px]" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <div className="skeleton h-2.5 w-20" />
+                <div className="skeleton h-3 w-40" />
+              </div>
+              <div className="skeleton h-9 w-9 rounded-[10px]" />
             </div>
           </div>
         </section>
