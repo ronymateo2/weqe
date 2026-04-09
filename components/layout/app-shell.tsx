@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { FloatingQuickActions } from "@/components/layout/floating-quick-actions";
 import { useOfflineSync } from "@/lib/hooks/use-offline-sync";
+import { usePullToRefresh } from "@/lib/hooks/use-pull-to-refresh";
 
 function NetworkBanner() {
   const { pendingCount, isSyncing } = useOfflineSync();
@@ -47,6 +48,67 @@ function NetworkBanner() {
   );
 }
 
+function PullToRefreshIndicator() {
+  const { pullDistance, refreshing, threshold } = usePullToRefresh();
+
+  if (!refreshing && pullDistance === 0) return null;
+
+  const progress = Math.min(pullDistance / threshold, 1);
+  const rotation = progress * 180;
+  const opacity = 0.3 + progress * 0.7;
+
+  return (
+    <div
+      className="fixed left-0 right-0 z-[60] flex items-center justify-center"
+      style={{
+        top: 0,
+        height: 48,
+        background: "var(--surface)",
+        borderBottom: "1px solid var(--border)",
+        pointerEvents: "none",
+      }}
+    >
+      {refreshing ? (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          style={{ animation: "ptr-spin 0.8s linear infinite" }}
+        >
+          <circle cx="10" cy="10" r="8" stroke="var(--border)" strokeWidth="2" />
+          <path
+            d="M10 2a8 8 0 0 1 8 8"
+            stroke="var(--accent)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            opacity,
+            transition: "none",
+          }}
+        >
+          <path
+            d="M10 3v11M10 14l-4-4M10 14l4-4"
+            stroke="var(--accent)"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export function AppShell({
   children,
   isAuthenticated
@@ -56,6 +118,7 @@ export function AppShell({
 }) {
   return (
     <div className="app-shell">
+      <PullToRefreshIndicator />
       {isAuthenticated ? <NetworkBanner /> : null}
       <main className="app-frame">{children}</main>
       {isAuthenticated ? (

@@ -40,6 +40,11 @@ body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-ui);
+  overscroll-behavior-y: none;
+}
+
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
 }
 
 body {
