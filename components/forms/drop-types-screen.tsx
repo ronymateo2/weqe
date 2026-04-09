@@ -21,6 +21,7 @@ import {
   arrayMove
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DotsSixVerticalIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
@@ -35,25 +36,6 @@ type DropTypesScreenProps = {
   initialErrorMessage?: string;
 };
 
-function DragHandle() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <rect x="4" y="3" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="3" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="4" y="7" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="7" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="4" y="11" width="3" height="3" rx="1" fill="currentColor" />
-      <rect x="9" y="11" width="3" height="3" rx="1" fill="currentColor" />
-    </svg>
-  );
-}
 
 function SortableItem({ dropType, isOnly }: { dropType: DropTypeRecord; isOnly: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -89,7 +71,7 @@ function SortableItem({ dropType, isOnly }: { dropType: DropTypeRecord; isOnly: 
           aria-label={`Reordenar ${dropType.name}`}
           className="flex min-h-12 w-10 shrink-0 cursor-grab items-center justify-center text-[var(--text-faint)] active:cursor-grabbing"
         >
-          <DragHandle />
+          <DotsSixVerticalIcon size={16} />
         </button>
       )}
     </li>
