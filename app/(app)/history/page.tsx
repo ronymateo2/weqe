@@ -5,6 +5,7 @@ import { ScreenHeader } from "@/components/layout/screen-header";
 import { HistoryScreen } from "@/components/history/history-screen";
 import { getHistoryFeedAction } from "@/lib/actions/history";
 import { redirect } from "next/navigation";
+import { DayGroupSkeleton } from "@/components/ui/day-group-skeleton";
 
 async function HistoryFeed() {
   const historyFeed = await getHistoryFeedAction();
@@ -14,27 +15,9 @@ async function HistoryFeed() {
 function HistoryFeedSkeleton() {
   return (
     <section className="space-y-8">
-      {[
-        ["checkin", "slim", "slim"],
-        ["checkin", "slim"],
-        ["slim", "checkin"],
-      ].map((group, i) => (
-        <div key={i}>
-          <div className="skeleton mb-3 h-7 w-16 rounded-full" />
-          <div className="space-y-2.5">
-            {group.map((type, j) =>
-              type === "checkin" ? (
-                <div
-                  key={j}
-                  className="skeleton h-[88px] rounded-[14px]"
-                />
-              ) : (
-                <div key={j} className="skeleton h-[52px] rounded-[14px]" />
-              ),
-            )}
-          </div>
-        </div>
-      ))}
+      <DayGroupSkeleton entries={["checkin", "slim", "slim"]} />
+      <DayGroupSkeleton entries={["checkin", "slim"]} />
+      <DayGroupSkeleton entries={["slim", "checkin"]} />
     </section>
   );
 }
