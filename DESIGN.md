@@ -17,17 +17,17 @@
 ---
 
 ## Typography
-- **UI / Body / Headings:** Inter — highly legible humanist sans-serif. Excellent readability at small sizes on dark backgrounds with strong 500/600 weight contrast.
+- **UI / Body / Headings:** SF Pro (system font) — accessed via `-apple-system, BlinkMacSystemFont`. No font file loaded; the OS provides it. Renders natively on iOS/macOS with subpixel precision. Falls back to Segoe UI on Windows.
 - **Data / Numbers:** Geist Mono — all numeric values (pain scores 0-10, drop counts, sleep hours, timestamps, correlation coefficients). Tabular-nums. Makes readings feel like instrument output, not form inputs. Reinforces the clinical precision aesthetic.
 - **UI Labels (uppercase):** Inter 500, 11-12px, 0.1em letter-spacing — section headers, field labels.
-- **Loading:** next/font/google (`Inter`, weights 400/500/600) + `geist/font/mono` (Geist Mono)
+- **Loading:** System font stack (no download) + `geist/font/mono` (Geist Mono) for data values
 - **Scale:**
-  - `10px / Inter 600 / 0.12em tracking` — section labels (uppercase)
-  - `12px / Inter 500` — metadata, timestamps, helper text
-  - `13px / Inter 500` — input labels, chip text, alert text
-  - `15px / Inter 400` — body copy
-  - `17px / Inter 600` — screen titles
-  - `22px / Inter 600 / -0.02em` — page headings
+  - `10px / SF Pro 600 / 0.12em tracking` — section labels (uppercase)
+  - `12px / SF Pro 500` — metadata, timestamps, helper text
+  - `13px / SF Pro 500` — input labels, chip text, alert text
+  - `15px / SF Pro 400` — body copy
+  - `17px / SF Pro 600` — screen titles
+  - `22px / SF Pro 600 / -0.02em` — page headings
   - `22px / Geist Mono 300` — primary data values (pain score display in sliders)
   - `32-36px / Geist Mono 300` — stat card values (dashboard)
   - `11-13px / Geist Mono 400` — secondary data (correlation coefficients, timestamps)
@@ -195,7 +195,7 @@ Tap cycles 0→1→2→3→0. Default on first select is State 1 (leve).
   color: #121008;  /* dark text on amber */
   border-radius: var(--radius-full);
   min-height: 48px;
-  font-family: var(--font-ui);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   font-size: 15px;
   font-weight: 500;
 }
@@ -226,7 +226,7 @@ Used for Gotas and Triggers screens (launched from FAB).
 
 - **No light mode.** Photophobia makes this a medical necessity, not a feature toggle.
 - **No blue or cyan accents.** `#06b6d4`, `#0ea5e9`, `#3b82f6` — all activate photosensitive receptors. Even the original manifest `#0f172a` navy is too blue for this product.
-- **No DM Sans.** Replaced by Inter as of 2026-04-08.
+- **No custom UI web fonts.** Use the system font stack (`-apple-system`) — zero download, native rendering.
 - **No purple/violet gradients.** Generic wellness app slop.
 - **No gamification.** No streaks, no badges, no progress bars with encouragement messages. Medical tool.
 - **No bounce/spring animations.** User may be in pain.
@@ -243,7 +243,7 @@ Used for Gotas and Triggers screens (launched from FAB).
 | 2026-03-29 | Amber accent (#d4a24c) over cyan/teal | Blue light (cyan range 480-510nm) maximally activates ipRGC photoreceptors. Amber sits at ~580-600nm, minimum photosensitive activation. FL-41 clinical research supports warm spectrum for photophobia. |
 | 2026-03-29 | Warm charcoal background (#121008) over navy | Navy blue has significant blue component. Pure warm charcoal eliminates blue entirely from the dominant screen area. |
 | 2026-03-29 | Geist Mono for all numeric values | Makes pain scores feel like clinical instrument readings, not subjective form inputs. Reinforces medical credibility for doctor reports. |
-| 2026-04-08 | Inter over DM Sans | Switched to Inter per explicit user request. |
+| 2026-04-08 | SF Pro (system font) over DM Sans / Inter | System font renders natively on iOS with subpixel precision, zero download cost, works offline without any caching config. |
 | 2026-03-29 | Pain gradient on sliders (temperature metaphor) | Users can read severity before consciously processing the number. Important when cognitive load is impaired by pain. |
 | 2026-03-29 | 48px minimum touch targets | Per Apple HIG for PWA. Users may have reduced motor precision during high-pain episodes. |
 | 2026-03-29 | No gamification | This is a medical monitoring tool used by people in chronic pain. Achievement badges are inappropriate and insulting. |

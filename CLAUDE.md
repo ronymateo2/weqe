@@ -10,7 +10,7 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 - **Framework:** Next.js 15 (App Router), TypeScript
 - **Database:** Supabase (PostgreSQL only — no Supabase Auth)
 - **Auth:** Auth.js v5 (NextAuth) with Google provider + Postgres adapter (`@auth/pg-adapter`). Env vars: `AUTH_SECRET` (not `NEXTAUTH_SECRET`), `AUTH_URL` (not `NEXTAUTH_URL`) — wrong names silently break auth.
-- **PWA:** `@serwist/next` (`skipWaiting: true`, `clientsClaim: true`). Fonts loaded via `next/font/google` (Inter) and `geist/font/mono` — served locally, no CDN dependency offline. Installable from Safari, no App Store required.
+- **PWA:** `@serwist/next` (`skipWaiting: true`, `clientsClaim: true`). UI font is the system font stack (`-apple-system` / SF Pro) — no font file to cache. Only `geist/font/mono` (Geist Mono, via `geist` package) needs `runtimeCaching`. Installable from Safari, no App Store required.
 - **Offline:** IndexedDB via idb-keyval, sync on reconnect (last-write-wins upsert)
 - **Charts:** Recharts
 - **Stats:** simple-statistics (Spearman via rank arrays + sampleCorrelation — NOT direct sampleCorrelation which is Pearson)

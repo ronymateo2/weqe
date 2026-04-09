@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --font-ui: var(--font-inter, "Inter");
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   --bg: #121008;
   --surface: #1c1810;
   --surface-el: #252014;
@@ -39,7 +39,7 @@ body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-ui), sans-serif;
+  font-family: var(--font-ui);
 }
 
 body {
