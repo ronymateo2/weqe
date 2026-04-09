@@ -89,11 +89,11 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
     const supabase = getSupabaseAdmin();
     const timezone = getSafeTimezone(session.user.timezone);
 
-    const twoDaysAgoIso = new Date(
-      Date.now() - 2 * 24 * 60 * 60 * 1000,
+    const yesterdayIso = new Date(
+      Date.now() - 1 * 24 * 60 * 60 * 1000,
     ).toISOString();
-    const twoDaysAgoDayKey = getDayKey(twoDaysAgoIso, timezone);
-    const utcWindowStart = dayKeyToUtcStart(twoDaysAgoDayKey, timezone);
+    const yesterdayDayKey = getDayKey(yesterdayIso, timezone);
+    const utcWindowStart = dayKeyToUtcStart(yesterdayDayKey, timezone);
 
     const [
       checkInsResponse,

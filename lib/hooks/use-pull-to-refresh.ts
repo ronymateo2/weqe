@@ -8,8 +8,12 @@ const MAX_PULL = 100; // px cap for visual indicator
 
 export function usePullToRefresh() {
   const router = useRouter();
+  // Ref tracks the live pull distance — never stale inside event handlers
+  const pullDistanceRef = useRef(0);
+  // State is only for triggering a re-render of the visual indicator
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
   const startYRef = useRef<number | null>(null);
   const pullingRef = useRef(false);
 
@@ -32,21 +36,24 @@ export function usePullToRefresh() {
       pullingRef.current = true;
       // Prevent native overscroll bounce while we handle the gesture
       e.preventDefault();
-      setPullDistance(Math.min(delta, MAX_PULL));
+      const clamped = Math.min(delta, MAX_PULL);
+      pullDistanceRef.current = clamped; // always up-to-date
+      setPullDistance(clamped);          // schedule visual re-render
     }
 
     function onTouchEnd() {
       if (!pullingRef.current) return;
-      const distance = pullDistance;
+      // Read from ref — never stale, regardless of React render timing
+      const distance = pullDistanceRef.current;
       startYRef.current = null;
       pullingRef.current = false;
+      pullDistanceRef.current = 0;
       setPullDistance(0);
 
       if (distance >= THRESHOLD) {
         setRefreshing(true);
         router.refresh();
-        // Give Next.js a moment to re-fetch, then hide spinner
-        setTimeout(() => setRefreshing(false), 1200);
+        setTimeout(() => setRefreshing(false), 1400);
       }
     }
 
@@ -59,8 +66,8 @@ export function usePullToRefresh() {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pullDistance]);
+  // Effect runs once — all mutable values go through refs, not closure state
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { pullDistance, refreshing, threshold: THRESHOLD };
 }
