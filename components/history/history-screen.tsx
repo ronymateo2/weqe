@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   PulseIcon,
   CheckIcon,
@@ -9,6 +9,11 @@ import {
   MoonIcon,
   SunIcon,
   LightningIcon,
+  EyeIcon,
+  HeadCircuitIcon,
+  CrosshairIcon,
+  SmileyMeltingIcon,
+  BoneIcon,
 } from "@phosphor-icons/react";
 import { SYMPTOM_OPTIONS } from "@/lib/constants";
 import type {
@@ -224,24 +229,13 @@ function getDotColor(item: DisplayItem): string {
   return "var(--text-muted)";
 }
 
-const SCORE_FIELDS: { key: keyof DisplayCheckIn; label: string }[] = [
-  { key: "eyelidPain", label: "PA" },
-  { key: "templePain", label: "SI" },
-  { key: "masseterPain", label: "MA" },
-  { key: "cervicalPain", label: "CE" },
-  { key: "orbitalPain", label: "OR" },
+const SCORE_FIELDS: { key: keyof DisplayCheckIn; icon: React.ReactNode }[] = [
+  { key: "eyelidPain", icon: <EyeIcon size={15} /> },
+  { key: "templePain", icon: <HeadCircuitIcon size={15} /> },
+  { key: "masseterPain", icon: <SmileyMeltingIcon size={15} /> },
+  { key: "cervicalPain", icon: <BoneIcon size={15} /> },
+  { key: "orbitalPain", icon: <CrosshairIcon size={15} /> },
 ];
-
-function avgPainScore(item: DisplayCheckIn): number {
-  const scores = [
-    item.eyelidPain,
-    item.templePain,
-    item.masseterPain,
-    item.cervicalPain,
-    item.orbitalPain,
-  ];
-  return scores.reduce((a, b) => a + b, 0) / scores.length;
-}
 
 function CheckInCard({
   item,
@@ -251,8 +245,6 @@ function CheckInCard({
   timezone: string;
 }) {
   const { label, isMoon } = getTimeOfDay(item.loggedAt, timezone);
-  const avg = avgPainScore(item);
-  const barPct = avg * 10;
 
   return (
     <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 pt-4 pb-3">
@@ -277,7 +269,7 @@ function CheckInCard({
           </div>
         </div>
         <div className="flex shrink-0 gap-3">
-          {SCORE_FIELDS.map(({ key, label: fieldLabel }) => {
+          {SCORE_FIELDS.map(({ key, icon }) => {
             const score = item[key] as number;
             return (
               <div key={key} className="flex flex-col items-center gap-0.5">
@@ -287,25 +279,29 @@ function CheckInCard({
                 >
                   {score}
                 </span>
-                <span className="text-[9px] font-medium tracking-[0.08em] text-[var(--text-faint)]">
-                  {fieldLabel}
-                </span>
+                <span style={{ color: "var(--text-muted)" }}>{icon}</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-2.5">
-        <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--surface-el)]">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${barPct}%`, background: painColor(avg) }}
-          />
-        </div>
-        <span className="mono text-[11px] text-[var(--text-muted)]">
-          {avg.toFixed(2)}/10
-        </span>
+      <div className="mt-3 space-y-1.5">
+        {[
+          { label: "Párpado", icon: <EyeIcon size={13} />, value: item.eyelidPain },
+          { label: "Sien", icon: <HeadCircuitIcon size={13} />, value: item.templePain },
+        ].map(({ label, icon, value }) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className="flex w-[13px] shrink-0 items-center justify-center" style={{ color: "var(--text-muted)" }}>{icon}</span>
+            <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--surface-el)]">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${value * 10}%`, background: painColor(value) }}
+              />
+            </div>
+            <span className="mono w-[28px] text-right text-[11px] text-[var(--text-muted)]">{value}/10</span>
+          </div>
+        ))}
       </div>
 
       {item.sleepHours !== null ? (
