@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Trash, DotsSixVertical, Plus } from "@phosphor-icons/react";
+import { useMemo, useState, useTransition } from "react";
+import {
+  TrashIcon,
+  DotsSixVerticalIcon,
+  PlusIcon,
+  ClockIcon,
+  PencilSimpleIcon,
+} from "@phosphor-icons/react";
 import {
   DndContext,
   PointerSensor,
@@ -29,12 +35,14 @@ import {
   deleteMedicationAction,
   reorderMedicationsAction,
 } from "@/lib/actions/medications";
+import { updateTimezoneAction } from "@/lib/actions/user-settings";
 import type { ActionState, MedicationRecord } from "@/types/domain";
 
 type ProfileScreenProps = {
   user: { name: string | null; email: string | null };
   initialMedications: MedicationRecord[];
   initialErrorMessage?: string;
+  initialTimezone: string;
 };
 
 type FormState = {
@@ -147,7 +155,7 @@ function SortableMedRow({
               aria-label={`Eliminar ${med.name}`}
               className="flex min-h-12 w-10 items-center justify-center text-[var(--text-faint)] hover:text-[var(--error)] transition-colors"
             >
-              <Trash size={16} />
+              <TrashIcon size={16} />
             </button>
             {!isOnly && (
               <button
@@ -157,7 +165,7 @@ function SortableMedRow({
                 aria-label={`Reordenar ${med.name}`}
                 className="flex min-h-12 w-10 cursor-grab items-center justify-center text-[var(--text-faint)] active:cursor-grabbing"
               >
-                <DotsSixVertical size={16} />
+                <DotsSixVerticalIcon size={16} />
               </button>
             )}
           </div>
@@ -173,7 +181,9 @@ export function ProfileScreen({
   user,
   initialMedications,
   initialErrorMessage,
+  initialTimezone,
 }: ProfileScreenProps) {
+  // ── Medications state ──
   const [medications, setMedications] = useState(initialMedications);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -185,6 +195,38 @@ export function ProfileScreen({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // ── Timezone state ──
+  const [timezone, setTimezone] = useState(initialTimezone);
+  const [tzSheetOpen, setTzSheetOpen] = useState(false);
+  const [tzSearch, setTzSearch] = useState("");
+  const [tzPending, startTzTransition] = useTransition();
+
+  const allTimezones = useMemo<string[]>(() => {
+    try {
+      return Intl.supportedValuesOf("timeZone");
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const filteredTimezones = useMemo(() => {
+    if (!tzSearch.trim()) return allTimezones;
+    const q = tzSearch.toLowerCase();
+    return allTimezones.filter((tz) => tz.toLowerCase().includes(q));
+  }, [allTimezones, tzSearch]);
+
+  const handleTimezoneSelect = (tz: string) => {
+    startTzTransition(async () => {
+      const result = await updateTimezoneAction(tz);
+      if (result.ok) {
+        setTimezone(tz);
+        setTzSheetOpen(false);
+        setTzSearch("");
+      }
+    });
+  };
+
+  // ── DnD sensors ──
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, {
@@ -293,6 +335,41 @@ export function ProfileScreen({
           </div>
         </section>
 
+        {/* ── Configuración ── */}
+        <section className="space-y-3">
+          <p className="section-label">Configuración</p>
+          <div className="overflow-hidden rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)]">
+            <div className="flex min-h-[72px] items-center gap-3 px-4">
+              {/* Icon */}
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[var(--accent-dim)]">
+                <ClockIcon size={16} color="var(--accent)" weight="fill" />
+              </div>
+              {/* Label + value */}
+              <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-faint)]">
+                  Zona Horaria
+                </span>
+                <span className="mono truncate text-[14px] text-[var(--text-primary)]">
+                  {timezone}
+                </span>
+              </div>
+              {/* Edit button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setTzSearch("");
+                  setTzSheetOpen(true);
+                }}
+                aria-label="Cambiar zona horaria"
+                disabled={tzPending}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface-el)] text-[var(--text-faint)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
+              >
+                <PencilSimpleIcon size={15} />
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* ── Medicamentos ── */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -303,7 +380,7 @@ export function ProfileScreen({
               aria-label="Agregar medicamento"
               className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-el)] text-[var(--accent)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-dim)]"
             >
-              <Plus size={12} weight="bold" />
+              <PlusIcon size={12} weight="bold" />
             </button>
           </div>
 
@@ -313,7 +390,7 @@ export function ProfileScreen({
               onClick={openSheet}
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[var(--border)] text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
-              <Plus size={14} weight="bold" />
+              <PlusIcon size={14} weight="bold" />
               Agregar primer medicamento
             </button>
           ) : (
@@ -394,6 +471,66 @@ export function ProfileScreen({
           >
             {isPending ? "Guardando..." : "Agregar medicamento"}
           </Button>
+        </div>
+      </MobileSheet>
+
+      {/* ── Timezone picker sheet ── */}
+      <MobileSheet
+        open={tzSheetOpen}
+        title="Zona horaria"
+        description="Selecciona tu zona horaria local."
+        onClose={() => {
+          setTzSheetOpen(false);
+          setTzSearch("");
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <TextInput
+            placeholder="Buscar (ej. Bogota, Mexico_City…)"
+            value={tzSearch}
+            autoFocus
+            onChange={(e) => setTzSearch(e.target.value)}
+          />
+          <ul className="max-h-[45vh] overflow-y-auto rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)]">
+            {filteredTimezones.length === 0 ? (
+              <li className="flex min-h-12 items-center px-4 text-[13px] text-[var(--text-faint)]">
+                Sin resultados
+              </li>
+            ) : (
+              filteredTimezones.map((tz) => {
+                const isActive = tz === timezone;
+                return (
+                  <li
+                    key={tz}
+                    className="border-b border-[var(--border)] last:border-b-0"
+                  >
+                    <button
+                      type="button"
+                      disabled={tzPending}
+                      onClick={() => handleTimezoneSelect(tz)}
+                      className="flex min-h-12 w-full items-center px-4 text-left transition-colors disabled:opacity-40"
+                      style={{
+                        color: isActive
+                          ? "var(--accent)"
+                          : "var(--text-primary)",
+                      }}
+                    >
+                      <span
+                        className={`mono text-[13px] ${isActive ? "font-medium" : ""}`}
+                      >
+                        {tz}
+                      </span>
+                      {isActive && (
+                        <span className="ml-auto text-[11px] font-medium text-[var(--accent)]">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
         </div>
       </MobileSheet>
     </>

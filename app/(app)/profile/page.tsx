@@ -4,6 +4,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ProfileScreen } from "@/components/forms/profile-screen";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { getMedicationsAction } from "@/lib/actions/medications";
+import { getUserTimezoneAction } from "@/lib/actions/user-settings";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -12,7 +13,10 @@ export default async function ProfilePage() {
     redirect("/register?from=%2Fprofile");
   }
 
-  const result = await getMedicationsAction();
+  const [medsResult, tzResult] = await Promise.all([
+    getMedicationsAction(),
+    getUserTimezoneAction()
+  ]);
 
   return (
     <section>
@@ -23,8 +27,9 @@ export default async function ProfilePage() {
         user={session.user}
       />
       <ProfileScreen
-        initialErrorMessage={result.ok ? undefined : result.message}
-        initialMedications={result.medications}
+        initialErrorMessage={medsResult.ok ? undefined : medsResult.message}
+        initialMedications={medsResult.medications}
+        initialTimezone={tzResult.timezone}
         user={{ name: session.user.name ?? null, email: session.user.email ?? null }}
       />
     </section>
