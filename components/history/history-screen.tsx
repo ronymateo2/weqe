@@ -9,9 +9,9 @@ import {
   MoonIcon,
   SunIcon,
   LightningIcon,
-  EyeIcon,
+  EyeClosedIcon,
   HeadCircuitIcon,
-  CrosshairIcon,
+  HandEyeIcon,
   SmileyMeltingIcon,
   BoneIcon,
 } from "@phosphor-icons/react";
@@ -230,11 +230,11 @@ function getDotColor(item: DisplayItem): string {
 }
 
 const SCORE_FIELDS: { key: keyof DisplayCheckIn; icon: React.ReactNode }[] = [
-  { key: "eyelidPain", icon: <EyeIcon size={15} /> },
+  { key: "eyelidPain", icon: <EyeClosedIcon size={15} /> },
   { key: "templePain", icon: <HeadCircuitIcon size={15} /> },
+  { key: "orbitalPain", icon: <HandEyeIcon size={15} /> },
   { key: "masseterPain", icon: <SmileyMeltingIcon size={15} /> },
   { key: "cervicalPain", icon: <BoneIcon size={15} /> },
-  { key: "orbitalPain", icon: <CrosshairIcon size={15} /> },
 ];
 
 function CheckInCard({
@@ -288,18 +288,36 @@ function CheckInCard({
 
       <div className="mt-3 space-y-1.5">
         {[
-          { label: "Párpado", icon: <EyeIcon size={13} />, value: item.eyelidPain },
-          { label: "Sien", icon: <HeadCircuitIcon size={13} />, value: item.templePain },
+          {
+            label: "Párpado",
+            icon: <EyeClosedIcon size={13} />,
+            value: item.eyelidPain,
+          },
+          {
+            label: "Sien",
+            icon: <HeadCircuitIcon size={13} />,
+            value: item.templePain,
+          },
         ].map(({ label, icon, value }) => (
           <div key={label} className="flex items-center gap-2">
-            <span className="flex w-[13px] shrink-0 items-center justify-center" style={{ color: "var(--text-primary)" }}>{icon}</span>
+            <span
+              className="flex w-[13px] shrink-0 items-center justify-center"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {icon}
+            </span>
             <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--surface-el)]">
               <div
                 className="h-full rounded-full"
-                style={{ width: `${value * 10}%`, background: painColor(value) }}
+                style={{
+                  width: `${value * 10}%`,
+                  background: painColor(value),
+                }}
               />
             </div>
-            <span className="mono w-[28px] text-right text-[11px] text-[var(--text-muted)]">{value}/10</span>
+            <span className="mono w-[28px] text-right text-[11px] text-[var(--text-muted)]">
+              {value}/10
+            </span>
           </div>
         ))}
       </div>

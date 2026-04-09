@@ -28,8 +28,8 @@ import type {
 } from "@/types/domain";
 import {
   BoneIcon,
-  CrosshairIcon,
-  EyeIcon,
+  HandEyeIcon,
+  EyeClosedIcon,
   SmileyMeltingIcon,
   LightningIcon,
   HeadCircuitIcon,
@@ -381,7 +381,7 @@ export function CheckInForm() {
           <p className="section-label">Mapa de dolor</p>
           <div className="space-y-5">
             <PainSlider
-              icon={<EyeIcon size={15} />}
+              icon={<EyeClosedIcon size={15} />}
               label="Parpados"
               value={pain.eyelidPain}
               onChange={updateEyelidPain}
@@ -393,7 +393,7 @@ export function CheckInForm() {
               onChange={updateTemplePain}
             />
             <PainSlider
-              icon={<CrosshairIcon size={15} />}
+              icon={<HandEyeIcon size={15} />}
               label="Zona Orbital"
               value={pain.orbitalPain}
               onChange={updateOrbitalPain}
