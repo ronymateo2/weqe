@@ -245,6 +245,12 @@ function CheckInCard({
   timezone: string;
 }) {
   const { label, isMoon } = getTimeOfDay(item.loggedAt, timezone);
+  const [barsReady, setBarsReady] = useState(false);
+
+  React.useEffect(() => {
+    const id = setTimeout(() => setBarsReady(true), 100);
+    return () => clearTimeout(id);
+  }, []);
 
   return (
     <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 pt-4 pb-3">
@@ -298,7 +304,7 @@ function CheckInCard({
             icon: <HeadCircuitIcon size={13} />,
             value: item.templePain,
           },
-        ].map(({ label, icon, value }) => (
+        ].map(({ label, icon, value }, i) => (
           <div key={label} className="flex items-center gap-2">
             <span
               className="flex w-[13px] shrink-0 items-center justify-center"
@@ -310,8 +316,9 @@ function CheckInCard({
               <div
                 className="h-full rounded-full"
                 style={{
-                  width: `${value * 10}%`,
+                  width: barsReady ? `${value * 10}%` : "0%",
                   background: painColor(value),
+                  transition: `width 650ms cubic-bezier(0.25, 1, 0.5, 1) ${150}ms`,
                 }}
               />
             </div>
