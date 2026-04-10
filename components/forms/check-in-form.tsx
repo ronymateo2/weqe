@@ -382,7 +382,7 @@ export function CheckInForm() {
           <div className="space-y-5">
             <PainSlider
               icon={<EyeIcon size={15} />}
-              label="Parpados"
+              label="Ojo/Parpados"
               value={pain.eyelidPain}
               onChange={updateEyelidPain}
             />
