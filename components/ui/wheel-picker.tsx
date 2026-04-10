@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 const WHEEL_ROW_HEIGHT = 44;
 const WHEEL_VISIBLE_ROWS = 3;
 const WHEEL_PADDING_ROWS = (WHEEL_VISIBLE_ROWS - 1) / 2;
@@ -35,7 +40,7 @@ export function WheelPicker({ label, options, value, onChange }: WheelPickerProp
     if (!node) return;
     const nextScrollTop = effectiveSelectedIndex * WHEEL_ROW_HEIGHT;
     if (Math.abs(node.scrollTop - nextScrollTop) < 2) return;
-    node.scrollTo({ top: nextScrollTop, behavior: "auto" });
+    node.scrollTo({ top: nextScrollTop, behavior: prefersReducedMotion() ? "auto" : "smooth" });
   }, [effectiveSelectedIndex]);
 
   useEffect(() => {
@@ -73,7 +78,7 @@ export function WheelPicker({ label, options, value, onChange }: WheelPickerProp
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-2 top-1/2 z-20 -translate-y-1/2 rounded-[10px] border border-[var(--accent)] bg-[var(--accent-dim)]"
+        className="pointer-events-none absolute inset-x-2 top-1/2 z-20 -translate-y-1/2 rounded-[10px] border border-[var(--accent)] bg-[var(--accent-dim)] motion-safe:transition-[top] motion-safe:duration-100 motion-safe:[transition-timing-function:cubic-bezier(0.23,1,0.32,1)]"
         style={{ height: `${WHEEL_ROW_HEIGHT}px` }}
       />
       <div
@@ -107,7 +112,7 @@ export function WheelPicker({ label, options, value, onChange }: WheelPickerProp
               key={option.value}
               aria-selected={isSelected}
               className={cn(
-                "block w-full snap-center rounded-[10px] border border-transparent px-4 text-center text-[15px] font-medium transition-colors",
+                "block w-full snap-center rounded-[10px] border border-transparent px-4 text-center text-[15px] font-medium transition-[color] duration-150 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-safe:active:scale-[0.97] motion-safe:active:transition-none",
                 option.isAction
                   ? isSelected
                     ? "text-[var(--accent)]"
@@ -122,7 +127,7 @@ export function WheelPicker({ label, options, value, onChange }: WheelPickerProp
               onClick={() => {
                 const node = wheelRef.current;
                 if (node) {
-                  node.scrollTo({ top: index * WHEEL_ROW_HEIGHT, behavior: "smooth" });
+                  node.scrollTo({ top: index * WHEEL_ROW_HEIGHT, behavior: prefersReducedMotion() ? "auto" : "smooth" });
                 }
                 commitIndex(index);
               }}
