@@ -351,7 +351,7 @@ export function CheckInForm() {
                   key={option.id}
                   type="button"
                   className={cn(
-                    "min-h-12 rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-colors",
+                    "min-h-12 rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
                     selectedTrigger === option.id
                       ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
                       : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
