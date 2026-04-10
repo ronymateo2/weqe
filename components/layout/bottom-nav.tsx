@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,26 +21,16 @@ const icons = {
 
 export function BottomNav() {
   const pathname = usePathname();
+
   const activeIndex = APP_TABS.findIndex((tab) =>
     pathname === tab.href || pathname.startsWith(`${tab.href}/`)
   );
   const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
-  const activeTab = APP_TABS[safeActiveIndex];
-  const ActiveIcon = icons[activeTab.href];
-  const navStyle = {
-    "--active-index": String(safeActiveIndex),
-    "--tab-count": String(APP_TABS.length),
-  } as CSSProperties;
 
   return (
     <nav className="bottom-nav" aria-label="Navegacion principal">
       <div className="bottom-nav__inner">
-        <div className="bottom-nav__rail" style={navStyle}>
-          <span className="bottom-nav__notch" aria-hidden />
-          <span className="bottom-nav__orb" aria-hidden>
-            <ActiveIcon size={22} weight="fill" />
-          </span>
-
+        <div className="bottom-nav__rail">
           {APP_TABS.map((tab, index) => {
             const Icon = icons[tab.href];
             const isActive = index === safeActiveIndex;

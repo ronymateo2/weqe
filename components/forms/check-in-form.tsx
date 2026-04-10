@@ -275,6 +275,10 @@ export function CheckInForm() {
   };
 
   const handleSave = () => {
+    if (isPending || !isTriggerValid) {
+      return;
+    }
+
     const input = buildPayload();
     const warningMessage = getZeroValueWarning(input);
 
@@ -288,7 +292,7 @@ export function CheckInForm() {
   };
 
   return (
-    <div className="relative pb-[calc(var(--sticky-cta-height)+32px)]">
+    <div className="relative pb-[calc(var(--sticky-cta-height)+44px)]">
       <div className="space-y-6">
         {state.status !== "idle" && state.message ? (
           <Toast
@@ -435,7 +439,7 @@ export function CheckInForm() {
         ) : null}
       </div>
 
-      <div className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--bg)] px-5 py-4 shadow-[0_-14px_28px_rgba(18,16,8,0.95)]">
+      <div className="fixed bottom-[calc(82px+env(safe-area-inset-bottom))] left-0 right-0 z-50 border-t border-[var(--border)] bg-[var(--bg)] px-1 py-1 shadow-[0_-14px_28px_rgba(18,16,8,0.95)]">
         <div className="mx-auto w-full max-w-[480px] space-y-2">
           {!isOnline ? (
             <div className="flex items-center justify-center gap-2">
