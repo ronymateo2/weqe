@@ -435,7 +435,7 @@ export function CheckInForm() {
         ) : null}
       </div>
 
-      <div className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-20 border-t border-[var(--border)] bg-[rgba(18,16,8,0.94)] px-5 py-4 backdrop-blur-md">
+      <div className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--bg)] px-5 py-4 shadow-[0_-14px_28px_rgba(18,16,8,0.95)]">
         <div className="mx-auto w-full max-w-[480px] space-y-2">
           {!isOnline ? (
             <div className="flex items-center justify-center gap-2">

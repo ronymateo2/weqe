@@ -191,6 +191,7 @@ svg {
   bottom: 0;
   left: 0;
   z-index: 40;
+  background: var(--bg);
   pointer-events: none;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
@@ -200,7 +201,8 @@ svg {
 .bottom-nav__inner {
   width: min(100%, 480px);
   margin: 0 auto;
-  padding: 14px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  padding: 14px 12px env(safe-area-inset-bottom);
   pointer-events: auto;
 }
 
