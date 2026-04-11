@@ -26,7 +26,10 @@ export async function saveObservationAction(input: SaveObservationInput) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { ok: false, message: "Necesitas iniciar sesion para guardar observaciones." };
+    return {
+      ok: false,
+      message: "Necesitas iniciar sesion para guardar observaciones.",
+    };
   }
 
   try {
@@ -39,7 +42,7 @@ export async function saveObservationAction(input: SaveObservationInput) {
         notes: input.notes,
         eye: input.eye,
       },
-      { onConflict: "id" }
+      { onConflict: "id" },
     );
 
     if (error) throw error;
@@ -49,7 +52,10 @@ export async function saveObservationAction(input: SaveObservationInput) {
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo guardar la observacion.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la observacion.",
     };
   }
 }
@@ -93,7 +99,10 @@ export async function getObservationTypesAction(): Promise<{
     if (occError) throw occError;
 
     // Pick only the most recent occurrence per type
-    const lastOccurrenceMap = new Map<string, { loggedAt: string; intensity: number }>();
+    const lastOccurrenceMap = new Map<
+      string,
+      { loggedAt: string; intensity: number }
+    >();
     for (const occ of occurrences ?? []) {
       const obsId = occ.observation_id as string;
       if (!lastOccurrenceMap.has(obsId)) {
@@ -117,7 +126,10 @@ export async function getObservationTypesAction(): Promise<{
     return {
       ok: false,
       types: [],
-      message: error instanceof Error ? error.message : "No se pudieron cargar las observaciones.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar las observaciones.",
     };
   }
 }
@@ -143,7 +155,7 @@ export async function saveOccurrenceAction(input: SaveOccurrenceInput) {
         duration_minutes: input.durationMinutes,
         notes: input.notes || null,
       },
-      { onConflict: "id" }
+      { onConflict: "id" },
     );
 
     if (error) throw error;
@@ -153,7 +165,10 @@ export async function saveOccurrenceAction(input: SaveOccurrenceInput) {
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo guardar la ocurrencia.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la ocurrencia.",
     };
   }
 }
@@ -186,14 +201,19 @@ export async function getObservationsAction(): Promise<{
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("dy_observation_occurrences")
-      .select("id, logged_at, intensity, duration_minutes, notes, observation_id, dy_clinical_observations(title, eye)")
+      .select(
+        "id, logged_at, intensity, duration_minutes, notes, observation_id, dy_clinical_observations(title, eye)",
+      )
       .eq("user_id", session.user.id)
       .order("logged_at", { ascending: false });
 
     if (error) throw error;
 
     const observations: ObservationEntry[] = (data ?? []).map((row) => {
-      const type = row.dy_clinical_observations as { title: string; eye: string } | null;
+      const type = row.dy_clinical_observations as unknown as {
+        title: string;
+        eye: string;
+      } | null;
       return {
         kind: "observation" as const,
         id: row.id as string,
@@ -211,7 +231,10 @@ export async function getObservationsAction(): Promise<{
     return {
       ok: false,
       observations: [],
-      message: error instanceof Error ? error.message : "No se pudieron cargar las observaciones.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar las observaciones.",
     };
   }
 }

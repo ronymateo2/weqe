@@ -2,7 +2,12 @@
 
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getSafeTimezone, getDayKey, dayKeyToUtcStart, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
+import {
+  getSafeTimezone,
+  getDayKey,
+  dayKeyToUtcStart,
+  DEFAULT_TIMEZONE,
+} from "@/lib/utils/timezone";
 import type { DropEye, TriggerType, ObservationEye } from "@/types/domain";
 
 type HistoryCheckInEntry = {
@@ -83,7 +88,6 @@ type GetHistoryFeedError = {
 
 export type GetHistoryFeedResult = GetHistoryFeedSuccess | GetHistoryFeedError;
 
-
 export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
   const session = await auth();
 
@@ -154,7 +158,9 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         .order("logged_at", { ascending: false }),
       supabase
         .from("dy_observation_occurrences")
-        .select("id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)")
+        .select(
+          "id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)",
+        )
         .eq("user_id", session.user.id)
         .gte("logged_at", utcWindowStart)
         .order("logged_at", { ascending: false }),
@@ -230,21 +236,24 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       }),
     );
 
-    const observationEntries: HistoryEntry[] = (observationsResponse.data ?? []).map(
-      (occ) => {
-        const type = occ.dy_clinical_observations as { title: string; eye: string } | null;
-        return {
-          id: occ.id,
-          kind: "observation",
-          loggedAt: occ.logged_at,
-          title: (type?.title ?? "") as string,
-          eye: (type?.eye ?? "none") as ObservationEye,
-          notes: (occ.notes ?? "") as string,
-          intensity: occ.intensity as number,
-          durationMinutes: (occ.duration_minutes ?? null) as number | null,
-        };
-      },
-    );
+    const observationEntries: HistoryEntry[] = (
+      observationsResponse.data ?? []
+    ).map((occ) => {
+      const type = occ.dy_clinical_observations as unknown as {
+        title: string;
+        eye: string;
+      } | null;
+      return {
+        id: occ.id,
+        kind: "observation",
+        loggedAt: occ.logged_at,
+        title: (type?.title ?? "") as string,
+        eye: (type?.eye ?? "none") as ObservationEye,
+        notes: (occ.notes ?? "") as string,
+        intensity: occ.intensity as number,
+        durationMinutes: (occ.duration_minutes ?? null) as number | null,
+      };
+    });
 
     const allEntries = [
       ...checkInEntries,
@@ -325,19 +334,19 @@ export async function loadMoreHistoryAction(
       symptomsResponse,
       observationsResponse,
     ] = await Promise.all([
-        supabase
-          .from("dy_check_ins")
-          .select(
-            "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
-          )
-          .eq("user_id", session.user.id)
-          .lt("logged_at", utcBefore)
-          .order("logged_at", { ascending: false })
-          .limit(rowLimit),
-        supabase
-          .from("dy_drops")
-          .select(
-            `
+      supabase
+        .from("dy_check_ins")
+        .select(
+          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
+        )
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
+      supabase
+        .from("dy_drops")
+        .select(
+          `
             id,
             logged_at,
             quantity,
@@ -346,33 +355,35 @@ export async function loadMoreHistoryAction(
               name
             )
           `,
-          )
-          .eq("user_id", session.user.id)
-          .lt("logged_at", utcBefore)
-          .order("logged_at", { ascending: false })
-          .limit(rowLimit),
-        supabase
-          .from("dy_triggers")
-          .select("id, logged_at, trigger_type, intensity")
-          .eq("user_id", session.user.id)
-          .lt("logged_at", utcBefore)
-          .order("logged_at", { ascending: false })
-          .limit(rowLimit),
-        supabase
-          .from("dy_symptoms")
-          .select("id, logged_at, symptom_type")
-          .eq("user_id", session.user.id)
-          .lt("logged_at", utcBefore)
-          .order("logged_at", { ascending: false })
-          .limit(rowLimit),
-        supabase
-          .from("dy_observation_occurrences")
-          .select("id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)")
-          .eq("user_id", session.user.id)
-          .lt("logged_at", utcBefore)
-          .order("logged_at", { ascending: false })
-          .limit(rowLimit),
-      ]);
+        )
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
+      supabase
+        .from("dy_triggers")
+        .select("id, logged_at, trigger_type, intensity")
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
+      supabase
+        .from("dy_symptoms")
+        .select("id, logged_at, symptom_type")
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
+      supabase
+        .from("dy_observation_occurrences")
+        .select(
+          "id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)",
+        )
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
+    ]);
 
     if (checkInsResponse.error) throw checkInsResponse.error;
     if (dropsResponse.error) throw dropsResponse.error;
@@ -431,21 +442,24 @@ export async function loadMoreHistoryAction(
       }),
     );
 
-    const observationEntries: HistoryEntry[] = (observationsResponse.data ?? []).map(
-      (occ) => {
-        const type = occ.dy_clinical_observations as { title: string; eye: string } | null;
-        return {
-          id: occ.id,
-          kind: "observation",
-          loggedAt: occ.logged_at,
-          title: (type?.title ?? "") as string,
-          eye: (type?.eye ?? "none") as ObservationEye,
-          notes: (occ.notes ?? "") as string,
-          intensity: occ.intensity as number,
-          durationMinutes: (occ.duration_minutes ?? null) as number | null,
-        };
-      },
-    );
+    const observationEntries: HistoryEntry[] = (
+      observationsResponse.data ?? []
+    ).map((occ) => {
+      const type = occ.dy_clinical_observations as unknown as {
+        title: string;
+        eye: string;
+      } | null;
+      return {
+        id: occ.id,
+        kind: "observation",
+        loggedAt: occ.logged_at,
+        title: (type?.title ?? "") as string,
+        eye: (type?.eye ?? "none") as ObservationEye,
+        notes: (occ.notes ?? "") as string,
+        intensity: occ.intensity as number,
+        durationMinutes: (occ.duration_minutes ?? null) as number | null,
+      };
+    });
 
     const allEntries = [
       ...checkInEntries,
