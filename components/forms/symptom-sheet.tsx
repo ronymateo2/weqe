@@ -108,7 +108,7 @@ export function SymptomSheet({ onSaved }: SymptomSheetProps) {
         <div className="space-y-2">
           <p className="section-label">Otro</p>
           <input
-            className="w-full rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3 text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            className="w-full rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3 text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
             placeholder="Describe el sintoma..."
             type="text"
             value={customSymptom}

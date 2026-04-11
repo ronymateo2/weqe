@@ -73,7 +73,7 @@ export function ObservationSheet({ onSaved }: ObservationSheetProps) {
             className={cn(
               "w-full rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3",
               "text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-              "focus:outline-none focus:ring-1 focus:ring-[var(--accent)]",
+              "focus:outline-none focus:border-[var(--accent)]",
               "h-[48px]"
             )}
             maxLength={MAX_TITLE}
@@ -90,7 +90,7 @@ export function ObservationSheet({ onSaved }: ObservationSheetProps) {
               className={cn(
                 "w-full resize-none rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3",
                 "text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                "focus:outline-none focus:ring-1 focus:ring-[var(--accent)]",
+                "focus:outline-none focus:border-[var(--accent)]",
                 "min-h-[96px]"
               )}
               maxLength={MAX_CHARS}

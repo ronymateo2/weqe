@@ -118,7 +118,7 @@ export function LogOccurrenceSheet({ observation, onSaved }: Props) {
               className={cn(
                 "w-24 rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3",
                 "mono text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                "focus:outline-none focus:ring-1 focus:ring-[var(--accent)]",
+                "focus:outline-none focus:border-[var(--accent)]",
                 "h-[48px] text-center"
               )}
               inputMode="numeric"
@@ -144,7 +144,7 @@ export function LogOccurrenceSheet({ observation, onSaved }: Props) {
               className={cn(
                 "w-full resize-none rounded-[12px] border border-[var(--border)] bg-transparent px-4 py-3",
                 "text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                "focus:outline-none focus:ring-1 focus:ring-[var(--accent)]",
+                "focus:outline-none focus:border-[var(--accent)]",
                 "min-h-[80px]"
               )}
               maxLength={MAX_NOTES}
