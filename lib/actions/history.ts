@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getSafeTimezone, getDayKey, dayKeyToUtcStart, DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
-import type { DropEye, TriggerType } from "@/types/domain";
+import type { DropEye, TriggerType, ObservationEye } from "@/types/domain";
 
 type HistoryCheckInEntry = {
   id: string;
@@ -43,11 +43,23 @@ type HistorySymptomEntry = {
   symptomType: string;
 };
 
+export type HistoryObservationEntry = {
+  id: string;
+  kind: "observation";
+  loggedAt: string;
+  title: string;
+  notes: string;
+  eye: ObservationEye;
+  intensity: number;
+  durationMinutes: number | null;
+};
+
 export type HistoryEntry =
   | HistoryCheckInEntry
   | HistoryDropEntry
   | HistoryTriggerEntry
-  | HistorySymptomEntry;
+  | HistorySymptomEntry
+  | HistoryObservationEntry;
 
 export type HistoryDayGroup = {
   dayKey: string;
@@ -100,7 +112,9 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       dropsResponse,
       triggersResponse,
       symptomsResponse,
-      olderCheck,
+      observationsResponse,
+      olderCheckIns,
+      olderObservations,
     ] = await Promise.all([
       supabase
         .from("dy_check_ins")
@@ -139,7 +153,19 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         .gte("logged_at", utcWindowStart)
         .order("logged_at", { ascending: false }),
       supabase
+        .from("dy_observation_occurrences")
+        .select("id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)")
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
         .from("dy_check_ins")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcWindowStart)
+        .limit(1),
+      supabase
+        .from("dy_observation_occurrences")
         .select("id")
         .eq("user_id", session.user.id)
         .lt("logged_at", utcWindowStart)
@@ -150,6 +176,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
     if (dropsResponse.error) throw dropsResponse.error;
     if (triggersResponse.error) throw triggersResponse.error;
     if (symptomsResponse.error) throw symptomsResponse.error;
+    if (observationsResponse.error) throw observationsResponse.error;
 
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
       (checkIn) => ({
@@ -203,11 +230,28 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       }),
     );
 
+    const observationEntries: HistoryEntry[] = (observationsResponse.data ?? []).map(
+      (occ) => {
+        const type = occ.dy_clinical_observations as { title: string; eye: string } | null;
+        return {
+          id: occ.id,
+          kind: "observation",
+          loggedAt: occ.logged_at,
+          title: (type?.title ?? "") as string,
+          eye: (type?.eye ?? "none") as ObservationEye,
+          notes: (occ.notes ?? "") as string,
+          intensity: occ.intensity as number,
+          durationMinutes: (occ.duration_minutes ?? null) as number | null,
+        };
+      },
+    );
+
     const allEntries = [
       ...checkInEntries,
       ...dropEntries,
       ...triggerEntries,
       ...symptomEntries,
+      ...observationEntries,
     ].sort(
       (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );
@@ -228,7 +272,9 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       }),
     );
 
-    const hasMore = (olderCheck.data?.length ?? 0) > 0;
+    const hasMore =
+      (olderCheckIns.data?.length ?? 0) > 0 ||
+      (olderObservations.data?.length ?? 0) > 0;
 
     return {
       ok: true,
@@ -272,8 +318,13 @@ export async function loadMoreHistoryAction(
     const utcBefore = dayKeyToUtcStart(beforeDayKey, timezone);
     const rowLimit = limitDays * 30 + 30;
 
-    const [checkInsResponse, dropsResponse, triggersResponse, symptomsResponse] =
-      await Promise.all([
+    const [
+      checkInsResponse,
+      dropsResponse,
+      triggersResponse,
+      symptomsResponse,
+      observationsResponse,
+    ] = await Promise.all([
         supabase
           .from("dy_check_ins")
           .select(
@@ -314,12 +365,20 @@ export async function loadMoreHistoryAction(
           .lt("logged_at", utcBefore)
           .order("logged_at", { ascending: false })
           .limit(rowLimit),
+        supabase
+          .from("dy_observation_occurrences")
+          .select("id, logged_at, intensity, duration_minutes, notes, dy_clinical_observations(title, eye)")
+          .eq("user_id", session.user.id)
+          .lt("logged_at", utcBefore)
+          .order("logged_at", { ascending: false })
+          .limit(rowLimit),
       ]);
 
     if (checkInsResponse.error) throw checkInsResponse.error;
     if (dropsResponse.error) throw dropsResponse.error;
     if (triggersResponse.error) throw triggersResponse.error;
     if (symptomsResponse.error) throw symptomsResponse.error;
+    if (observationsResponse.error) throw observationsResponse.error;
 
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
       (checkIn) => ({
@@ -372,11 +431,28 @@ export async function loadMoreHistoryAction(
       }),
     );
 
+    const observationEntries: HistoryEntry[] = (observationsResponse.data ?? []).map(
+      (occ) => {
+        const type = occ.dy_clinical_observations as { title: string; eye: string } | null;
+        return {
+          id: occ.id,
+          kind: "observation",
+          loggedAt: occ.logged_at,
+          title: (type?.title ?? "") as string,
+          eye: (type?.eye ?? "none") as ObservationEye,
+          notes: (occ.notes ?? "") as string,
+          intensity: occ.intensity as number,
+          durationMinutes: (occ.duration_minutes ?? null) as number | null,
+        };
+      },
+    );
+
     const allEntries = [
       ...checkInEntries,
       ...dropEntries,
       ...triggerEntries,
       ...symptomEntries,
+      ...observationEntries,
     ].sort(
       (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );

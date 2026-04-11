@@ -55,3 +55,23 @@
 **Cons:** Minor — copy decision only.
 **Context:** The dashboard recomputes on every load, so no special invalidation logic is needed. The only action needed is ensuring the delete warning modal copy accounts for the n < 14 consequence: "Este registro contiene datos de sueño. Eliminarlo podría afectar o eliminar la correlación en tu dashboard."
 **Depends on:** Step 3.5 (Historial screen + delete SA)
+
+---
+
+## T6 — Symptom offline queue (parity)
+**What:** Add `lib/offline/symptoms-queue.ts` + offline path in `symptom-sheet.tsx`.
+**Why:** Observations now have offline support but symptoms don't. Same UX flow, different behavior — a quiet inconsistency that will confuse the user ("why did my observation save but my symptom didn't?").
+**Pros:** Consistent offline experience across all quick log types.
+**Cons:** Another file, another sync loop entry (~40 lines).
+**Context:** Same pattern as `drops-queue.ts` and the newly added `observations-queue.ts`. Looks like an oversight from the symptoms implementation sprint, not a deliberate product decision. See `lib/hooks/use-offline-sync.ts` for where to add the symptom sync loop.
+**Depends on:** — (no blockers)
+
+---
+
+## T7 — Convert observation to trigger
+**What:** Add a button on observation cards in the history "Observaciones" tab: "Convertir en trigger". Pre-fills the trigger log sheet with the observation text.
+**Why:** The explicit product intent — observations are "pre-triggers". Creates the clinical workflow: observe → confirm pattern → promote.
+**Pros:** Closes the observation lifecycle. Keeps data lineage visible.
+**Cons:** Requires a UI/data decision on linking — either a FK `source_observation_id` on `dy_triggers` (full traceability) or just pre-filling the text (simple). Not needed for v1.
+**Context:** User explicitly said observations "could become triggers in the future." The `ObservationCard` in `components/history/history-screen.tsx` is where the button would live. The trigger sheet is in `components/forms/check-in-form.tsx` (triggered via the FAB or check-in form).
+**Depends on:** Clinical observations feature (shipped in this PR).

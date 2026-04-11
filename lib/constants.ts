@@ -34,6 +34,20 @@ export const SYMPTOM_OPTIONS = [
   { id: "dolor_cabeza", label: "Dolor de cabeza", value: "dolor_cabeza" }
 ] as const;
 
+export const OBS_EYE_OPTIONS = [
+  { label: "OD", value: "right" },
+  { label: "OI", value: "left" },
+  { label: "AO", value: "both" },
+  { label: "Ninguno", value: "none" },
+] as const;
+
+export const OBS_EYE_LABELS: Record<string, string> = {
+  right: "OD",
+  left: "OI",
+  both: "AO",
+  none: "",
+};
+
 export const TRIGGER_OPTIONS = [
   { id: "screens", label: "Pantallas", value: "screens" },
   { id: "tv", label: "TV", value: "tv" },

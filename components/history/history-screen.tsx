@@ -14,16 +14,21 @@ import {
   HandEyeIcon,
   SmileyMeltingIcon,
   BoneIcon,
+  NotePencilIcon,
 } from "@phosphor-icons/react";
-import { SYMPTOM_OPTIONS } from "@/lib/constants";
+import { SYMPTOM_OPTIONS, OBS_EYE_LABELS } from "@/lib/constants";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import type {
   GetHistoryFeedResult,
   HistoryDayGroup,
   HistoryEntry,
 } from "@/lib/actions/history";
 import { loadMoreHistoryAction } from "@/lib/actions/history";
-import type { TriggerType } from "@/types/domain";
+import { getObservationsAction } from "@/lib/actions/observations";
+import type { ObservationEntry } from "@/lib/actions/observations";
+import type { TriggerType, ObservationEye } from "@/types/domain";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { getDayKey } from "@/lib/utils/timezone";
 
 type HistoryScreenProps = {
   historyFeed: GetHistoryFeedResult;
@@ -80,11 +85,22 @@ type DisplaySymptomGroup = {
   loggedAt: string;
   symptomTypes: string[];
 };
+type DisplayObservation = {
+  kind: "observation";
+  id: string;
+  loggedAt: string;
+  title: string;
+  notes: string;
+  eye: ObservationEye;
+  intensity: number;
+  durationMinutes: number | null;
+};
 type DisplayItem =
   | DisplayCheckIn
   | DisplayDrop
   | DisplayTriggerGroup
-  | DisplaySymptomGroup;
+  | DisplaySymptomGroup
+  | DisplayObservation;
 
 function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
   const result: DisplayItem[] = [];
@@ -127,6 +143,12 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
           symptomTypes: [entry.symptomType],
         });
       }
+      continue;
+    }
+
+    if (entry.kind === "observation") {
+      result.push(entry as DisplayObservation);
+      continue;
     }
   }
 
@@ -492,14 +514,68 @@ function SymptomCard({
   );
 }
 
+function ObservationCard({
+  item,
+  timezone,
+}: {
+  item: DisplayObservation;
+  timezone: string;
+}) {
+  const time = formatTime(item.loggedAt, timezone);
+  const eyeLabel = OBS_EYE_LABELS[item.eye];
+  const intensityHue = painColor(item.intensity);
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
+          <NotePencilIcon size={15} color="var(--text-muted)" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-[14px] font-medium text-[var(--text-primary)]">
+              {item.title}
+            </p>
+            <span
+              className="mono shrink-0 text-[13px] font-medium tabular-nums"
+              style={{ color: intensityHue }}
+            >
+              {item.intensity}/10
+            </span>
+          </div>
+          <p className="mono mt-0.5 text-[10px] text-[var(--text-muted)]">
+            {eyeLabel ? `${eyeLabel} · ` : ""}
+            {item.durationMinutes ? `${item.durationMinutes} min · ` : ""}
+            {time}
+          </p>
+          {item.notes ? (
+            <p className="mt-1.5 text-[13px] leading-snug text-[var(--text-secondary)]">
+              {item.notes}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function renderItem(item: DisplayItem, timezone: string) {
   if (item.kind === "check_in")
     return <CheckInCard item={item} timezone={timezone} />;
   if (item.kind === "drop") return <DropCard item={item} timezone={timezone} />;
   if (item.kind === "trigger_group")
     return <TriggerCard item={item} timezone={timezone} />;
+  if (item.kind === "observation")
+    return <ObservationCard item={item} timezone={timezone} />;
   return <SymptomCard item={item} timezone={timezone} />;
 }
+
+const HISTORY_TABS = [
+  { label: "Todo", value: "all" },
+  { label: "Observaciones", value: "observations" },
+] as const;
+
+type HistoryTab = (typeof HISTORY_TABS)[number]["value"];
 
 export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
   const [groups, setGroups] = useState<HistoryDayGroup[]>(
@@ -510,6 +586,31 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<HistoryTab>("all");
+  const [observations, setObservations] = useState<ObservationEntry[] | null>(null);
+  const [obsLoading, setObsLoading] = useState(false);
+
+  const timezone = historyFeed.ok ? historyFeed.timezone : "America/Bogota";
+
+  async function handleTabChange(tab: HistoryTab) {
+    setActiveTab(tab);
+    if (tab === "observations" && observations === null) {
+      setObsLoading(true);
+      try {
+        const result = await getObservationsAction();
+        if (result.ok) {
+          setObservations(result.observations);
+        } else {
+          setObservations([]);
+        }
+      } catch {
+        setObservations([]);
+      } finally {
+        setObsLoading(false);
+      }
+    }
+  }
 
   async function handleLoadMore() {
     if (isLoading || groups.length === 0) return;
@@ -539,9 +640,122 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
     );
   }
 
+  // Build observations tab content: group by day
+  function buildObservationGroups(
+    obs: ObservationEntry[],
+  ): { dayKey: string; items: DisplayObservation[] }[] {
+    const map = new Map<string, DisplayObservation[]>();
+    for (const entry of obs) {
+      const dayKey = getDayKey(entry.loggedAt, timezone);
+      const existing = map.get(dayKey) ?? [];
+      existing.push(entry as DisplayObservation);
+      map.set(dayKey, existing);
+    }
+    return Array.from(map.entries()).map(([dayKey, items]) => ({ dayKey, items }));
+  }
+
+  if (activeTab === "observations") {
+    if (obsLoading) {
+      return (
+        <section className="space-y-4">
+          <div className="mb-4">
+            <SegmentedControl
+              label=""
+              options={HISTORY_TABS}
+              value={activeTab}
+              onChange={handleTabChange}
+            />
+          </div>
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-16 animate-pulse rounded-[14px] bg-[var(--surface)]"
+              />
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    const obsGroups = buildObservationGroups(observations ?? []);
+
+    return (
+      <section>
+        <div className="mb-6">
+          <SegmentedControl
+            label=""
+            options={HISTORY_TABS}
+            value={activeTab}
+            onChange={handleTabChange}
+          />
+        </div>
+
+        {obsGroups.length === 0 ? (
+          <StatusBanner
+            message="No hay observaciones clinicas aun. Toca + para registrar tu primera observacion."
+            tone="info"
+          />
+        ) : (
+          <div className="relative">
+            <div className="absolute bottom-0 left-[15px] top-2 w-px bg-[var(--border)]" />
+            <div className="space-y-6">
+              {obsGroups.map((group) => {
+                const pillLabel = getDayPillLabel(group.dayKey, timezone);
+                const shortDate = formatShortDate(group.dayKey);
+                return (
+                  <div key={group.dayKey}>
+                    <div className="relative mb-3 flex items-center gap-2 py-1">
+                      <span className="relative z-10 inline-flex h-7 items-center rounded-full border border-[var(--border)] bg-[var(--surface-el)] px-3 text-[10px] font-semibold tracking-[0.12em] text-[var(--text-primary)]">
+                        {pillLabel ?? shortDate}
+                      </span>
+                      {pillLabel ? (
+                        <span className="text-[11px] font-medium tracking-[0.1em] text-[var(--text-muted)]">
+                          {shortDate}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2.5">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="relative flex items-start gap-3 pl-8"
+                        >
+                          <div
+                            className="absolute left-[11px] top-[19px] z-10 h-[9px] w-[9px] rounded-full"
+                            style={{
+                              background: "var(--text-muted)",
+                              boxShadow: "0 0 0 2px var(--bg)",
+                            }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <ObservationCard item={item} timezone={timezone} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // "Todo" tab — original feed
   if (groups.length === 0) {
     return (
       <section className="space-y-8">
+        <div className="mb-4">
+          <SegmentedControl
+            label=""
+            options={HISTORY_TABS}
+            value={activeTab}
+            onChange={handleTabChange}
+          />
+        </div>
         <StatusBanner
           message="Aun no tienes registros. Ve a Registrar para empezar y cuando guardes veremos aqui check-ins, gotas y triggers agrupados por dia."
           tone="info"
@@ -550,10 +764,17 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
     );
   }
 
-  const timezone = historyFeed.timezone;
-
   return (
     <section>
+      <div className="mb-6">
+        <SegmentedControl
+          label=""
+          options={HISTORY_TABS}
+          value={activeTab}
+          onChange={handleTabChange}
+        />
+      </div>
+
       <div className="relative">
         {/* Vertical timeline line */}
         <div className="absolute bottom-0 left-[15px] top-2 w-px bg-[var(--border)]" />

@@ -2,17 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Pulse, Drop, Plus } from "@phosphor-icons/react";
+import { Pulse, Drop, Plus, NotePencil } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
 import { SymptomSheet } from "@/components/forms/symptom-sheet";
+import { ObservationSheet } from "@/components/forms/observation-sheet";
+import { ObservationsListSheet } from "@/components/forms/observations-list-sheet";
+import { LogOccurrenceSheet } from "@/components/forms/log-occurrence-sheet";
 import { cn } from "@/lib/utils";
+import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
+
+type Sheet = "drop" | "symptom" | "obs_list" | "obs_log" | "obs_new" | null;
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheet, setSheet] = useState<"drop" | "symptom" | null>(null);
+  const [sheet, setSheet] = useState<Sheet>(null);
+  const [selectedObservation, setSelectedObservation] =
+    useState<ObservationTypeWithLastOccurrence | null>(null);
 
   const isVisible = useMemo(
     () => pathname === "/register" || pathname === "/history",
@@ -28,6 +36,12 @@ export function FloatingQuickActions() {
   const closeAll = () => {
     setSheet(null);
     setMenuOpen(false);
+    setSelectedObservation(null);
+  };
+
+  const handleSelectObservation = (obs: ObservationTypeWithLastOccurrence) => {
+    setSelectedObservation(obs);
+    setSheet("obs_log");
   };
 
   return (
@@ -51,6 +65,14 @@ export function FloatingQuickActions() {
               >
                 <Pulse size={18} />
                 Sintomas
+              </Button>
+              <Button
+                className="min-w-[132px] justify-start gap-2"
+                variant="subtle"
+                onClick={() => setSheet("obs_list")}
+              >
+                <NotePencil size={18} />
+                Observacion
               </Button>
             </>
           ) : null}
@@ -86,6 +108,42 @@ export function FloatingQuickActions() {
         onClose={closeAll}
       >
         <SymptomSheet onSaved={closeAll} />
+      </MobileSheet>
+
+      {/* Observation flow: list → log occurrence or create new */}
+      <MobileSheet
+        description="Selecciona una observacion para registrar una ocurrencia."
+        open={sheet === "obs_list"}
+        title="Observaciones"
+        onClose={closeAll}
+      >
+        <ObservationsListSheet
+          onSelectObservation={handleSelectObservation}
+          onCreateNew={() => setSheet("obs_new")}
+        />
+      </MobileSheet>
+
+      <MobileSheet
+        description="Registra cuando ocurre esta observacion."
+        open={sheet === "obs_log"}
+        title="Registrar ocurrencia"
+        onClose={closeAll}
+      >
+        {selectedObservation ? (
+          <LogOccurrenceSheet
+            observation={selectedObservation}
+            onSaved={closeAll}
+          />
+        ) : null}
+      </MobileSheet>
+
+      <MobileSheet
+        description="Registra algo que notaste que aun no es un trigger."
+        open={sheet === "obs_new"}
+        title="Nueva observacion"
+        onClose={closeAll}
+      >
+        <ObservationSheet onSaved={() => setSheet("obs_list")} />
       </MobileSheet>
     </>
   );

@@ -86,6 +86,17 @@ export type SaveMedicationInput = {
   notes?: string;
 };
 
+export type ObservationEye = "right" | "left" | "both" | "none";
+
+export type SaveOccurrenceInput = {
+  id: string;
+  observationId: string;
+  loggedAt: string;
+  intensity: number;
+  durationMinutes: number | null;
+  notes: string;
+};
+
 export type ActionState =
   | { status: "idle" }
   | { status: "success"; message: string }

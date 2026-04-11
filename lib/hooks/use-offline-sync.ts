@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { saveDropAction } from "@/lib/actions/drops";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
+import { saveObservationAction, saveOccurrenceAction } from "@/lib/actions/observations";
 import {
   getPendingDrops,
   getPendingDropsCount,
@@ -13,26 +14,48 @@ import {
   getPendingCheckInsCount,
   removePendingCheckIn,
 } from "@/lib/offline/check-ins-queue";
+import {
+  getPendingObservations,
+  getPendingObservationsCount,
+  removePendingObservation,
+} from "@/lib/offline/observations-queue";
+import {
+  getPendingOccurrences,
+  getPendingOccurrencesCount,
+  removePendingOccurrence,
+} from "@/lib/offline/occurrences-queue";
 
 export function useOfflineSync() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const refreshCount = useCallback(async () => {
-    const [drops, checkIns] = await Promise.all([
+    const [drops, checkIns, observations, occurrences] = await Promise.all([
       getPendingDropsCount(),
       getPendingCheckInsCount(),
+      getPendingObservationsCount(),
+      getPendingOccurrencesCount(),
     ]);
-    setPendingCount(drops + checkIns);
+    setPendingCount(drops + checkIns + observations + occurrences);
   }, []);
 
   const sync = useCallback(async () => {
-    const [pendingDrops, pendingCheckIns] = await Promise.all([
-      getPendingDrops(),
-      getPendingCheckIns(),
-    ]);
+    const [pendingDrops, pendingCheckIns, pendingObservations, pendingOccurrences] =
+      await Promise.all([
+        getPendingDrops(),
+        getPendingCheckIns(),
+        getPendingObservations(),
+        getPendingOccurrences(),
+      ]);
 
-    if (pendingDrops.length === 0 && pendingCheckIns.length === 0) return;
+    if (
+      pendingDrops.length === 0 &&
+      pendingCheckIns.length === 0 &&
+      pendingObservations.length === 0 &&
+      pendingOccurrences.length === 0
+    ) {
+      return;
+    }
 
     setIsSyncing(true);
 
@@ -49,6 +72,24 @@ export function useOfflineSync() {
       try {
         const result = await saveCheckInAction(checkIn);
         if (result.ok) await removePendingCheckIn(checkIn.id);
+      } catch {
+        // Keep in queue, try again next time online
+      }
+    }
+
+    for (const observation of pendingObservations) {
+      try {
+        const result = await saveObservationAction(observation);
+        if (result.ok) await removePendingObservation(observation.id);
+      } catch {
+        // Keep in queue, try again next time online
+      }
+    }
+
+    for (const occurrence of pendingOccurrences) {
+      try {
+        const result = await saveOccurrenceAction(occurrence);
+        if (result.ok) await removePendingOccurrence(occurrence.id);
       } catch {
         // Keep in queue, try again next time online
       }
