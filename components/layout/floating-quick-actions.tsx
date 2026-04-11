@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Pulse, Drop, Plus, NotePencil } from "@phosphor-icons/react";
+import {
+  PulseIcon,
+  DropIcon,
+  PlusIcon,
+  NotePencilIcon,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
@@ -55,7 +60,7 @@ export function FloatingQuickActions() {
                 variant="subtle"
                 onClick={() => setSheet("drop")}
               >
-                <Drop size={18} />
+                <DropIcon size={18} />
                 Gota
               </Button>
               <Button
@@ -63,7 +68,7 @@ export function FloatingQuickActions() {
                 variant="subtle"
                 onClick={() => setSheet("symptom")}
               >
-                <Pulse size={18} />
+                <PulseIcon size={18} />
                 Sintomas
               </Button>
               <Button
@@ -71,7 +76,7 @@ export function FloatingQuickActions() {
                 variant="subtle"
                 onClick={() => setSheet("obs_list")}
               >
-                <NotePencil size={18} />
+                <NotePencilIcon size={18} />
                 Observacion
               </Button>
             </>
@@ -87,7 +92,7 @@ export function FloatingQuickActions() {
             type="button"
             onClick={() => setMenuOpen((current) => !current)}
           >
-            <Plus size={24} />
+            <PlusIcon size={24} />
           </button>
         </div>
       </div>
