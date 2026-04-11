@@ -128,6 +128,7 @@ export function FloatingQuickActions() {
         open={sheet === "obs_log"}
         title="Registrar ocurrencia"
         onClose={closeAll}
+        onBack={() => setSheet("obs_list")}
       >
         {selectedObservation ? (
           <LogOccurrenceSheet

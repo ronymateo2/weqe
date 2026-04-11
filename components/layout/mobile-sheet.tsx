@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { ArrowLeft } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 type MobileSheetProps = {
@@ -8,11 +9,12 @@ type MobileSheetProps = {
   title: string;
   description: string;
   onClose: () => void;
+  onBack?: () => void;
   children: React.ReactNode;
   panelClassName?: string;
 };
 
-export function MobileSheet({ open, title, description, onClose, children, panelClassName }: MobileSheetProps) {
+export function MobileSheet({ open, title, description, onClose, onBack, children, panelClassName }: MobileSheetProps) {
   const id = useId();
   const titleId = `${id}-title`;
   const descId = `${id}-desc`;
@@ -50,6 +52,17 @@ export function MobileSheet({ open, title, description, onClose, children, panel
       >
         <div className="sheet-handle" />
         <header className="mb-6">
+          {onBack && (
+            <button
+              aria-label="Volver"
+              className="mb-3 flex items-center gap-1.5 text-[13px] text-[var(--accent)] -ml-0.5"
+              type="button"
+              onClick={onBack}
+            >
+              <ArrowLeft size={16} weight="bold" />
+              Volver
+            </button>
+          )}
           <h2 id={titleId} className="screen-title text-[17px]">{title}</h2>
           <p id={descId} className="screen-subtitle text-[13px]">{description}</p>
         </header>
