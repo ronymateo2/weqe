@@ -27,7 +27,9 @@ import {
   SmileyMeltingIcon,
   LightningIcon,
   HeadCircuitIcon,
-  CaretDown,
+  CaretDownIcon,
+  TargetIcon,
+  ActivityIcon,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -395,12 +397,13 @@ export function CheckInForm() {
                   }
                 }}
               >
-                <span>
+                <span className="flex items-center gap-2">
+                  <TargetIcon size={18} className="text-[var(--text-muted)]" />
                   {selectedTrigger !== null
                     ? `Trigger: ${TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger)?.label}`
                     : "¿Hubo un trigger?"}
                 </span>
-                <CaretDown
+                <CaretDownIcon
                   weight="bold"
                   className={cn("transition-transform duration-200", showTriggers && "rotate-180")}
                 />
@@ -459,12 +462,13 @@ export function CheckInForm() {
                   }
                 }}
               >
-                <span>
+                <span className="flex items-center gap-2">
+                  <ActivityIcon  size={18} className="text-[var(--text-muted)]" />
                   {selectedSymptoms.size > 0
                     ? `Síntomas (${selectedSymptoms.size})`
                     : "¿Sientes algún síntoma?"}
                 </span>
-                <CaretDown
+                <CaretDownIcon
                   weight="bold"
                   className={cn("transition-transform duration-200", showSymptoms && "rotate-180")}
                 />
