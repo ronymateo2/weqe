@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
-  PulseIcon,
   DropIcon,
   PlusIcon,
   NotePencilIcon,
@@ -13,14 +12,13 @@ import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
 import { SleepSheet } from "@/components/forms/sleep-sheet";
-import { SymptomSheet } from "@/components/forms/symptom-sheet";
 import { ObservationSheet } from "@/components/forms/observation-sheet";
 import { ObservationsListSheet } from "@/components/forms/observations-list-sheet";
 import { LogOccurrenceSheet } from "@/components/forms/log-occurrence-sheet";
 import { cn } from "@/lib/utils";
 import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
 
-type Sheet = "drop" | "sleep" | "symptom" | "obs_list" | "obs_log" | "obs_new" | null;
+type Sheet = "drop" | "sleep" | "obs_list" | "obs_log" | "obs_new" | null;
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
@@ -76,14 +74,6 @@ export function FloatingQuickActions() {
               <Button
                 className="min-w-[132px] justify-start gap-2"
                 variant="subtle"
-                onClick={() => setSheet("symptom")}
-              >
-                <PulseIcon size={18} />
-                Sintomas
-              </Button>
-              <Button
-                className="min-w-[132px] justify-start gap-2"
-                variant="subtle"
                 onClick={() => setSheet("obs_list")}
               >
                 <NotePencilIcon size={18} />
@@ -123,15 +113,6 @@ export function FloatingQuickActions() {
         onClose={closeAll}
       >
         <DropSheet onSaved={closeAll} />
-      </MobileSheet>
-
-      <MobileSheet
-        description="Registra los sintomas que estas sintiendo ahora."
-        open={sheet === "symptom"}
-        title="Sintomas"
-        onClose={closeAll}
-      >
-        <SymptomSheet onSaved={closeAll} />
       </MobileSheet>
 
       {/* Observation flow: list → log occurrence or create new */}

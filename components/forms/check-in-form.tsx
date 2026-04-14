@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { TextInput } from "@/components/ui/text-input";
 import { Toast } from "@/components/ui/toast";
-import { TRIGGER_OPTIONS } from "@/lib/constants";
+import { TRIGGER_OPTIONS, SYMPTOM_OPTIONS } from "@/lib/constants";
 
 import { saveCheckInAction } from "@/lib/actions/check-ins";
+import { saveSymptomAction } from "@/lib/actions/symptoms";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
 import { queueCheckIn } from "@/lib/offline/check-ins-queue";
 import type { ActionState, TriggerType } from "@/types/domain";
@@ -81,6 +82,9 @@ export function CheckInForm() {
   const [pain, setPain] = useState(defaultPainState);
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
   const [customTriggerName, setCustomTriggerName] = useState("");
+  const [showSymptoms, setShowSymptoms] = useState(false);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
+  const [customSymptom, setCustomSymptom] = useState("");
   const [contextTab, setContextTab] = useState<ContextTab>("now");
   const [showTriggers, setShowTriggers] = useState(false);
   const [loggedAt, setLoggedAt] = useState<string | null>(null);
@@ -206,6 +210,9 @@ export function CheckInForm() {
     setPain(defaultPainState);
     setSelectedTrigger(null);
     setCustomTriggerName("");
+    setShowSymptoms(false);
+    setSelectedSymptoms(new Set());
+    setCustomSymptom("");
     setContextTab("now");
     setLoggedAt(null);
     setShowTriggers(false);
@@ -215,6 +222,16 @@ export function CheckInForm() {
     setIsPending(true);
 
     startTransition(async () => {
+      const loggedAt = input.loggedAt;
+      const symptomsToSave: { type: string }[] = Array.from(selectedSymptoms).map((id) => {
+        const option = SYMPTOM_OPTIONS.find((o) => o.id === id);
+        return { type: option?.value ?? id };
+      });
+
+      if (customSymptom.trim()) {
+        symptomsToSave.push({ type: customSymptom.trim().toLowerCase().replace(/\s+/g, "_") });
+      }
+
       if (!navigator.onLine) {
         await queueCheckIn(input);
         setState({
@@ -228,6 +245,17 @@ export function CheckInForm() {
 
       try {
         const result = await saveCheckInAction(input);
+        
+        if (result.ok) {
+          for (const { type } of symptomsToSave) {
+            await saveSymptomAction({
+              id: crypto.randomUUID(),
+              loggedAt,
+              symptomType: type
+            });
+          }
+        }
+
         setState({
           status: result.ok ? "success" : "error",
           message: result.message,
@@ -378,6 +406,59 @@ export function CheckInForm() {
                       onChange={(e) => setCustomTriggerName(e.target.value)}
                     />
                   ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Symptoms — always optional */}
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                className={tabClass(showSymptoms || selectedSymptoms.size > 0)}
+                onClick={() => {
+                  const next = !showSymptoms;
+                  setShowSymptoms(next);
+                  if (!next) {
+                    setSelectedSymptoms(new Set());
+                    setCustomSymptom("");
+                  }
+                }}
+              >
+                {selectedSymptoms.size > 0
+                  ? `Síntomas (${selectedSymptoms.size})`
+                  : "¿Sientes algún síntoma?"}
+              </button>
+              {showSymptoms ? (
+                <div className="space-y-2.5">
+                  <div className="flex flex-wrap gap-2">
+                    {SYMPTOM_OPTIONS.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={cn(
+                          "min-h-[44px] rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
+                          selectedSymptoms.has(option.id)
+                            ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
+                            : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
+                        )}
+                        onClick={() => {
+                          setSelectedSymptoms((current) => {
+                            const next = new Set(current);
+                            if (next.has(option.id)) next.delete(option.id);
+                            else next.add(option.id);
+                            return next;
+                          });
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <TextInput
+                    placeholder="Describe el síntoma..."
+                    value={customSymptom}
+                    onChange={(e) => setCustomSymptom(e.target.value)}
+                  />
                 </div>
               ) : null}
             </div>
