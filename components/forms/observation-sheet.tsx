@@ -8,6 +8,7 @@ import { saveObservationAction } from "@/lib/actions/observations";
 import { queueObservation } from "@/lib/offline/observations-queue";
 import { cn } from "@/lib/utils";
 import type { ObservationEye, ActionState } from "@/types/domain";
+import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
 
 const EYE_OPTIONS = [
   { label: "OD", value: "right" },
@@ -20,7 +21,7 @@ const MAX_CHARS = 300;
 const MAX_TITLE = 80;
 
 type ObservationSheetProps = {
-  onSaved: () => void;
+  onSaved: (observation: ObservationTypeWithLastOccurrence) => void;
 };
 
 export function ObservationSheet({ onSaved }: ObservationSheetProps) {
@@ -36,12 +37,19 @@ export function ObservationSheet({ onSaved }: ObservationSheetProps) {
   const handleSave = () => {
     const id = crypto.randomUUID();
     const input = { id, title: title.trim(), notes: notes.trim(), eye };
+    const savedObs: ObservationTypeWithLastOccurrence = {
+      id,
+      title: input.title,
+      notes: input.notes,
+      eye: input.eye,
+      lastOccurrence: null,
+    };
 
     startTransition(async () => {
       if (!navigator.onLine) {
         await queueObservation(input);
         setState({ status: "success", message: "Guardado localmente, se sincronizara cuando haya conexion." });
-        onSaved();
+        onSaved(savedObs);
         return;
       }
 
@@ -53,7 +61,7 @@ export function ObservationSheet({ onSaved }: ObservationSheetProps) {
       }
 
       setState({ status: "success", message: result.message });
-      onSaved();
+      onSaved(savedObs);
     });
   };
 

@@ -168,7 +168,12 @@ export function FloatingQuickActions() {
         title="Nueva observacion"
         onClose={closeAll}
       >
-        <ObservationSheet onSaved={() => setSheet("obs_list")} />
+        <ObservationSheet
+          onSaved={(obs) => {
+            setSelectedObservation(obs);
+            setSheet("obs_log");
+          }}
+        />
       </MobileSheet>
     </>
   );
