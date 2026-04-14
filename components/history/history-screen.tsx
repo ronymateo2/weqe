@@ -339,7 +339,7 @@ function CheckInCard({
             icon: <HeadCircuitIcon size={13} />,
             value: item.templePain,
           },
-        ].map(({ label, icon, value }, i) => (
+        ].map(({ label, icon, value }) => (
           <div key={label} className="flex items-center gap-2">
             <span
               className="flex w-[13px] shrink-0 items-center justify-center"
@@ -654,8 +654,7 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
         setGroups(result.groups);
         setHasMore(result.hasMore);
       }
-      // Reset observations so they re-fetch on next tab visit (or immediately if active)
-      setObservations(null);
+      // Don't reset observations — they're loaded once and cached in state
     };
     window.addEventListener("history:refresh", handler);
     return () => window.removeEventListener("history:refresh", handler);
@@ -708,18 +707,33 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
     );
   }
 
-  // Build observations tab content: group by day
-  function buildObservationGroups(
-    obs: ObservationEntry[],
-  ): { dayKey: string; items: DisplayObservation[] }[] {
-    const map = new Map<string, DisplayObservation[]>();
+  // Build observations tab content: group by clinical observation type
+  function buildObservationTypeGroups(obs: ObservationEntry[]): {
+    observationId: string;
+    title: string;
+    eye: ObservationEntry["eye"];
+    occurrences: DisplayObservation[];
+  }[] {
+    const map = new Map<
+      string,
+      { title: string; eye: ObservationEntry["eye"]; occurrences: DisplayObservation[] }
+    >();
     for (const entry of obs) {
-      const dayKey = getDayKey(entry.loggedAt, timezone);
-      const existing = map.get(dayKey) ?? [];
-      existing.push(entry as DisplayObservation);
-      map.set(dayKey, existing);
+      const existing = map.get(entry.observationId);
+      if (existing) {
+        existing.occurrences.push(entry as DisplayObservation);
+      } else {
+        map.set(entry.observationId, {
+          title: entry.title,
+          eye: entry.eye,
+          occurrences: [entry as DisplayObservation],
+        });
+      }
     }
-    return Array.from(map.entries()).map(([dayKey, items]) => ({ dayKey, items }));
+    return Array.from(map.entries()).map(([observationId, v]) => ({
+      observationId,
+      ...v,
+    }));
   }
 
   if (activeTab === "observations") {
@@ -746,7 +760,7 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
       );
     }
 
-    const obsGroups = buildObservationGroups(observations ?? []);
+    const obsTypeGroups = buildObservationTypeGroups(observations ?? []);
 
     return (
       <section>
@@ -759,53 +773,73 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
           />
         </div>
 
-        {obsGroups.length === 0 ? (
+        {obsTypeGroups.length === 0 ? (
           <StatusBanner
             message="No hay observaciones clinicas aun. Toca + para registrar tu primera observacion."
             tone="info"
           />
         ) : (
-          <div className="relative">
-            <div className="absolute bottom-0 left-[15px] top-2 w-px bg-[var(--border)]" />
-            <div className="space-y-6">
-              {obsGroups.map((group) => {
-                const pillLabel = getDayPillLabel(group.dayKey, timezone);
-                const shortDate = formatShortDate(group.dayKey);
-                return (
-                  <div key={group.dayKey}>
-                    <div className="relative mb-3 flex items-center gap-2 py-1">
-                      <span className="relative z-10 inline-flex h-7 items-center rounded-full border border-[var(--border)] bg-[var(--surface-el)] px-3 text-[10px] font-semibold tracking-[0.12em] text-[var(--text-primary)]">
-                        {pillLabel ?? shortDate}
-                      </span>
-                      {pillLabel ? (
-                        <span className="text-[11px] font-medium tracking-[0.1em] text-[var(--text-muted)]">
-                          {shortDate}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="space-y-2.5">
-                      {group.items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="relative flex items-start gap-3 pl-8"
-                        >
-                          <div
-                            className="absolute left-[11px] top-[19px] z-10 h-[9px] w-[9px] rounded-full"
-                            style={{
-                              background: "var(--text-muted)",
-                              boxShadow: "0 0 0 2px var(--bg)",
-                            }}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <ObservationCard item={item} timezone={timezone} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+          <div className="space-y-6">
+            {obsTypeGroups.map((group) => (
+              <div
+                key={group.observationId}
+                className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
+              >
+                {/* Observation type header */}
+                <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border)]">
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-[var(--text-primary)] truncate">
+                      {group.title}
+                    </p>
+                    {group.eye && group.eye !== "none" ? (
+                      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)] mt-0.5">
+                        {OBS_EYE_LABELS[group.eye]}
+                      </p>
+                    ) : null}
                   </div>
-                );
-              })}
-            </div>
+                  <span className="mono shrink-0 inline-flex items-center justify-center h-6 min-w-[24px] px-1.5 rounded-full bg-[var(--surface-el)] text-[11px] font-semibold text-[var(--text-muted)]">
+                    {group.occurrences.length}
+                  </span>
+                </div>
+
+                {/* Occurrences list */}
+                <div className="divide-y divide-[var(--border)]">
+                  {group.occurrences.map((item) => {
+                    const time = formatTime(item.loggedAt, timezone);
+                    const dayKey = getDayKey(item.loggedAt, timezone);
+                    const pillLabel = getDayPillLabel(dayKey, timezone);
+                    const shortDate = formatShortDate(dayKey);
+                    const dateLabel = pillLabel ?? shortDate;
+                    const intensityHue = painColor(item.intensity);
+                    return (
+                      <div key={item.id} className="flex items-start gap-3 px-4 py-2.5">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="mono text-[11px] text-[var(--text-muted)]">
+                              {dateLabel} · {time}
+                              {item.durationMinutes
+                                ? ` · ${item.durationMinutes} min`
+                                : ""}
+                            </p>
+                            <span
+                              className="mono shrink-0 text-[12px] font-semibold tabular-nums"
+                              style={{ color: intensityHue }}
+                            >
+                              {item.intensity}/10
+                            </span>
+                          </div>
+                          {item.notes ? (
+                            <p className="mt-0.5 text-[12px] leading-snug text-[var(--text-secondary)]">
+                              {item.notes}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

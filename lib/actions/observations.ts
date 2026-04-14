@@ -178,6 +178,7 @@ export async function saveOccurrenceAction(input: SaveOccurrenceInput) {
 export type ObservationEntry = {
   kind: "observation";
   id: string;
+  observationId: string;
   loggedAt: string;
   title: string;
   notes: string;
@@ -217,6 +218,7 @@ export async function getObservationsAction(): Promise<{
       return {
         kind: "observation" as const,
         id: row.id as string,
+        observationId: row.observation_id as string,
         loggedAt: row.logged_at as string,
         title: (type?.title ?? "") as string,
         eye: (type?.eye ?? "none") as ObservationEye,
