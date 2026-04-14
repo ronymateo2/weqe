@@ -47,7 +47,7 @@ export function SleepQualitySelector({
   value,
   onChange,
 }: {
-  value: SleepQuality;
+  value: SleepQuality | null;
   onChange: (v: SleepQuality) => void;
 }) {
   return (

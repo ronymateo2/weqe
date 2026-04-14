@@ -18,13 +18,37 @@ function parseSleepHours(value: string): number | null {
   return Math.round(Math.round(clamped / 0.5) * 0.5 * 10) / 10;
 }
 
+function SleepSheetSkeleton() {
+  return (
+    <div className="animate-pulse space-y-5 pb-4">
+      <div className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
+          <div className="h-4 w-32 rounded-md bg-[var(--surface)]" />
+          <div className="h-7 w-16 rounded-md bg-[var(--surface)]" />
+        </div>
+        <div className="h-[168px] rounded-[16px] border border-[var(--border)] bg-[var(--surface)]" />
+        <div className="h-3 w-52 rounded-md bg-[var(--surface)]" />
+      </div>
+      <div className="space-y-3">
+        <div className="h-3 w-36 rounded-md bg-[var(--surface)]" />
+        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-[72px] rounded-[10px] bg-[var(--surface)]" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type SleepSheetProps = {
   onSaved: () => void;
 };
 
 export function SleepSheet({ onSaved }: SleepSheetProps) {
-  const [sleepHours, setSleepHours] = useState("7");
-  const [sleepQuality, setSleepQuality] = useState<SleepQuality>("regular");
+  const [isLoading, setIsLoading] = useState(true);
+  const [sleepHours, setSleepHours] = useState("8");
+  const [sleepQuality, setSleepQuality] = useState<SleepQuality | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [state, setState] = useState<ActionState>({ status: "idle" });
@@ -32,17 +56,23 @@ export function SleepSheet({ onSaved }: SleepSheetProps) {
 
   useEffect(() => {
     getTodaySleep().then((record) => {
-      if (!record) return;
-      setExistingId(record.id);
-      setIsUpdating(true);
-      setSleepHours(String(record.sleepHours));
-      setSleepQuality(record.sleepQuality);
+      if (record) {
+        setExistingId(record.id);
+        setIsUpdating(true);
+        setSleepHours(String(record.sleepHours));
+        setSleepQuality(record.sleepQuality);
+      }
+      setIsLoading(false);
     });
   }, []);
 
   const handleSave = () => {
     const hours = parseSleepHours(sleepHours);
     if (hours === null) return;
+    if (sleepQuality === null) {
+      setState({ status: "error", message: "Selecciona la calidad del sueno." });
+      return;
+    }
 
     const input = {
       id: existingId ?? crypto.randomUUID(),
@@ -87,17 +117,21 @@ export function SleepSheet({ onSaved }: SleepSheetProps) {
 
   return (
     <>
-      <div className="space-y-5 pb-4">
-        {state.status !== "idle" && state.message ? (
-          <StatusBanner
-            message={state.message}
-            tone={state.status === "success" ? "success" : "error"}
-          />
-        ) : null}
+      {isLoading ? (
+        <SleepSheetSkeleton />
+      ) : (
+        <div className="space-y-5 pb-4">
+          {state.status !== "idle" && state.message ? (
+            <StatusBanner
+              message={state.message}
+              tone={state.status === "success" ? "success" : "error"}
+            />
+          ) : null}
 
-        <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
-        <SleepQualitySelector value={sleepQuality} onChange={setSleepQuality} />
-      </div>
+          <SleepHoursInput value={sleepHours} onChange={setSleepHours} />
+          <SleepQualitySelector value={sleepQuality} onChange={setSleepQuality} />
+        </div>
+      )}
 
       <div
         className="sticky bottom-0 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3"
@@ -108,7 +142,7 @@ export function SleepSheet({ onSaved }: SleepSheetProps) {
       >
         <Button
           className="w-full"
-          disabled={isPending}
+          disabled={isPending || isLoading}
           type="button"
           onClick={handleSave}
         >
