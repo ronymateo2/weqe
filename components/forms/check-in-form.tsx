@@ -62,12 +62,18 @@ function formatLoggedAt(iso: string): string {
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  const time = d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+  const time = d.toLocaleTimeString("es", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   if (d.toDateString() === now.toDateString()) return `hoy, ${time}`;
   if (d.toDateString() === yesterday.toDateString()) return `ayer, ${time}`;
   return (
-    d.toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" }) +
-    `, ${time}`
+    d.toLocaleDateString("es", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }) + `, ${time}`
   );
 }
 
@@ -76,12 +82,15 @@ export function CheckInForm() {
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
   const [customTriggerName, setCustomTriggerName] = useState("");
   const [contextTab, setContextTab] = useState<ContextTab>("now");
+  const [showTriggers, setShowTriggers] = useState(false);
   const [loggedAt, setLoggedAt] = useState<string | null>(null);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
-  const [pendingInput, setPendingInput] = useState<SaveCheckInInput | null>(null);
+  const [pendingInput, setPendingInput] = useState<SaveCheckInInput | null>(
+    null,
+  );
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -199,6 +208,7 @@ export function CheckInForm() {
     setCustomTriggerName("");
     setContextTab("now");
     setLoggedAt(null);
+    setShowTriggers(false);
   };
 
   const submitCheckIn = (input: SaveCheckInInput) => {
@@ -242,7 +252,10 @@ export function CheckInForm() {
   };
 
   const confirmSaveWithZeros = () => {
-    if (!pendingInput) { closeZeroWarning(); return; }
+    if (!pendingInput) {
+      closeZeroWarning();
+      return;
+    }
     const input = pendingInput;
     closeZeroWarning();
     submitCheckIn(input);
@@ -252,7 +265,10 @@ export function CheckInForm() {
     if (isPending || !isTriggerValid) return;
     const input = buildPayload();
     const warningMessage = getZeroValueWarning(input);
-    if (!warningMessage) { submitCheckIn(input); return; }
+    if (!warningMessage) {
+      submitCheckIn(input);
+      return;
+    }
     setPendingInput(input);
     setZeroWarning(warningMessage);
   };
@@ -275,6 +291,98 @@ export function CheckInForm() {
             onDismiss={() => setState({ status: "idle" })}
           />
         ) : null}
+        {/* Context — all optional */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)]">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <p className="section-label mb-0">Contexto</p>
+          </div>
+
+          <div className="px-4 pb-4 space-y-5">
+            {/* 2-tab control: Ahora / Cambiar hora */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  className={tabClass(contextTab === "now")}
+                  onClick={() => handleContextTab("now")}
+                >
+                  Ahora
+                </button>
+                <button
+                  type="button"
+                  className={cn(tabClass(contextTab === "custom"))}
+                  onClick={() => handleContextTab("custom")}
+                >
+                  {contextTab === "custom" && loggedAt
+                    ? formatLoggedAt(loggedAt)
+                    : "Cambiar hora"}
+                </button>
+              </div>
+
+              {/* Wheel picker — inline below tabs, only when custom */}
+              {contextTab === "custom" ? (
+                <DateTimeWheelPicker
+                  max={new Date()}
+                  value={loggedAt ?? new Date().toISOString()}
+                  onChange={setLoggedAt}
+                />
+              ) : null}
+            </div>
+
+            {/* Trigger — always optional */}
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                className={tabClass(showTriggers || selectedTrigger !== null)}
+                onClick={() => {
+                  const next = !showTriggers;
+                  setShowTriggers(next);
+                  if (!next) {
+                    setSelectedTrigger(null);
+                    setCustomTriggerName("");
+                  }
+                }}
+              >
+                {selectedTrigger !== null
+                  ? `Trigger: ${TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger)?.label}`
+                  : "¿Hubo un trigger?"}
+              </button>
+              {showTriggers ? (
+                <div className="space-y-2.5">
+                  <div className="flex flex-wrap gap-2">
+                    {TRIGGER_OPTIONS.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={cn(
+                          "min-h-[44px] rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
+                          selectedTrigger === option.id
+                            ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
+                            : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
+                        )}
+                        onClick={() => {
+                          setSelectedTrigger(
+                            selectedTrigger === option.id ? null : option.id,
+                          );
+                          if (option.id !== "other") setCustomTriggerName("");
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedTrigger === "other" ? (
+                    <TextInput
+                      placeholder="Nombre del trigger (ej. polvo, humo)"
+                      value={customTriggerName}
+                      onChange={(e) => setCustomTriggerName(e.target.value)}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
 
         {/* Pain map — always shown */}
         <div className="space-y-4 rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)] p-4">
@@ -322,91 +430,6 @@ export function CheckInForm() {
             value={pain.stressLevel}
             onChange={updateStressLevel}
           />
-        </div>
-
-        {/* Context — all optional */}
-        <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)]">
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <p className="section-label mb-0">Contexto</p>
-            <span
-              className="text-[10px] font-medium tracking-[0.08em] uppercase"
-              style={{ color: "var(--text-faint)" }}
-            >
-              opcional
-            </span>
-          </div>
-
-          <div className="px-4 pb-4 space-y-5">
-            {/* 2-tab control: Ahora / Cambiar hora */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  className={tabClass(contextTab === "now")}
-                  onClick={() => handleContextTab("now")}
-                >
-                  Ahora
-                </button>
-                <button
-                  type="button"
-                  className={cn(tabClass(contextTab === "custom"))}
-                  onClick={() => handleContextTab("custom")}
-                >
-                  {contextTab === "custom" && loggedAt
-                    ? formatLoggedAt(loggedAt)
-                    : "Cambiar hora"}
-                </button>
-              </div>
-
-              {/* Wheel picker — inline below tabs, only when custom */}
-              {contextTab === "custom" ? (
-                <DateTimeWheelPicker
-                  max={new Date()}
-                  value={loggedAt ?? new Date().toISOString()}
-                  onChange={setLoggedAt}
-                />
-              ) : null}
-            </div>
-
-            {/* Trigger — always optional */}
-            <div className="space-y-2.5">
-              <p
-                className="text-[11px] font-medium tracking-[0.08em] uppercase"
-                style={{ color: "var(--text-muted)" }}
-              >
-                ¿Hubo un trigger?
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {TRIGGER_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={cn(
-                      "min-h-[44px] rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
-                      selectedTrigger === option.id
-                        ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
-                        : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
-                    )}
-                    onClick={() => {
-                      setSelectedTrigger(
-                        selectedTrigger === option.id ? null : option.id,
-                      );
-                      if (option.id !== "other") setCustomTriggerName("");
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              {selectedTrigger === "other" ? (
-                <TextInput
-                  placeholder="Nombre del trigger (ej. polvo, humo)"
-                  value={customTriggerName}
-                  onChange={(e) => setCustomTriggerName(e.target.value)}
-                />
-              ) : null}
-            </div>
-          </div>
         </div>
       </div>
 
