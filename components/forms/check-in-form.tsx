@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { TextInput } from "@/components/ui/text-input";
@@ -26,6 +27,7 @@ import {
   SmileyMeltingIcon,
   LightningIcon,
   HeadCircuitIcon,
+  CaretDown,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -301,12 +303,22 @@ export function CheckInForm() {
     setZeroWarning(warningMessage);
   };
 
-  const tabClass = (active: boolean) =>
+  const pillClass = (active: boolean) =>
     cn(
-      "min-h-[44px] rounded-[999px] border px-4 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
+      "inline-flex items-center justify-center min-h-[48px] rounded-[999px] border px-4 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
       active
         ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
         : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
+    );
+
+  const accordionToggleClass = (expanded: boolean, hasSelection: boolean) =>
+    cn(
+      "flex w-full min-h-[48px] items-center justify-between rounded-[12px] border px-4 text-[14px] font-medium transition-colors duration-[160ms] ease-out active:scale-[0.98]",
+      hasSelection && !expanded
+        ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
+        : expanded
+          ? "border-[var(--border)] bg-[var(--surface-el)] text-[var(--text-primary)]"
+          : "border-[var(--border)] bg-transparent text-[var(--text-muted)]"
     );
 
   return (
@@ -331,14 +343,14 @@ export function CheckInForm() {
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
-                  className={tabClass(contextTab === "now")}
+                  className={pillClass(contextTab === "now")}
                   onClick={() => handleContextTab("now")}
                 >
                   Ahora
                 </button>
                 <button
                   type="button"
-                  className={cn(tabClass(contextTab === "custom"))}
+                  className={cn(pillClass(contextTab === "custom"))}
                   onClick={() => handleContextTab("custom")}
                 >
                   {contextTab === "custom" && loggedAt
@@ -348,20 +360,32 @@ export function CheckInForm() {
               </div>
 
               {/* Wheel picker — inline below tabs, only when custom */}
-              {contextTab === "custom" ? (
-                <DateTimeWheelPicker
-                  max={new Date()}
-                  value={loggedAt ?? new Date().toISOString()}
-                  onChange={setLoggedAt}
-                />
-              ) : null}
+              <AnimatePresence initial={false}>
+                {contextTab === "custom" && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-2">
+                      <DateTimeWheelPicker
+                        max={new Date()}
+                        value={loggedAt ?? new Date().toISOString()}
+                        onChange={setLoggedAt}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Trigger — always optional */}
             <div className="space-y-2.5">
               <button
                 type="button"
-                className={tabClass(showTriggers || selectedTrigger !== null)}
+                className={accordionToggleClass(showTriggers, selectedTrigger !== null)}
                 onClick={() => {
                   const next = !showTriggers;
                   setShowTriggers(next);
@@ -371,50 +395,61 @@ export function CheckInForm() {
                   }
                 }}
               >
-                {selectedTrigger !== null
-                  ? `Trigger: ${TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger)?.label}`
-                  : "¿Hubo un trigger?"}
+                <span>
+                  {selectedTrigger !== null
+                    ? `Trigger: ${TRIGGER_OPTIONS.find((o) => o.id === selectedTrigger)?.label}`
+                    : "¿Hubo un trigger?"}
+                </span>
+                <CaretDown
+                  weight="bold"
+                  className={cn("transition-transform duration-200", showTriggers && "rotate-180")}
+                />
               </button>
-              {showTriggers ? (
-                <div className="space-y-2.5">
-                  <div className="flex flex-wrap gap-2">
-                    {TRIGGER_OPTIONS.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className={cn(
-                          "min-h-[44px] rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
-                          selectedTrigger === option.id
-                            ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
-                            : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
-                        )}
-                        onClick={() => {
-                          setSelectedTrigger(
-                            selectedTrigger === option.id ? null : option.id,
-                          );
-                          if (option.id !== "other") setCustomTriggerName("");
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  {selectedTrigger === "other" ? (
-                    <TextInput
-                      placeholder="Nombre del trigger (ej. polvo, humo)"
-                      value={customTriggerName}
-                      onChange={(e) => setCustomTriggerName(e.target.value)}
-                    />
-                  ) : null}
-                </div>
-              ) : null}
+              <AnimatePresence initial={false}>
+                {showTriggers && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2.5 pt-1">
+                      <div className="flex flex-wrap gap-2">
+                        {TRIGGER_OPTIONS.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={pillClass(selectedTrigger === option.id)}
+                            onClick={() => {
+                              setSelectedTrigger(
+                                selectedTrigger === option.id ? null : option.id,
+                              );
+                              if (option.id !== "other") setCustomTriggerName("");
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedTrigger === "other" ? (
+                        <TextInput
+                          placeholder="Nombre del trigger (ej. polvo, humo)"
+                          value={customTriggerName}
+                          onChange={(e) => setCustomTriggerName(e.target.value)}
+                        />
+                      ) : null}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Symptoms — always optional */}
             <div className="space-y-2.5">
               <button
                 type="button"
-                className={tabClass(showSymptoms || selectedSymptoms.size > 0)}
+                className={accordionToggleClass(showSymptoms, selectedSymptoms.size > 0)}
                 onClick={() => {
                   const next = !showSymptoms;
                   setShowSymptoms(next);
@@ -424,43 +459,54 @@ export function CheckInForm() {
                   }
                 }}
               >
-                {selectedSymptoms.size > 0
-                  ? `Síntomas (${selectedSymptoms.size})`
-                  : "¿Sientes algún síntoma?"}
+                <span>
+                  {selectedSymptoms.size > 0
+                    ? `Síntomas (${selectedSymptoms.size})`
+                    : "¿Sientes algún síntoma?"}
+                </span>
+                <CaretDown
+                  weight="bold"
+                  className={cn("transition-transform duration-200", showSymptoms && "rotate-180")}
+                />
               </button>
-              {showSymptoms ? (
-                <div className="space-y-2.5">
-                  <div className="flex flex-wrap gap-2">
-                    {SYMPTOM_OPTIONS.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className={cn(
-                          "min-h-[44px] rounded-[999px] border px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-[160ms] ease-out active:scale-[0.97]",
-                          selectedSymptoms.has(option.id)
-                            ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
-                            : "border-[var(--border)] bg-transparent text-[var(--text-muted)]",
-                        )}
-                        onClick={() => {
-                          setSelectedSymptoms((current) => {
-                            const next = new Set(current);
-                            if (next.has(option.id)) next.delete(option.id);
-                            else next.add(option.id);
-                            return next;
-                          });
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <TextInput
-                    placeholder="Describe el síntoma..."
-                    value={customSymptom}
-                    onChange={(e) => setCustomSymptom(e.target.value)}
-                  />
-                </div>
-              ) : null}
+              <AnimatePresence initial={false}>
+                {showSymptoms && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2.5 pt-1">
+                      <div className="flex flex-wrap gap-2">
+                        {SYMPTOM_OPTIONS.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={pillClass(selectedSymptoms.has(option.id))}
+                            onClick={() => {
+                              setSelectedSymptoms((current) => {
+                                const next = new Set(current);
+                                if (next.has(option.id)) next.delete(option.id);
+                                else next.add(option.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <TextInput
+                        placeholder="Describe el síntoma..."
+                        value={customSymptom}
+                        onChange={(e) => setCustomSymptom(e.target.value)}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
