@@ -44,6 +44,11 @@ export function FloatingQuickActions() {
     setSelectedObservation(null);
   };
 
+  const savedAndClose = () => {
+    window.dispatchEvent(new CustomEvent("history:refresh"));
+    closeAll();
+  };
+
   const handleSelectObservation = (obs: ObservationTypeWithLastOccurrence) => {
     setSelectedObservation(obs);
     setSheet("obs_log");
@@ -103,7 +108,7 @@ export function FloatingQuickActions() {
         title="Sueno de hoy"
         onClose={closeAll}
       >
-        <SleepSheet onSaved={closeAll} />
+        <SleepSheet onSaved={savedAndClose} />
       </MobileSheet>
 
       <MobileSheet
@@ -112,7 +117,7 @@ export function FloatingQuickActions() {
         title="Registrar gota"
         onClose={closeAll}
       >
-        <DropSheet onSaved={closeAll} />
+        <DropSheet onSaved={savedAndClose} />
       </MobileSheet>
 
       {/* Observation flow: list → log occurrence or create new */}
@@ -138,7 +143,7 @@ export function FloatingQuickActions() {
         {selectedObservation ? (
           <LogOccurrenceSheet
             observation={selectedObservation}
-            onSaved={closeAll}
+            onSaved={savedAndClose}
           />
         ) : null}
       </MobileSheet>

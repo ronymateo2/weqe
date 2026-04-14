@@ -24,7 +24,7 @@ import type {
   HistoryDayGroup,
   HistoryEntry,
 } from "@/lib/actions/history";
-import { loadMoreHistoryAction } from "@/lib/actions/history";
+import { loadMoreHistoryAction, getHistoryFeedAction } from "@/lib/actions/history";
 import { getObservationsAction } from "@/lib/actions/observations";
 import type { ObservationEntry } from "@/lib/actions/observations";
 import type { TriggerType, ObservationEye } from "@/types/domain";
@@ -646,6 +646,20 @@ export function HistoryScreen({ historyFeed }: HistoryScreenProps) {
   const [obsLoading, setObsLoading] = useState(false);
 
   const timezone = historyFeed.ok ? historyFeed.timezone : "America/Bogota";
+
+  React.useEffect(() => {
+    const handler = async () => {
+      const result = await getHistoryFeedAction();
+      if (result.ok) {
+        setGroups(result.groups);
+        setHasMore(result.hasMore);
+      }
+      // Reset observations so they re-fetch on next tab visit (or immediately if active)
+      setObservations(null);
+    };
+    window.addEventListener("history:refresh", handler);
+    return () => window.removeEventListener("history:refresh", handler);
+  }, []);
 
   async function handleTabChange(tab: HistoryTab) {
     setActiveTab(tab);
