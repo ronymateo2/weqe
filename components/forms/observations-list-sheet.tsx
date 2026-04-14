@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, NotePencil } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getObservationTypesAction } from "@/lib/actions/observations";
 import { painColor } from "@/lib/pain";
 import { OBS_EYE_LABELS } from "@/lib/constants";
@@ -88,10 +89,10 @@ function ObservationRow({
 
 function SkeletonRow() {
   return (
-    <div className="flex min-h-[64px] w-full animate-pulse items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
+    <div className="flex min-h-[64px] w-full items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
       <div className="flex flex-1 flex-col gap-2">
-        <div className="h-4 w-2/3 rounded-md bg-[var(--surface-2)]" />
-        <div className="h-3 w-1/3 rounded-md bg-[var(--surface-2)]" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
       </div>
     </div>
   );
