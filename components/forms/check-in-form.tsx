@@ -564,28 +564,26 @@ export function CheckInForm() {
         </div>
       </div>
 
-      <div className="fixed bottom-[calc(82px+env(safe-area-inset-bottom))] left-0 right-0 z-50 border-t border-[var(--border)] bg-[var(--bg)] px-1 py-1 shadow-[0_-14px_28px_rgba(18,16,8,0.95)]">
-        <div className="mx-auto w-full max-w-[480px] space-y-2">
-          {!isOnline ? (
-            <div className="flex items-center justify-center gap-2">
-              <span
-                className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                style={{ background: "var(--text-muted)" }}
-              />
-              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-                Sin conexión — se guardará al reconectar
-              </p>
-            </div>
-          ) : null}
-          <Button
-            className="w-full"
-            disabled={isPending || !isTriggerValid}
-            type="button"
-            onClick={handleSave}
-          >
-            {isPending ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
+      <div className="pointer-events-none fixed bottom-[calc(82px+env(safe-area-inset-bottom))] right-4 z-50 flex flex-col items-end gap-3 md:right-[calc(50vw-240px)]">
+        {!isOnline ? (
+          <div className="pointer-events-auto flex items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[rgba(28,24,16,0.9)] px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full"
+              style={{ background: "var(--text-muted)" }}
+            />
+            <p className="m-0 text-[12px] leading-none" style={{ color: "var(--text-muted)" }}>
+              Sin conexión
+            </p>
+          </div>
+        ) : null}
+        <Button
+          className="pointer-events-auto h-[56px] min-w-[124px] px-6 text-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.8)]"
+          disabled={isPending || !isTriggerValid}
+          type="button"
+          onClick={handleSave}
+        >
+          {isPending ? "Guardando..." : "Guardar"}
+        </Button>
       </div>
 
       <MobileSheet
