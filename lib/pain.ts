@@ -36,7 +36,3 @@ export function qualityGradient(score: number): string {
   return `linear-gradient(to right, #cc3f30 0%, #e0932a 40%, #5cb85a ${pct}%, ${bg} ${pct}%)`;
 }
 
-export function averagePain(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}

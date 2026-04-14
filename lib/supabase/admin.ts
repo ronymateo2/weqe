@@ -19,9 +19,3 @@ export function getSupabaseAdmin() {
   });
 }
 
-export function getSupabaseBrowserConfig() {
-  return {
-    url: assertServerEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    anonKey: assertServerEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  };
-}

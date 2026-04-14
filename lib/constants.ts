@@ -7,11 +7,7 @@ export const APP_TABS = [
 ] as const;
 
 export const DROP_EYES = ["left", "right", "both"] as const;
-export const TIME_OF_DAY_OPTIONS = [
-  { label: "Manana", value: "morning" },
-  { label: "Tarde", value: "evening" },
-  { label: "Trigger", value: "trigger" }
-] as const;
+
 
 export const SLEEP_QUALITY_OPTIONS = [
   { label: "Muy malo", value: "muy_malo" },
@@ -34,12 +30,6 @@ export const SYMPTOM_OPTIONS = [
   { id: "dolor_cabeza", label: "Dolor de cabeza", value: "dolor_cabeza" }
 ] as const;
 
-export const OBS_EYE_OPTIONS = [
-  { label: "OD", value: "right" },
-  { label: "OI", value: "left" },
-  { label: "AO", value: "both" },
-  { label: "Ninguno", value: "none" },
-] as const;
 
 export const OBS_EYE_LABELS: Record<string, string> = {
   right: "OD",

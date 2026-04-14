@@ -11,19 +11,7 @@ export type TriggerType =
   | "exercise"
   | "other";
 
-export type CheckInRecord = {
-  id: string;
-  loggedAt: string;
-  timeOfDay: TimeOfDay | null;
-  eyelidPain: number;
-  templePain: number;
-  masseterPain: number;
-  cervicalPain: number;
-  orbitalPain: number;
-  stressLevel: number;
-  triggerType: TriggerType | null;
-  notes: string | null;
-};
+
 
 export type SleepRecord = {
   id: string;
@@ -45,42 +33,11 @@ export type DropTypeRecord = {
   name: string;
 };
 
-export type DropRecord = {
-  id: string;
-  loggedAt: string;
-  quantity: number;
-  eye: DropEye;
-  notes: string | null;
-  dropType: DropTypeRecord;
-};
 
-export type TriggerRecord = {
-  id: string;
-  loggedAt: string;
-  triggerType: TriggerType;
-  intensity: 1 | 2 | 3;
-  notes: string | null;
-};
 
-export type SymptomType =
-  | "ardor"
-  | "sequedad"
-  | "lagrimeo_paradojico"
-  | "fotofobia"
-  | "vision_borrosa"
-  | "sensacion_arena"
-  | "picazon"
-  | "hinchazon"
-  | "enrojecimiento"
-  | "dolor_cabeza"
-  | "otro";
 
-export type SymptomRecord = {
-  id: string;
-  loggedAt: string;
-  symptomType: string;
-  notes: string | null;
-};
+
+
 
 export type MedicationRecord = {
   id: string;

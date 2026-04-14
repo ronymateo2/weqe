@@ -1,4 +1,4 @@
-export function SlimCardSkeleton({ width }: { width: number }) {
+function SlimCardSkeleton({ width }: { width: number }) {
   return (
     <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.56)] p-4">
       <div className="flex items-center justify-between gap-2">
@@ -9,7 +9,7 @@ export function SlimCardSkeleton({ width }: { width: number }) {
   );
 }
 
-export function CheckInCardSkeleton() {
+function CheckInCardSkeleton() {
   return (
     <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.72)] p-4">
       <div className="mb-3 flex items-center justify-between">

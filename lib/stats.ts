@@ -1,6 +1,6 @@
 import { sampleCorrelation } from "simple-statistics";
 
-export function getAverageRank(values: number[]): number[] {
+function getAverageRank(values: number[]): number[] {
   const indexed = values
     .map((value, index) => ({ value, index }))
     .sort((a, b) => a.value - b.value);
