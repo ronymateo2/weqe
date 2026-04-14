@@ -3,20 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { TimeOfDay, SleepQuality, TriggerType } from "@/types/domain";
+import type { TimeOfDay, TriggerType } from "@/types/domain";
 
 export type SaveCheckInInput = {
   id: string;
   loggedAt: string;
-  timeOfDay: TimeOfDay;
+  timeOfDay: TimeOfDay | null;
   eyelidPain: number;
   templePain: number;
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
   stressLevel: number;
-  sleepHours?: number | null;
-  sleepQuality?: SleepQuality | null;
   triggerType?: TriggerType | null;
   notes?: string;
 };
@@ -35,19 +33,17 @@ export async function saveCheckInAction(input: SaveCheckInInput) {
         id: input.id,
         user_id: session.user.id,
         logged_at: input.loggedAt,
-        time_of_day: input.timeOfDay,
+        time_of_day: input.timeOfDay ?? null,
         eyelid_pain: input.eyelidPain,
         temple_pain: input.templePain,
         masseter_pain: input.masseterPain,
         cervical_pain: input.cervicalPain,
         orbital_pain: input.orbitalPain,
         stress_level: input.stressLevel,
-        sleep_hours: input.sleepHours ?? null,
-        sleep_quality: input.sleepQuality ?? null,
         trigger_type: input.triggerType ?? null,
-        notes: input.notes ?? null
+        notes: input.notes ?? null,
       },
-      { onConflict: "id" }
+      { onConflict: "id" },
     );
 
     if (error) {
@@ -63,7 +59,10 @@ export async function saveCheckInAction(input: SaveCheckInInput) {
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo guardar el registro."
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el registro.",
     };
   }
 }

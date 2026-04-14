@@ -7,10 +7,12 @@ import {
   DropIcon,
   PlusIcon,
   NotePencilIcon,
+  MoonIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { DropSheet } from "@/components/forms/drop-sheet";
+import { SleepSheet } from "@/components/forms/sleep-sheet";
 import { SymptomSheet } from "@/components/forms/symptom-sheet";
 import { ObservationSheet } from "@/components/forms/observation-sheet";
 import { ObservationsListSheet } from "@/components/forms/observations-list-sheet";
@@ -18,7 +20,7 @@ import { LogOccurrenceSheet } from "@/components/forms/log-occurrence-sheet";
 import { cn } from "@/lib/utils";
 import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
 
-type Sheet = "drop" | "symptom" | "obs_list" | "obs_log" | "obs_new" | null;
+type Sheet = "drop" | "sleep" | "symptom" | "obs_list" | "obs_log" | "obs_new" | null;
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
@@ -66,6 +68,14 @@ export function FloatingQuickActions() {
               <Button
                 className="min-w-[132px] justify-start gap-2"
                 variant="subtle"
+                onClick={() => setSheet("sleep")}
+              >
+                <MoonIcon size={18} />
+                Sueno
+              </Button>
+              <Button
+                className="min-w-[132px] justify-start gap-2"
+                variant="subtle"
                 onClick={() => setSheet("symptom")}
               >
                 <PulseIcon size={18} />
@@ -96,6 +106,15 @@ export function FloatingQuickActions() {
           </button>
         </div>
       </div>
+
+      <MobileSheet
+        description="Registra o actualiza tu sueno de hoy."
+        open={sheet === "sleep"}
+        title="Sueno de hoy"
+        onClose={closeAll}
+      >
+        <SleepSheet onSaved={closeAll} />
+      </MobileSheet>
 
       <MobileSheet
         description="Registra rapidamente una aplicacion sin salir del flujo actual."

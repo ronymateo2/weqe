@@ -15,6 +15,7 @@ import {
   SmileyMeltingIcon,
   BoneIcon,
   NotePencilIcon,
+  BedIcon,
 } from "@phosphor-icons/react";
 import { SYMPTOM_OPTIONS, OBS_EYE_LABELS } from "@/lib/constants";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -61,7 +62,6 @@ type DisplayCheckIn = {
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
-  sleepHours: number | null;
   triggerType: TriggerType | null;
   notes: string | null;
 };
@@ -95,12 +95,20 @@ type DisplayObservation = {
   intensity: number;
   durationMinutes: number | null;
 };
+type DisplaySleep = {
+  kind: "sleep";
+  id: string;
+  loggedAt: string;
+  sleepHours: number;
+  sleepQuality: "muy_malo" | "malo" | "regular" | "bueno" | "excelente";
+};
 type DisplayItem =
   | DisplayCheckIn
   | DisplayDrop
   | DisplayTriggerGroup
   | DisplaySymptomGroup
-  | DisplayObservation;
+  | DisplayObservation
+  | DisplaySleep;
 
 function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
   const result: DisplayItem[] = [];
@@ -148,6 +156,11 @@ function collapseEntries(entries: HistoryEntry[]): DisplayItem[] {
 
     if (entry.kind === "observation") {
       result.push(entry as DisplayObservation);
+      continue;
+    }
+
+    if (entry.kind === "sleep") {
+      result.push(entry as DisplaySleep);
       continue;
     }
   }
@@ -351,14 +364,6 @@ function CheckInCard({
         ))}
       </div>
 
-      {item.sleepHours !== null ? (
-        <div className="mt-2 flex items-center gap-1.5">
-          <MoonIcon size={11} color="var(--text-faint)" />
-          <span className="mono text-[10px] text-[var(--text-faint)]">
-            {item.sleepHours}h sueño
-          </span>
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -559,6 +564,53 @@ function ObservationCard({
   );
 }
 
+const SLEEP_QUALITY_LABELS: Record<DisplaySleep["sleepQuality"], string> = {
+  muy_malo: "Muy malo",
+  malo: "Malo",
+  regular: "Regular",
+  bueno: "Bueno",
+  excelente: "Excelente",
+};
+
+const SLEEP_QUALITY_COLORS: Record<DisplaySleep["sleepQuality"], string> = {
+  muy_malo: "var(--pain-high)",
+  malo: "var(--pain-mid)",
+  regular: "var(--text-muted)",
+  bueno: "var(--pain-low)",
+  excelente: "var(--pain-low)",
+};
+
+function SleepCard({ item, timezone }: { item: DisplaySleep; timezone: string }) {
+  const time = formatTime(item.loggedAt, timezone);
+  const qualityColor = SLEEP_QUALITY_COLORS[item.sleepQuality];
+
+  return (
+    <article className="rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(90,78,58,0.25)]">
+            <BedIcon size={15} color="var(--text-muted)" />
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold leading-tight text-[var(--text-primary)]">
+              Sueño · {item.sleepHours}h
+            </p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]">
+              {time}
+            </p>
+          </div>
+        </div>
+        <span
+          className="text-[11px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: qualityColor }}
+        >
+          {SLEEP_QUALITY_LABELS[item.sleepQuality]}
+        </span>
+      </div>
+    </article>
+  );
+}
+
 function renderItem(item: DisplayItem, timezone: string) {
   if (item.kind === "check_in")
     return <CheckInCard item={item} timezone={timezone} />;
@@ -567,6 +619,8 @@ function renderItem(item: DisplayItem, timezone: string) {
     return <TriggerCard item={item} timezone={timezone} />;
   if (item.kind === "observation")
     return <ObservationCard item={item} timezone={timezone} />;
+  if (item.kind === "sleep")
+    return <SleepCard item={item} timezone={timezone} />;
   return <SymptomCard item={item} timezone={timezone} />;
 }
 

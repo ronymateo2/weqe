@@ -101,7 +101,7 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
   try {
     const supabase = getSupabaseAdmin();
 
-    const [userRes, checkInsRes, dropsRes, triggersRes] = await Promise.all([
+    const [userRes, checkInsRes, sleepRes, dropsRes, triggersRes] = await Promise.all([
       supabase
         .from("dy_users")
         .select("timezone, name")
@@ -110,10 +110,16 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, sleep_quality"
+          "id, logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain"
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: true })
+        .limit(2000),
+      supabase
+        .from("dy_sleep")
+        .select("day_key, sleep_hours, sleep_quality")
+        .eq("user_id", session.user.id)
+        .order("day_key", { ascending: true })
         .limit(2000),
       supabase
         .from("dy_drops")
@@ -138,8 +144,19 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
     const userName =
       userRes.data?.name ?? session.user.name ?? null;
     const checkIns = checkInsRes.data ?? [];
+    const sleepRecords = sleepRes.data ?? [];
     const drops = dropsRes.data ?? [];
     const triggers = triggersRes.data ?? [];
+
+    // Build a day_key → masseter_pain map (daily average) for sleep correlation
+    const masseterByDay = new Map<string, { sum: number; count: number }>();
+    for (const ci of checkIns) {
+      const dayKey = getDayKey(ci.logged_at, timezone);
+      const entry = masseterByDay.get(dayKey) ?? { sum: 0, count: 0 };
+      entry.sum += ci.masseter_pain;
+      entry.count += 1;
+      masseterByDay.set(dayKey, entry);
+    }
 
     const checkInsCount = checkIns.length;
     const hasEnoughData = checkInsCount >= MIN_RECORDS;
@@ -178,16 +195,13 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
       };
     }
 
-    // Average sleep
-    const withSleep = checkIns.filter((ci) => ci.sleep_hours !== null);
+    // Average sleep — sourced from dy_sleep (one record per day)
     const averageSleepHours =
-      withSleep.length > 0
+      sleepRecords.length > 0
         ? Number(
             (
-              withSleep.reduce(
-                (sum, ci) => sum + Number(ci.sleep_hours),
-                0
-              ) / withSleep.length
+              sleepRecords.reduce((sum, s) => sum + Number(s.sleep_hours), 0) /
+              sleepRecords.length
             ).toFixed(1)
           )
         : null;
@@ -199,26 +213,29 @@ export async function getReportDataAction(): Promise<ReportDataResult> {
       bueno: 4,
       excelente: 5
     };
-    const withQuality = withSleep.filter((ci) => ci.sleep_quality !== null);
     const averageSleepQuality =
-      withQuality.length > 0
+      sleepRecords.length > 0
         ? Number(
             (
-              withQuality.reduce(
-                (sum, ci) => sum + (sleepQualityScore[ci.sleep_quality as string] ?? 3),
+              sleepRecords.reduce(
+                (sum, s) => sum + (sleepQualityScore[s.sleep_quality as string] ?? 3),
                 0
-              ) / withQuality.length
+              ) / sleepRecords.length
             ).toFixed(1)
           )
         : null;
 
-    // Spearman (morning check-ins with sleep_hours)
-    const correlationPoints: ReportCorrelationPoint[] = checkIns
-      .filter((ci) => ci.time_of_day === "morning" && ci.sleep_hours !== null)
-      .map((ci) => ({
-        sleepHours: Number(ci.sleep_hours),
-        masseterPain: ci.masseter_pain
-      }));
+    // Spearman — join sleep records with daily masseter average
+    const correlationPoints: ReportCorrelationPoint[] = sleepRecords
+      .map((s) => {
+        const masseter = masseterByDay.get(s.day_key);
+        if (!masseter) return null;
+        return {
+          sleepHours: Number(s.sleep_hours),
+          masseterPain: Number((masseter.sum / masseter.count).toFixed(2)),
+        };
+      })
+      .filter((p): p is ReportCorrelationPoint => p !== null);
 
     const spearmanRaw =
       correlationPoints.length >= MIN_RECORDS

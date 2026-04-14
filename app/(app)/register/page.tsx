@@ -5,6 +5,8 @@ import { ScreenHeader } from "@/components/layout/screen-header";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { env } from "@/lib/env";
+import { hasSleepToday } from "@/lib/actions/sleep";
+import { SleepNudge } from "@/components/ui/sleep-nudge";
 
 type RegisterPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -63,7 +65,10 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           )}
         </div>
       ) : (
-        <CheckInForm />
+        <div className="space-y-4">
+          {!(await hasSleepToday()) ? <SleepNudge /> : null}
+          <CheckInForm />
+        </div>
       )}
     </section>
   );

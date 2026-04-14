@@ -19,7 +19,6 @@ type HistoryCheckInEntry = {
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
-  sleepHours: number | null;
   triggerType: TriggerType | null;
   notes: string | null;
 };
@@ -59,12 +58,21 @@ export type HistoryObservationEntry = {
   durationMinutes: number | null;
 };
 
+export type HistorySleepEntry = {
+  id: string;
+  kind: "sleep";
+  loggedAt: string;
+  sleepHours: number;
+  sleepQuality: "muy_malo" | "malo" | "regular" | "bueno" | "excelente";
+};
+
 export type HistoryEntry =
   | HistoryCheckInEntry
   | HistoryDropEntry
   | HistoryTriggerEntry
   | HistorySymptomEntry
-  | HistoryObservationEntry;
+  | HistoryObservationEntry
+  | HistorySleepEntry;
 
 export type HistoryDayGroup = {
   dayKey: string;
@@ -117,13 +125,14 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       triggersResponse,
       symptomsResponse,
       observationsResponse,
+      sleepResponse,
       olderCheckIns,
       olderObservations,
     ] = await Promise.all([
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
+          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, trigger_type, notes",
         )
         .eq("user_id", session.user.id)
         .gte("logged_at", utcWindowStart)
@@ -165,6 +174,12 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         .gte("logged_at", utcWindowStart)
         .order("logged_at", { ascending: false }),
       supabase
+        .from("dy_sleep")
+        .select("id, logged_at, sleep_hours, sleep_quality")
+        .eq("user_id", session.user.id)
+        .gte("logged_at", utcWindowStart)
+        .order("logged_at", { ascending: false }),
+      supabase
         .from("dy_check_ins")
         .select("id")
         .eq("user_id", session.user.id)
@@ -184,6 +199,25 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
     if (symptomsResponse.error) throw symptomsResponse.error;
     if (observationsResponse.error) throw observationsResponse.error;
 
+
+    // Deduplicate sleep by local day — migration used UTC day_key so migrated
+    // records may have a different day_key than a fresh record logged the same
+    // calendar-day in the user's timezone. Keep the most-recent per local day.
+    const sleepByDay = new Map<string, HistorySleepEntry>();
+    for (const s of sleepResponse.data ?? []) {
+      const localDay = getDayKey(s.logged_at, timezone);
+      if (!sleepByDay.has(localDay)) {
+        sleepByDay.set(localDay, {
+          id: s.id,
+          kind: "sleep",
+          loggedAt: s.logged_at,
+          sleepHours: s.sleep_hours,
+          sleepQuality: s.sleep_quality as HistorySleepEntry["sleepQuality"],
+        });
+      }
+    }
+    const sleepEntries: HistoryEntry[] = Array.from(sleepByDay.values());
+
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
       (checkIn) => ({
         id: checkIn.id,
@@ -194,7 +228,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
         masseterPain: checkIn.masseter_pain,
         cervicalPain: checkIn.cervical_pain,
         orbitalPain: checkIn.orbital_pain,
-        sleepHours: checkIn.sleep_hours,
+
         triggerType: (checkIn.trigger_type as TriggerType) ?? null,
         notes: checkIn.notes ?? null,
       }),
@@ -261,6 +295,7 @@ export async function getHistoryFeedAction(): Promise<GetHistoryFeedResult> {
       ...triggerEntries,
       ...symptomEntries,
       ...observationEntries,
+      ...sleepEntries,
     ].sort(
       (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );
@@ -333,11 +368,12 @@ export async function loadMoreHistoryAction(
       triggersResponse,
       symptomsResponse,
       observationsResponse,
+      sleepResponse,
     ] = await Promise.all([
       supabase
         .from("dy_check_ins")
         .select(
-          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type, notes",
+          "id, logged_at, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, trigger_type, notes",
         )
         .eq("user_id", session.user.id)
         .lt("logged_at", utcBefore)
@@ -383,6 +419,13 @@ export async function loadMoreHistoryAction(
         .lt("logged_at", utcBefore)
         .order("logged_at", { ascending: false })
         .limit(rowLimit),
+      supabase
+        .from("dy_sleep")
+        .select("id, logged_at, sleep_hours, sleep_quality")
+        .eq("user_id", session.user.id)
+        .lt("logged_at", utcBefore)
+        .order("logged_at", { ascending: false })
+        .limit(rowLimit),
     ]);
 
     if (checkInsResponse.error) throw checkInsResponse.error;
@@ -390,6 +433,21 @@ export async function loadMoreHistoryAction(
     if (triggersResponse.error) throw triggersResponse.error;
     if (symptomsResponse.error) throw symptomsResponse.error;
     if (observationsResponse.error) throw observationsResponse.error;
+
+    const sleepByDay2 = new Map<string, HistorySleepEntry>();
+    for (const s of sleepResponse.data ?? []) {
+      const localDay = getDayKey(s.logged_at, timezone);
+      if (!sleepByDay2.has(localDay)) {
+        sleepByDay2.set(localDay, {
+          id: s.id,
+          kind: "sleep",
+          loggedAt: s.logged_at,
+          sleepHours: s.sleep_hours,
+          sleepQuality: s.sleep_quality as HistorySleepEntry["sleepQuality"],
+        });
+      }
+    }
+    const sleepEntries2: HistoryEntry[] = Array.from(sleepByDay2.values());
 
     const checkInEntries: HistoryEntry[] = (checkInsResponse.data ?? []).map(
       (checkIn) => ({
@@ -401,7 +459,7 @@ export async function loadMoreHistoryAction(
         masseterPain: checkIn.masseter_pain,
         cervicalPain: checkIn.cervical_pain,
         orbitalPain: checkIn.orbital_pain,
-        sleepHours: checkIn.sleep_hours,
+
         triggerType: (checkIn.trigger_type as TriggerType) ?? null,
         notes: checkIn.notes ?? null,
       }),
@@ -467,6 +525,7 @@ export async function loadMoreHistoryAction(
       ...triggerEntries,
       ...symptomEntries,
       ...observationEntries,
+      ...sleepEntries2,
     ].sort(
       (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     );

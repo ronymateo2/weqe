@@ -14,17 +14,30 @@ export type TriggerType =
 export type CheckInRecord = {
   id: string;
   loggedAt: string;
-  timeOfDay: TimeOfDay;
+  timeOfDay: TimeOfDay | null;
   eyelidPain: number;
   templePain: number;
   masseterPain: number;
   cervicalPain: number;
   orbitalPain: number;
   stressLevel: number;
-  sleepHours: number | null;
-  sleepQuality: SleepQuality | null;
   triggerType: TriggerType | null;
   notes: string | null;
+};
+
+export type SleepRecord = {
+  id: string;
+  dayKey: string;
+  loggedAt: string;
+  sleepHours: number;
+  sleepQuality: SleepQuality;
+};
+
+export type SaveSleepInput = {
+  id: string;
+  loggedAt: string;
+  sleepHours: number;
+  sleepQuality: SleepQuality;
 };
 
 export type DropTypeRecord = {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { saveDropAction } from "@/lib/actions/drops";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
+import { saveSleepAction } from "@/lib/actions/sleep";
 import { saveObservationAction, saveOccurrenceAction } from "@/lib/actions/observations";
 import {
   getPendingDrops,
@@ -14,6 +15,11 @@ import {
   getPendingCheckInsCount,
   removePendingCheckIn,
 } from "@/lib/offline/check-ins-queue";
+import {
+  getPendingSleep,
+  getPendingSleepCount,
+  removePendingSleep,
+} from "@/lib/offline/sleep-queue";
 import {
   getPendingObservations,
   getPendingObservationsCount,
@@ -30,20 +36,22 @@ export function useOfflineSync() {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const refreshCount = useCallback(async () => {
-    const [drops, checkIns, observations, occurrences] = await Promise.all([
+    const [drops, checkIns, sleep, observations, occurrences] = await Promise.all([
       getPendingDropsCount(),
       getPendingCheckInsCount(),
+      getPendingSleepCount(),
       getPendingObservationsCount(),
       getPendingOccurrencesCount(),
     ]);
-    setPendingCount(drops + checkIns + observations + occurrences);
+    setPendingCount(drops + checkIns + sleep + observations + occurrences);
   }, []);
 
   const sync = useCallback(async () => {
-    const [pendingDrops, pendingCheckIns, pendingObservations, pendingOccurrences] =
+    const [pendingDrops, pendingCheckIns, pendingSleeps, pendingObservations, pendingOccurrences] =
       await Promise.all([
         getPendingDrops(),
         getPendingCheckIns(),
+        getPendingSleep(),
         getPendingObservations(),
         getPendingOccurrences(),
       ]);
@@ -51,6 +59,7 @@ export function useOfflineSync() {
     if (
       pendingDrops.length === 0 &&
       pendingCheckIns.length === 0 &&
+      pendingSleeps.length === 0 &&
       pendingObservations.length === 0 &&
       pendingOccurrences.length === 0
     ) {
@@ -72,6 +81,15 @@ export function useOfflineSync() {
       try {
         const result = await saveCheckInAction(checkIn);
         if (result.ok) await removePendingCheckIn(checkIn.id);
+      } catch {
+        // Keep in queue, try again next time online
+      }
+    }
+
+    for (const sleep of pendingSleeps) {
+      try {
+        const result = await saveSleepAction(sleep);
+        if (result.ok) await removePendingSleep(sleep.id);
       } catch {
         // Keep in queue, try again next time online
       }

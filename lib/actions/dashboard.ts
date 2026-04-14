@@ -168,7 +168,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
   try {
     const supabase = getSupabaseAdmin();
 
-    const [userResponse, checkInsResponse, dropsResponse] = await Promise.all([
+    const [userResponse, checkInsResponse, sleepResponse, dropsResponse] = await Promise.all([
       supabase
         .from("dy_users")
         .select("timezone")
@@ -177,10 +177,16 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       supabase
         .from("dy_check_ins")
         .select(
-          "logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, sleep_hours, trigger_type",
+          "logged_at, time_of_day, eyelid_pain, temple_pain, masseter_pain, cervical_pain, orbital_pain, trigger_type",
         )
         .eq("user_id", session.user.id)
         .order("logged_at", { ascending: false })
+        .limit(500),
+      supabase
+        .from("dy_sleep")
+        .select("day_key, sleep_hours")
+        .eq("user_id", session.user.id)
+        .order("day_key", { ascending: false })
         .limit(500),
       supabase
         .from("dy_drops")
@@ -205,6 +211,12 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
     const timezone = getSafeTimezone(userResponse.data?.timezone);
     const checkIns = checkInsResponse.data ?? [];
     const drops = dropsResponse.data ?? [];
+
+    // Build a map of day_key → sleep_hours from the standalone dy_sleep table
+    const sleepByDay = new Map<string, number>();
+    for (const s of sleepResponse.data ?? []) {
+      sleepByDay.set(s.day_key, Number(s.sleep_hours));
+    }
 
     const last30DayKeys = buildLastDayKeys(timezone, 30);
     const last30Set = new Set(last30DayKeys);
@@ -253,9 +265,10 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
         highPainDaySet.add(dayKey);
       }
 
-      if (checkIn.time_of_day === "morning" && checkIn.sleep_hours !== null) {
+      const sleepHours = sleepByDay.get(dayKey);
+      if (sleepHours !== undefined) {
         correlationPoints.push({
-          sleepHours: Number(checkIn.sleep_hours),
+          sleepHours,
           masseterPain: checkIn.masseter_pain,
         });
       }
