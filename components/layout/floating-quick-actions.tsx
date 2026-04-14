@@ -133,6 +133,7 @@ export function FloatingQuickActions() {
       <MobileSheet
         description="Calibra tu sesion de higiene palpebral."
         open={sheet === "hygiene"}
+        panelClassName="!h-[95svh]"
         title="Calibracion"
         onClose={closeAll}
       >

@@ -158,13 +158,6 @@ function HygieneHeatmap({
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-          MAPA DE IDENTIDAD
-        </span>
-        <span className="text-[11px] text-[var(--text-muted)]">Últimas 12 semanas</span>
-      </div>
-
       <div className="flex gap-1">
         {/* Row labels */}
         <div className="flex flex-col gap-[3px] pt-[2px]">
@@ -273,7 +266,7 @@ function TrajectoryChart({
 }) {
   const PREVIEW_LABEL = "▸";
 
-  const { chartData, weekAvg, todayLabel } = useMemo(() => {
+  const { chartData, projectedAvg, todayLabel } = useMemo(() => {
     // Plot every individual session — no grouping, no averaging
     const historical = records
       .filter((r) => r.status !== "skipped")
@@ -284,25 +277,22 @@ function TrajectoryChart({
         value: r.deviationValue,
       }));
 
-    // Rolling avg over last 7 sessions
-    const last7 = historical.slice(-7).map((p) => p.value);
-    const avg =
-      last7.length > 0
-        ? Math.round((last7.reduce((a, b) => a + b, 0) / last7.length) * 10) / 10
-        : null;
+    // Projected avg: last 6 existing + preview entry = 7
+    const last6 = historical.slice(-6).map((p) => p.value);
+    const projEntries = [...last6, previewDeviation];
+    const projected =
+      Math.round((projEntries.reduce((a, b) => a + b, 0) / projEntries.length) * 10) / 10;
 
     const data = [
       ...historical,
-      { label: PREVIEW_LABEL, value: null as unknown as number },
+      { label: PREVIEW_LABEL, value: previewDeviation },
     ];
 
-    return { chartData: data, weekAvg: avg, todayLabel: PREVIEW_LABEL };
-  }, [records]);
+    return { chartData: data, projectedAvg: projected, todayLabel: PREVIEW_LABEL };
+  }, [records, previewDeviation]);
 
   const avgDisplay =
-    weekAvg !== null
-      ? `${weekAvg > 0 ? "+" : ""}${weekAvg} Avg`
-      : null;
+    `${projectedAvg > 0 ? "+" : ""}${projectedAvg} Avg`;
 
   return (
     <div>
@@ -401,6 +391,7 @@ function TrajectoryChart({
 export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
   const [deviation, setDeviation] = useState(0);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
   const [note, setNote] = useState("");
   const [actionState, setActionState] = useState<ActionState>({ status: "idle" });
   const [historyData, setHistoryData] = useState<HygieneRecord[]>([]);
@@ -505,8 +496,22 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
               records={historyData}
             />
             {historyData.length > 0 && (
-              <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-                <HygieneHeatmap records={historyData} />
+              <div className="mt-3 border-t" style={{ borderColor: "var(--border)" }}>
+                <button
+                  className="flex w-full items-center justify-between py-3"
+                  style={{ color: "var(--text-muted)" }}
+                  type="button"
+                  onClick={() => setHeatmapOpen((o) => !o)}
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em]">
+                    MAPA DE IDENTIDAD
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px]" style={{ color: "var(--text-faint)" }}>
+                    Últimas 12 semanas
+                    {heatmapOpen ? <CaretUpIcon size={11} /> : <CaretDownIcon size={11} />}
+                  </span>
+                </button>
+                {heatmapOpen && <HygieneHeatmap records={historyData} />}
               </div>
             )}
           </>
