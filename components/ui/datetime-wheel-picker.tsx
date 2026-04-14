@@ -94,7 +94,6 @@ export function DateTimeWheelPicker({ value, onChange, max }: Props) {
           options={hourOptions}
           value={hour}
           onChange={(v) => onChange(buildISO(dayKey, v, minute, ceiling))}
-          infinite
         />
       </div>
       <div className="space-y-1.5">
@@ -104,7 +103,6 @@ export function DateTimeWheelPicker({ value, onChange, max }: Props) {
           options={minuteOptions}
           value={minute}
           onChange={(v) => onChange(buildISO(dayKey, hour, v, ceiling))}
-          infinite
         />
       </div>
     </div>
