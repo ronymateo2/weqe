@@ -262,7 +262,7 @@ function TrajectoryChart({
   previewDeviation,
 }: {
   records: HygieneRecord[];
-  previewDeviation: number;
+  previewDeviation: number | null;
 }) {
   const PREVIEW_LABEL = "▸";
 
@@ -277,22 +277,29 @@ function TrajectoryChart({
         value: r.deviationValue,
       }));
 
+    // Always include the preview slot so the array length stays constant.
+    // When untouched, value is null — Recharts leaves a gap (connectNulls=false).
+    const data = [
+      ...historical,
+      { label: PREVIEW_LABEL, value: previewDeviation ?? null },
+    ];
+
+    if (previewDeviation === null) {
+      return { chartData: data, projectedAvg: null, todayLabel: PREVIEW_LABEL };
+    }
+
     // Projected avg: last 6 existing + preview entry = 7
     const last6 = historical.slice(-6).map((p) => p.value);
     const projEntries = [...last6, previewDeviation];
     const projected =
       Math.round((projEntries.reduce((a, b) => a + b, 0) / projEntries.length) * 10) / 10;
 
-    const data = [
-      ...historical,
-      { label: PREVIEW_LABEL, value: previewDeviation },
-    ];
-
     return { chartData: data, projectedAvg: projected, todayLabel: PREVIEW_LABEL };
   }, [records, previewDeviation]);
 
-  const avgDisplay =
-    `${projectedAvg > 0 ? "+" : ""}${projectedAvg} Avg`;
+  const avgDisplay = projectedAvg !== null
+    ? `${projectedAvg > 0 ? "+" : ""}${projectedAvg} Avg`
+    : null;
 
   return (
     <div>
@@ -371,14 +378,14 @@ function TrajectoryChart({
               type="monotone"
             />
             {/* Live preview dot for today */}
-            <ReferenceDot
+            {todayLabel !== null && previewDeviation !== null && <ReferenceDot
               fill="var(--accent-bright)"
               r={5}
               stroke="var(--bg)"
               strokeWidth={2}
               x={todayLabel}
               y={previewDeviation}
-            />
+            />}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -390,6 +397,7 @@ function TrajectoryChart({
 
 export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
   const [deviation, setDeviation] = useState(0);
+  const [sliderTouched, setSliderTouched] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [heatmapOpen, setHeatmapOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -492,7 +500,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
         ) : (
           <>
             <TrajectoryChart
-              previewDeviation={deviation}
+              previewDeviation={sliderTouched ? deviation : null}
               records={historyData}
             />
             {historyData.length > 0 && (
@@ -552,9 +560,30 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
         {/* Slider track */}
         <div className="relative mb-2">
+          <style>{`
+            .friction-slider::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              width: 28px;
+              height: 28px;
+              border-radius: 50%;
+              background: var(--accent);
+              border: 2px solid var(--bg);
+              box-shadow: 0 0 0 1px rgba(212,162,76,0.4);
+              cursor: pointer;
+            }
+            .friction-slider::-moz-range-thumb {
+              width: 28px;
+              height: 28px;
+              border-radius: 50%;
+              background: var(--accent);
+              border: 2px solid var(--bg);
+              box-shadow: 0 0 0 1px rgba(212,162,76,0.4);
+              cursor: pointer;
+            }
+          `}</style>
           <input
             aria-label="Calibrador de fricción"
-            className="w-full"
+            className="friction-slider w-full"
             max={3}
             min={-3}
             step={1}
@@ -562,15 +591,18 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
               WebkitAppearance: "none",
               appearance: "none",
               height: "6px",
+              padding: "21px 0",
+              boxSizing: "content-box",
               borderRadius: "9999px",
               background:
                 "linear-gradient(to right, #cc3f30 0%, #5cb85a 50%, #e0932a 100%)",
+              backgroundClip: "content-box",
               outline: "none",
               cursor: "pointer",
             }}
             type="range"
             value={deviation}
-            onChange={(e) => setDeviation(Number(e.target.value))}
+            onChange={(e) => { setDeviation(Number(e.target.value)); setSliderTouched(true); }}
           />
         </div>
 
