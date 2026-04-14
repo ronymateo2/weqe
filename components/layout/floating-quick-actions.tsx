@@ -7,6 +7,7 @@ import {
   PlusIcon,
   NotePencilIcon,
   MoonIcon,
+  EyeIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
@@ -15,10 +16,11 @@ import { SleepSheet } from "@/components/forms/sleep-sheet";
 import { ObservationSheet } from "@/components/forms/observation-sheet";
 import { ObservationsListSheet } from "@/components/forms/observations-list-sheet";
 import { LogOccurrenceSheet } from "@/components/forms/log-occurrence-sheet";
+import { HygieneSheet } from "@/components/forms/hygiene-sheet";
 import { cn } from "@/lib/utils";
 import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
 
-type Sheet = "drop" | "sleep" | "obs_list" | "obs_log" | "obs_new" | null;
+type Sheet = "drop" | "sleep" | "obs_list" | "obs_log" | "obs_new" | "hygiene" | null;
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
@@ -79,6 +81,14 @@ export function FloatingQuickActions() {
               <Button
                 className="min-w-[132px] justify-start gap-2"
                 variant="subtle"
+                onClick={() => setSheet("hygiene")}
+              >
+                <EyeIcon size={18} />
+                Higiene
+              </Button>
+              <Button
+                className="min-w-[132px] justify-start gap-2"
+                variant="subtle"
                 onClick={() => setSheet("obs_list")}
               >
                 <NotePencilIcon size={18} />
@@ -118,6 +128,15 @@ export function FloatingQuickActions() {
         onClose={closeAll}
       >
         <DropSheet onSaved={savedAndClose} />
+      </MobileSheet>
+
+      <MobileSheet
+        description="Calibra tu sesion de higiene palpebral."
+        open={sheet === "hygiene"}
+        title="Calibracion"
+        onClose={closeAll}
+      >
+        <HygieneSheet onSaved={savedAndClose} />
       </MobileSheet>
 
       {/* Observation flow: list → log occurrence or create new */}

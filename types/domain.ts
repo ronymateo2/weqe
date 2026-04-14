@@ -67,6 +67,28 @@ export type SaveOccurrenceInput = {
   notes: string;
 };
 
+export type HygieneStatus = "completed" | "skipped" | "partial";
+export type FrictionType = "mental" | "logistics" | "none";
+
+export type SaveHygieneInput = {
+  id: string;
+  loggedAt: string;
+  status: HygieneStatus;
+  deviationValue: number;
+  frictionType: FrictionType;
+  userNote?: string;
+};
+
+export type HygieneRecord = {
+  id: string;
+  dayKey: string;
+  loggedAt: string;
+  status: HygieneStatus;
+  deviationValue: number;
+  frictionType: FrictionType;
+  userNote: string | null;
+};
+
 export type ActionState =
   | { status: "idle" }
   | { status: "success"; message: string }

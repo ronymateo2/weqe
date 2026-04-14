@@ -5,6 +5,7 @@ import { saveDropAction } from "@/lib/actions/drops";
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import { saveSleepAction } from "@/lib/actions/sleep";
 import { saveObservationAction, saveOccurrenceAction } from "@/lib/actions/observations";
+import { saveLidHygieneAction } from "@/lib/actions/lid-hygiene";
 import {
   getPendingDrops,
   getPendingDropsCount,
@@ -30,30 +31,37 @@ import {
   getPendingOccurrencesCount,
   removePendingOccurrence,
 } from "@/lib/offline/occurrences-queue";
+import {
+  getPendingHygiene,
+  getPendingHygieneCount,
+  removePendingHygiene,
+} from "@/lib/offline/lid-hygiene-queue";
 
 export function useOfflineSync() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const refreshCount = useCallback(async () => {
-    const [drops, checkIns, sleep, observations, occurrences] = await Promise.all([
+    const [drops, checkIns, sleep, observations, occurrences, hygiene] = await Promise.all([
       getPendingDropsCount(),
       getPendingCheckInsCount(),
       getPendingSleepCount(),
       getPendingObservationsCount(),
       getPendingOccurrencesCount(),
+      getPendingHygieneCount(),
     ]);
-    setPendingCount(drops + checkIns + sleep + observations + occurrences);
+    setPendingCount(drops + checkIns + sleep + observations + occurrences + hygiene);
   }, []);
 
   const sync = useCallback(async () => {
-    const [pendingDrops, pendingCheckIns, pendingSleeps, pendingObservations, pendingOccurrences] =
+    const [pendingDrops, pendingCheckIns, pendingSleeps, pendingObservations, pendingOccurrences, pendingHygiene] =
       await Promise.all([
         getPendingDrops(),
         getPendingCheckIns(),
         getPendingSleep(),
         getPendingObservations(),
         getPendingOccurrences(),
+        getPendingHygiene(),
       ]);
 
     if (
@@ -61,7 +69,8 @@ export function useOfflineSync() {
       pendingCheckIns.length === 0 &&
       pendingSleeps.length === 0 &&
       pendingObservations.length === 0 &&
-      pendingOccurrences.length === 0
+      pendingOccurrences.length === 0 &&
+      pendingHygiene.length === 0
     ) {
       return;
     }
@@ -108,6 +117,15 @@ export function useOfflineSync() {
       try {
         const result = await saveOccurrenceAction(occurrence);
         if (result.ok) await removePendingOccurrence(occurrence.id);
+      } catch {
+        // Keep in queue, try again next time online
+      }
+    }
+
+    for (const hygiene of pendingHygiene) {
+      try {
+        const result = await saveLidHygieneAction(hygiene);
+        if (result.ok) await removePendingHygiene(hygiene.id);
       } catch {
         // Keep in queue, try again next time online
       }
