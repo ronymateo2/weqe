@@ -20,7 +20,14 @@ import { HygieneSheet } from "@/components/forms/hygiene-sheet";
 import { cn } from "@/lib/utils";
 import type { ObservationTypeWithLastOccurrence } from "@/lib/actions/observations";
 
-type Sheet = "drop" | "sleep" | "obs_list" | "obs_log" | "obs_new" | "hygiene" | null;
+type Sheet =
+  | "drop"
+  | "sleep"
+  | "obs_list"
+  | "obs_log"
+  | "obs_new"
+  | "hygiene"
+  | null;
 
 export function FloatingQuickActions() {
   const pathname = usePathname();
@@ -131,10 +138,10 @@ export function FloatingQuickActions() {
       </MobileSheet>
 
       <MobileSheet
-        description="Calibra tu sesion de higiene palpebral."
+        description="Registra tu sesion de higiene palpebral."
         open={sheet === "hygiene"}
         panelClassName="!h-[95svh]"
-        title="Calibracion"
+        title="Higiene Palpebral"
         onClose={closeAll}
       >
         <HygieneSheet onSaved={savedAndClose} />
