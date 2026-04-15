@@ -36,7 +36,7 @@ export function ServoView({
     const completed = allCompleted;
 
     // Trajectory: linear regression over deviationValues
-    const ys = completed.map((r) => r.deviationValue);
+    const ys = completed.map((r) => r.deviationValue ?? 0);
     const { slope, intercept } = (() => {
       const n = ys.length;
       if (n < 2) return { slope: 0, intercept: 0 };
@@ -64,7 +64,7 @@ export function ServoView({
     // Distribution: count per level 0–5
     const counts = [0, 0, 0, 0, 0, 0];
     for (const r of completed) {
-      if (r.deviationValue >= 0 && r.deviationValue <= 5)
+      if (r.deviationValue !== null && r.deviationValue >= 0 && r.deviationValue <= 5)
         counts[r.deviationValue]++;
     }
     const distributionData = counts.map((count, val) => ({
@@ -73,15 +73,15 @@ export function ServoView({
     }));
 
     // Insight: compare first vs second half of calibrated sessions
-    const calibrated = completed.filter((r) => r.deviationValue > 0);
+    const calibrated = completed.filter((r) => r.deviationValue !== null && r.deviationValue > 0);
     let insight: string | null = null;
     if (calibrated.length >= 4) {
       const half = Math.floor(calibrated.length / 2);
       const firstAvg =
-        calibrated.slice(0, half).reduce((a, b) => a + b.deviationValue, 0) /
+        calibrated.slice(0, half).reduce((a, b) => a + (b.deviationValue ?? 0), 0) /
         half;
       const secondAvg =
-        calibrated.slice(half).reduce((a, b) => a + b.deviationValue, 0) /
+        calibrated.slice(half).reduce((a, b) => a + (b.deviationValue ?? 0), 0) /
         (calibrated.length - half);
       if (secondAvg < firstAvg - 0.5)
         insight =
@@ -99,7 +99,7 @@ export function ServoView({
       distributionData,
       insight,
       dayCount: completed.length,
-      calibratedDayCount: completed.filter((r) => r.deviationValue > 0).length,
+      calibratedDayCount: completed.filter((r) => r.deviationValue !== null && r.deviationValue > 0).length,
     };
   }, [records]);
 
@@ -287,6 +287,7 @@ export function ServoView({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
+                cursor={{ fill: "rgba(255,255,255,0.05)" }}
                 formatter={(val: number) => [val, "Veces"]}
               />
               <Bar dataKey="count" fill="var(--accent)" radius={[3, 3, 0, 0]} />

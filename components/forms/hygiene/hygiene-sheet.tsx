@@ -66,6 +66,7 @@ export function HygieneSheet({
     id: string;
     loggedAt: string;
   } | null>(null);
+  const [saving, setSaving] = useState(false);
   const [selectedFriction, setSelectedFriction] = useState<number | null>(null);
   const [actionState, setActionState] = useState<ActionState>({
     status: "idle",
@@ -132,6 +133,7 @@ export function HygieneSheet({
   async function handleLoHice() {
     if (isSaving.current) return;
     isSaving.current = true;
+    setSaving(true);
     setConfirmRepeat(false);
     setActionState({ status: "idle" });
 
@@ -142,11 +144,12 @@ export function HygieneSheet({
       id,
       loggedAt,
       status: "completed",
-      deviationValue: 0,
-      frictionType: "none",
+      deviationValue: null,
+      frictionType: null,
     });
 
     isSaving.current = false;
+    setSaving(false);
     if (ok) {
       setPendingSave({ id, loggedAt });
       setSelectedFriction(null);
@@ -155,7 +158,7 @@ export function HygieneSheet({
   }
 
   async function handleCalibrationSave() {
-    if (!pendingSave || selectedFriction === null || isSaving.current) return;
+    if (!pendingSave || isSaving.current) return;
     isSaving.current = true;
     setActionState({ status: "idle" });
 
@@ -164,7 +167,7 @@ export function HygieneSheet({
       loggedAt: pendingSave.loggedAt,
       status: "completed",
       deviationValue: selectedFriction,
-      frictionType: "none",
+      frictionType: selectedFriction !== null ? "none" : null,
     });
 
     isSaving.current = false;
@@ -292,7 +295,45 @@ export function HygieneSheet({
 
           {/* Main action card */}
           <div>
-            {confirmRepeat ? (
+            {saving ? (
+              /* Saving state — pulsing card while network request is in flight */
+              <div
+                className="flex w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-lg)]"
+                style={{
+                  minHeight: 160,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div className="flex items-center gap-[6px]">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      style={{
+                        display: "inline-block",
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                        animation: `hygienieDot 1.1s ease-in-out ${i * 0.18}s infinite`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-[0.12em]"
+                  style={{ color: "var(--text-faint)" }}
+                >
+                  Guardando…
+                </p>
+                <style>{`
+                  @keyframes hygienieDot {
+                    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+                    40% { opacity: 1; transform: scale(1); }
+                  }
+                `}</style>
+              </div>
+            ) : confirmRepeat ? (
               /* Confirmation state */
               <div
                 className="flex flex-col items-center justify-center gap-5 rounded-[var(--radius-lg)] px-5 py-6"

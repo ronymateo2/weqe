@@ -132,32 +132,32 @@ export function CalibratingView({
           })}
         </div>
 
-        {/* Selected description + save */}
+        {/* Selected description */}
         {level && (
-          <>
-            <p
-              className="mt-3 text-[12px] italic"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {level.desc}
-            </p>
-            <button
-              className="group mt-3 flex w-full items-center justify-center rounded-full py-[10px] text-[14px] font-medium transition-all active:opacity-70 active:scale-[0.98]"
-              style={{
-                background: "var(--surface-el)",
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-              }}
-              type="button"
-              onClick={onSave}
-            >
-              Guardar{" "}
-              <span className="inline-block transition-transform group-active:translate-x-1">
-                →
-              </span>
-            </button>
-          </>
+          <p
+            className="mt-3 text-[12px] italic"
+            style={{ color: "var(--text-muted)" }}
+          >
+            {level.desc}
+          </p>
         )}
+
+        {/* Save — always visible */}
+        <button
+          className="group mt-3 flex w-full items-center justify-center rounded-full py-[10px] text-[14px] font-medium transition-all active:opacity-70 active:scale-[0.98]"
+          style={{
+            background: "var(--surface-el)",
+            border: "1px solid var(--border)",
+            color: "var(--text-primary)",
+          }}
+          type="button"
+          onClick={onSave}
+        >
+          Guardar{" "}
+          <span className="inline-block transition-transform group-active:translate-x-1">
+            →
+          </span>
+        </button>
       </div>
 
       {/* Error */}

@@ -74,8 +74,8 @@ export type SaveHygieneInput = {
   id: string;
   loggedAt: string;
   status: HygieneStatus;
-  deviationValue: number;
-  frictionType: FrictionType;
+  deviationValue: number | null;
+  frictionType: FrictionType | null;
   userNote?: string;
 };
 
@@ -84,8 +84,8 @@ export type HygieneRecord = {
   dayKey: string;
   loggedAt: string;
   status: HygieneStatus;
-  deviationValue: number;
-  frictionType: FrictionType;
+  deviationValue: number | null;
+  frictionType: FrictionType | null;
   userNote: string | null;
 };
 

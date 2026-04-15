@@ -48,11 +48,11 @@ export function VictoriasView({
         isToday,
         sessionCount: 0,
       };
-    const calibrated = completedRecs.filter((r) => r.deviationValue > 0);
+    const calibrated = completedRecs.filter((r) => r.deviationValue !== null && r.deviationValue > 0);
     if (calibrated.length === 0)
       return { completed, dot: "gray" as const, isToday, sessionCount };
     const avg =
-      calibrated.reduce((a, b) => a + b.deviationValue, 0) / calibrated.length;
+      calibrated.reduce((a, b) => a + (b.deviationValue ?? 0), 0) / calibrated.length;
     return {
       completed,
       dot: avg <= 2 ? ("low" as const) : ("high" as const),
