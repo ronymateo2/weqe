@@ -270,7 +270,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
                 onClick={() => transitionTo("servo")}
               >
                 <WrenchIcon size={13} />
-                Servo
+                Progreso
               </button>
             </div>
           </div>
@@ -363,7 +363,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
                 className="mt-1 text-[10px] font-semibold uppercase tracking-[0.1em]"
                 style={{ color: "var(--text-muted)" }}
               >
-                Señales de Identidad
+                Días completados
               </p>
             </div>
             <div
@@ -403,7 +403,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
                 className="text-[12px] font-semibold"
                 style={{ color: "var(--text-muted)" }}
               >
-                Ciclo {cycleNumber} de identidad
+                Ciclo {cycleNumber}
               </span>
               <span
                 className="font-mono text-[12px]"

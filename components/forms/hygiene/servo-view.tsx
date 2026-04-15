@@ -85,13 +85,13 @@ export function ServoView({
         (calibrated.length - half);
       if (secondAvg < firstAvg - 0.5)
         insight =
-          "El servo está instalando la identidad. Menos corrección necesaria cada vez.";
+          "Está costando menos con el tiempo. El hábito se está formando.";
       else if (secondAvg > firstAvg + 0.5)
         insight =
-          "El servo está trabajando más. La corrección activa indica que el sistema opera.";
+          "Está costando más últimamente. Eso significa que sigues moviéndote a pesar del esfuerzo.";
       else
         insight =
-          "El servo mantiene equilibrio. Trayectoria estable — identidad consolidándose.";
+          "El esfuerzo se mantiene estable. Buen ritmo.";
     }
 
     return {
@@ -139,7 +139,7 @@ export function ServoView({
             color: "var(--text-muted)",
           }}
         >
-          Trayectoria del Servo
+          Mi Progreso
         </span>
       </div>
 
@@ -155,7 +155,7 @@ export function ServoView({
           className="mb-3 text-[10px] font-semibold uppercase tracking-[0.12em]"
           style={{ color: "var(--text-muted)" }}
         >
-          Fricción en el Tiempo — Corrección del Servo
+          Dificultad en el Tiempo
         </p>
 
         {completedCount < 2 ? (
@@ -189,7 +189,7 @@ export function ServoView({
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(val: number) => [val, "Fricción"]}
+                  formatter={(val: number) => [val, "Dificultad"]}
                 />
                 <Line
                   connectNulls={false}
@@ -227,7 +227,7 @@ export function ServoView({
               className="text-[10px]"
               style={{ color: "var(--text-faint)" }}
             >
-              Fricción diaria
+              Dificultad diaria
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -265,7 +265,7 @@ export function ServoView({
           className="mb-3 text-[10px] font-semibold uppercase tracking-[0.12em]"
           style={{ color: "var(--text-muted)" }}
         >
-          Distribución de Señales de Corrección
+          Distribución de Dificultad
         </p>
         <div className="h-[100px]">
           <ResponsiveContainer height="100%" width="100%">
@@ -287,7 +287,7 @@ export function ServoView({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(val: number) => [val, "Señales"]}
+                formatter={(val: number) => [val, "Veces"]}
               />
               <Bar dataKey="count" fill="var(--accent)" radius={[3, 3, 0, 0]} />
             </BarChart>
@@ -310,8 +310,8 @@ export function ServoView({
         className="text-center text-[12px] italic leading-relaxed"
         style={{ color: "var(--text-faint)" }}
       >
-        "Fricción alta no es fallo. Es el servo trabajando. La trayectoria
-        descendente es la identidad instalándose."
+        "Cuando cuesta más, no es un fallo. Es el hábito construyéndose. Con el
+        tiempo cuesta menos."
       </p>
     </div>
   );

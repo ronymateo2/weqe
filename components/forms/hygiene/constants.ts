@@ -8,32 +8,32 @@ export const FRICTION_LEVELS = [
   {
     val: 0,
     label: "FLUJO\nTOTAL",
-    desc: "Hábito automático, sin resistencia.",
+    desc: "Casi sin esfuerzo. El hábito salió solo.",
   },
   {
     val: 1,
     label: "MUY\nPOCA",
-    desc: "Mínima fricción. El servo apenas trabajó.",
+    desc: "Poca dificultad. Lo hiciste con facilidad.",
   },
   {
     val: 2,
     label: "MODERADA",
-    desc: "Fricción moderada. El servo trabaja con normalidad.",
+    desc: "Algo de esfuerzo, pero normal.",
   },
   {
     val: 3,
     label: "NOTABLE",
-    desc: "Resistencia notable. Señal de corrección significativa.",
+    desc: "Costó bastante. Lo hiciste igual.",
   },
   {
     val: 4,
     label: "ALTA",
-    desc: "Alta resistencia. Señal valiosa para el sistema.",
+    desc: "Fue difícil. Que lo hayas hecho vale mucho.",
   },
   {
     val: 5,
     label: "MÁXIMA",
-    desc: "Máxima corrección. El servo tiene material de trabajo.",
+    desc: "Muy difícil. Pero aquí estás.",
   },
 ] as const;
 
@@ -41,7 +41,7 @@ export const FRICTION_LEVELS = [
 
 export function identityLabel(n: number): string {
   if (n === 0) return "Despertando";
-  if (n <= 4) return "Activando";
+  if (n <= 4) return "Comenzando";
   if (n <= 9) return "Constante";
   if (n <= 14) return "Disciplinado";
   if (n <= 19) return "Consolidado";

@@ -30,7 +30,7 @@ export function CalibratingView({
             color: "var(--text-muted)",
           }}
         >
-          Calibrador de Fricción
+          ¿Cómo se sintió?
         </span>
       </div>
 
@@ -76,7 +76,7 @@ export function CalibratingView({
           className="mb-[3px] text-[11px] font-semibold uppercase tracking-[0.1em]"
           style={{ color: "var(--text-muted)" }}
         >
-          Calibrador de Fricción{" "}
+          ¿Qué tan difícil fue hoy?{" "}
           <span
             className="font-normal lowercase tracking-normal"
             style={{ color: "var(--text-faint)" }}
@@ -88,8 +88,8 @@ export function CalibratingView({
           className="mb-4 text-[12px] italic leading-snug"
           style={{ color: "var(--text-muted)" }}
         >
-          ¿Cuánta resistencia tuvo que superar el servo hoy? No es un fallo — es
-          la señal de corrección que usa para alinearse.
+          ¿Cuánto esfuerzo te costó hacerlo hoy? No importa si fue difícil — lo
+          importante es que lo hiciste.
         </p>
 
         {/* 0–5 buttons */}
@@ -151,7 +151,7 @@ export function CalibratingView({
               type="button"
               onClick={onSave}
             >
-              Guardar señal{" "}
+              Guardar{" "}
               <span className="inline-block transition-transform group-active:translate-x-1">
                 →
               </span>
@@ -180,7 +180,7 @@ export function CalibratingView({
         type="button"
         onClick={onOmit}
       >
-        omitir calibración
+        omitir esto
       </button>
     </div>
   );
