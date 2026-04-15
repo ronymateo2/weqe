@@ -62,7 +62,7 @@ export async function saveLidHygieneAction(
 }
 
 export async function getLidHygieneHistoryAction(
-  weeks: number = 12,
+  weeks: number = 9,
 ): Promise<HygieneRecord[]> {
   const session = await auth();
   if (!session?.user?.id) return [];

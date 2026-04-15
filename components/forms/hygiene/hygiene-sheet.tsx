@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarCheckIcon,
   TrophyIcon,
@@ -21,12 +21,40 @@ import { CalibratingView } from "./calibrating-view";
 import { VictoriasView } from "./victorias-view";
 import { ServoView } from "./servo-view";
 
+function SlideView({
+  direction,
+  children,
+}: {
+  direction: "forward" | "back";
+  children: React.ReactNode;
+}) {
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <div
+      style={{
+        opacity: entered ? 1 : 0,
+        transform: entered
+          ? "translateX(0)"
+          : `translateX(${direction === "forward" ? 18 : -18}px)`,
+        transition: entered
+          ? "opacity 260ms cubic-bezier(0,0,0.2,1), transform 300ms cubic-bezier(0.23,1,0.32,1)"
+          : "none",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
   const [displayedView, setDisplayedView] = useState<View>("main");
-  const [transitioning, setTransitioning] = useState(false);
-  const pendingTransition = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
+  const [navDirection, setNavDirection] = useState<"forward" | "back">("forward");
 
   const [pendingSave, setPendingSave] = useState<{
     id: string;
@@ -43,20 +71,14 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
   useEffect(() => {
     mounted.current = true;
-    getLidHygieneHistoryAction(12)
+    getLidHygieneHistoryAction(9)
       .then(setHistoryData)
       .finally(() => setLoading(false));
-    return () => {
-      if (pendingTransition.current) clearTimeout(pendingTransition.current);
-    };
   }, []);
 
   const transitionTo = useCallback((next: View) => {
-    setTransitioning(true);
-    pendingTransition.current = setTimeout(() => {
-      setDisplayedView(next);
-      setTransitioning(false);
-    }, 180);
+    setNavDirection(next === "main" ? "back" : "forward");
+    setDisplayedView(next);
   }, []);
 
   const todayKey = new Date().toLocaleDateString("en-CA");
@@ -175,40 +197,86 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
   // ── Animated view wrapper ──
   return (
-    <div
-      style={{
-        opacity: transitioning ? 0 : 1,
-        transform: transitioning ? "translateY(6px)" : "translateY(0)",
-        transition: transitioning
-          ? "opacity 180ms cubic-bezier(0.4,0,1,1), transform 180ms cubic-bezier(0.4,0,1,1)"
-          : "opacity 220ms cubic-bezier(0,0,0.2,1), transform 220ms cubic-bezier(0,0,0.2,1)",
-      }}
-    >
+    <div>
       {displayedView === "calibrating" && (
-        <CalibratingView
-          actionState={actionState}
-          selectedFriction={selectedFriction}
-          onOmit={onSaved}
-          onSave={handleCalibrationSave}
-          onSelect={setSelectedFriction}
-        />
+        <SlideView direction={navDirection}>
+          <CalibratingView
+            actionState={actionState}
+            selectedFriction={selectedFriction}
+            onOmit={onSaved}
+            onSave={handleCalibrationSave}
+            onSelect={setSelectedFriction}
+          />
+        </SlideView>
       )}
 
       {displayedView === "victorias" && (
-        <VictoriasView
-          records={historyData}
-          onBack={() => transitionTo("main")}
-        />
+        <SlideView direction={navDirection}>
+          <VictoriasView
+            records={historyData}
+            onBack={() => transitionTo("main")}
+          />
+        </SlideView>
       )}
 
       {displayedView === "servo" && (
-        <ServoView records={historyData} onBack={() => transitionTo("main")} />
+        <SlideView direction={navDirection}>
+          <ServoView records={historyData} onBack={() => transitionTo("main")} />
+        </SlideView>
       )}
 
       {displayedView === "main" && (
+        <SlideView direction={navDirection}>
         <div className="flex flex-col gap-5 px-5 pb-8">
+          {/* Top bar: cycle/day pill + Victorias/Servo buttons */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em]"
+              style={{
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--text-muted)",
+              }}
+            >
+              CICLO{" "}
+              <span style={{ color: "var(--accent)" }}>{cycleNumber}</span>
+              {" · "}DÍA{" "}
+              <span style={{ color: "var(--accent)" }}>{sessionInCycle}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition-opacity active:opacity-70"
+                style={{
+                  minHeight: 36,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-muted)",
+                }}
+                type="button"
+                onClick={() => transitionTo("victorias")}
+              >
+                <TrophyIcon size={13} />
+                Victorias
+              </button>
+              <button
+                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition-opacity active:opacity-70"
+                style={{
+                  minHeight: 36,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-muted)",
+                }}
+                type="button"
+                onClick={() => transitionTo("servo")}
+              >
+                <WrenchIcon size={13} />
+                Servo
+              </button>
+            </div>
+          </div>
+
           {/* Identity header */}
-          <div className="pt-1 text-center">
+          <div className="text-center">
             <p
               className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em]"
               style={{ color: "var(--text-muted)" }}
@@ -361,38 +429,6 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
             </div>
           </div>
 
-          {/* Victorias / Servo */}
-          <div className="flex gap-3">
-            <button
-              className="flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[13px] font-semibold transition-opacity active:opacity-70"
-              style={{
-                minHeight: 48,
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text-muted)",
-              }}
-              type="button"
-              onClick={() => transitionTo("victorias")}
-            >
-              <TrophyIcon size={14} />
-              Victorias
-            </button>
-            <button
-              className="flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[13px] font-semibold transition-opacity active:opacity-70"
-              style={{
-                minHeight: 48,
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text-muted)",
-              }}
-              type="button"
-              onClick={() => transitionTo("servo")}
-            >
-              <WrenchIcon size={14} />
-              Servo
-            </button>
-          </div>
-
           {/* Error */}
           {actionState.status === "error" && (
             <p
@@ -413,6 +449,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
             — omitir por hoy —
           </button>
         </div>
+        </SlideView>
       )}
     </div>
   );
