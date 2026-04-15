@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  CalendarCheckIcon,
   TrophyIcon,
   WrenchIcon,
 } from "@phosphor-icons/react";
@@ -52,9 +51,16 @@ function SlideView({
   );
 }
 
-export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
+export function HygieneSheet({
+  onSaved,
+  onClose,
+}: {
+  onSaved: () => void;
+  onClose?: () => void;
+}) {
   const [displayedView, setDisplayedView] = useState<View>("main");
   const [navDirection, setNavDirection] = useState<"forward" | "back">("forward");
+  const [confirmRepeat, setConfirmRepeat] = useState(false);
 
   const [pendingSave, setPendingSave] = useState<{
     id: string;
@@ -126,6 +132,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
   async function handleLoHice() {
     if (isSaving.current) return;
     isSaving.current = true;
+    setConfirmRepeat(false);
     setActionState({ status: "idle" });
 
     const id = crypto.randomUUID();
@@ -164,20 +171,12 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
     if (ok) onSaved();
   }
 
-  async function handleSkip() {
-    if (isSaving.current) return;
-    isSaving.current = true;
-
-    await saveHygiene({
-      id: crypto.randomUUID(),
-      loggedAt: new Date().toISOString(),
-      status: "skipped",
-      deviationValue: 0,
-      frictionType: "none",
-    });
-
-    isSaving.current = false;
-    onSaved();
+  function handleMainButtonTap() {
+    if (todaySessions > 0) {
+      setConfirmRepeat(true);
+    } else {
+      handleLoHice();
+    }
   }
 
   // ── Loading skeleton ──
@@ -228,7 +227,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
       {displayedView === "main" && (
         <SlideView direction={navDirection}>
         <div className="flex flex-col gap-5 px-5 pb-8">
-          {/* Top bar: cycle/day pill + Victorias/Servo buttons */}
+          {/* Top bar: cycle/day pill + Victorias/Progreso buttons */}
           <div className="flex items-center justify-between gap-3 pt-1">
             <div
               className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em]"
@@ -291,59 +290,108 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
             </p>
           </div>
 
-          {/* LO HICE card */}
-          <div className="relative">
-            <button
-              className="flex w-full flex-col items-center justify-center rounded-[var(--radius-lg)] transition-all active:opacity-75 active:scale-[0.97]"
-              style={{
-                minHeight: 160,
-                background: "var(--surface)",
-                border: `1px solid ${todaySessions > 0 ? "rgba(212,162,76,0.5)" : "var(--border)"}`,
-              }}
-              type="button"
-              onClick={handleLoHice}
-            >
-              <p
-                className="text-[42px] font-semibold leading-none tracking-tight"
-                style={{ color: "var(--text-primary)" }}
-              >
-                LO
-                <br />
-                HICE
-              </p>
-              <p
-                className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em]"
-                style={{ color: "var(--text-faint)" }}
-              >
-                REGISTRAR ACCIÓN
-              </p>
-            </button>
-
-            {/* Session badge — shows up to 3 icons, +N overflow after 3 */}
-            {todaySessions > 0 && (
+          {/* Main action card */}
+          <div>
+            {confirmRepeat ? (
+              /* Confirmation state */
               <div
-                className="absolute right-3 top-3 flex items-center gap-[3px] rounded-full px-[8px] py-[5px]"
+                className="flex flex-col items-center justify-center gap-5 rounded-[var(--radius-lg)] px-5 py-6"
                 style={{
-                  background: "var(--accent-dim)",
-                  border: "1px solid rgba(212,162,76,0.3)",
+                  minHeight: 160,
+                  background: "var(--surface)",
+                  border: "1px solid rgba(212,162,76,0.4)",
                 }}
               >
-                {Array.from({ length: Math.min(todaySessions, 3) }, (_, i) => (
-                  <CalendarCheckIcon
-                    key={i}
-                    size={16}
-                    style={{ color: "var(--accent)" }}
-                  />
-                ))}
-                {todaySessions > 3 && (
-                  <span
-                    className="font-mono text-[8px] font-bold"
-                    style={{ color: "var(--accent)" }}
+                <p
+                  className="text-[17px] font-semibold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  ¿Lo hiciste de nuevo?
+                </p>
+                <div className="flex w-full gap-3">
+                  <button
+                    className="flex-1 rounded-[var(--radius-lg)] py-3 text-[15px] font-semibold transition-all active:opacity-75 active:scale-[0.97]"
+                    style={{
+                      minHeight: 52,
+                      background: "var(--accent)",
+                      color: "#121008",
+                    }}
+                    type="button"
+                    onClick={handleLoHice}
                   >
-                    +{todaySessions - 3}
-                  </span>
-                )}
+                    Sí, lo hice
+                  </button>
+                  <button
+                    className="flex-1 rounded-[var(--radius-lg)] py-3 text-[15px] font-medium transition-all active:opacity-70"
+                    style={{
+                      minHeight: 52,
+                      background: "var(--surface-el)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-muted)",
+                    }}
+                    type="button"
+                    onClick={() => setConfirmRepeat(false)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
+            ) : (
+              /* Normal / repeat state */
+              <button
+                className="flex w-full flex-col items-center justify-center rounded-[var(--radius-lg)] transition-all active:opacity-75 active:scale-[0.97]"
+                style={{
+                  minHeight: 160,
+                  background: "var(--surface)",
+                  border: `1px solid ${todaySessions > 0 ? "rgba(212,162,76,0.5)" : "var(--border)"}`,
+                }}
+                type="button"
+                onClick={handleMainButtonTap}
+              >
+                {todaySessions > 0 ? (
+                  <>
+                    <p
+                      className="font-mono text-[60px] font-light leading-none"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      {todaySessions}
+                    </p>
+                    <p
+                      className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em]"
+                      style={{ color: "var(--text-faint)" }}
+                    >
+                      {todaySessions === 1 ? "VEZ HOY" : "VECES HOY"}
+                    </p>
+                    <div
+                      className="my-4 h-px w-10"
+                      style={{ background: "var(--border)" }}
+                    />
+                    <p
+                      className="text-[14px] font-medium"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Hacerlo de nuevo
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p
+                      className="text-[42px] font-semibold leading-none tracking-tight"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      LO
+                      <br />
+                      HICE
+                    </p>
+                    <p
+                      className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em]"
+                      style={{ color: "var(--text-faint)" }}
+                    >
+                      REGISTRAR ACCIÓN
+                    </p>
+                  </>
+                )}
+              </button>
             )}
           </div>
 
@@ -439,15 +487,17 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
             </p>
           )}
 
-          {/* Skip */}
-          <button
-            className="min-h-[48px] py-3 text-[14px] transition-opacity active:opacity-60"
-            style={{ color: "var(--text-faint)" }}
-            type="button"
-            onClick={handleSkip}
-          >
-            — omitir por hoy —
-          </button>
+          {/* Close */}
+          {onClose && (
+            <button
+              className="min-h-[48px] py-2 text-[13px] transition-opacity active:opacity-60"
+              style={{ color: "var(--text-faint)" }}
+              type="button"
+              onClick={onClose}
+            >
+              Cerrar
+            </button>
+          )}
         </div>
         </SlideView>
       )}

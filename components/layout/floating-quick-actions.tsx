@@ -144,7 +144,7 @@ export function FloatingQuickActions() {
         title="Higiene Palpebral"
         onClose={closeAll}
       >
-        <HygieneSheet onSaved={savedAndClose} />
+        <HygieneSheet onSaved={savedAndClose} onClose={closeAll} />
       </MobileSheet>
 
       {/* Observation flow: list → log occurrence or create new */}
