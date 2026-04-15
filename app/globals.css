@@ -444,3 +444,16 @@ svg {
     font-size: 24px;
   }
 }
+
+
+/* ── Hygiene sheet: check circle entrance animation ─────────────────────── */
+@keyframes checkScale {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
