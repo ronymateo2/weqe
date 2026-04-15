@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { get, set } from "idb-keyval";
 import type { DropTypeRecord } from "@/types/domain";
+import { getDropTypesAction } from "@/lib/actions/drops";
 
 export const DROP_TYPES_CACHE_KEY = "neuroeye_drop_types";
 export const DROP_TYPES_ORDER_KEY = "neuroeye_drop_types_order";
@@ -49,14 +50,9 @@ export function useDropTypes() {
         console.warn("Failed to retrieve drop types from IndexedDB", err);
       }
 
-      // 2. Fetch API
+      // 2. Server Action
       try {
-        const response = await fetch("/api/drop-types", { cache: "no-store" });
-        const result = (await response.json()) as {
-          ok: boolean;
-          message: string;
-          dropTypes: DropTypeRecord[];
-        };
+        const result = await getDropTypesAction();
 
         if (isMounted) {
           if (result.ok) {
