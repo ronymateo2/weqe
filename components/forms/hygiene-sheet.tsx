@@ -11,10 +11,22 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { ArrowLeftIcon, TrophyIcon, WrenchIcon } from "@phosphor-icons/react";
-import { saveLidHygieneAction, getLidHygieneHistoryAction } from "@/lib/actions/lid-hygiene";
+import {
+  ArrowLeftIcon,
+  VisorIcon,
+  TrophyIcon,
+  WrenchIcon,
+} from "@phosphor-icons/react";
+import {
+  saveLidHygieneAction,
+  getLidHygieneHistoryAction,
+} from "@/lib/actions/lid-hygiene";
 import { queueHygiene } from "@/lib/offline/lid-hygiene-queue";
-import type { HygieneRecord, SaveHygieneInput, ActionState } from "@/types/domain";
+import type {
+  HygieneRecord,
+  SaveHygieneInput,
+  ActionState,
+} from "@/types/domain";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,22 +35,46 @@ type View = "main" | "calibrating" | "victorias" | "servo";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const FRICTION_LEVELS = [
-  { val: 0, label: "FLUJO\nTOTAL",  desc: "Hábito automático, sin resistencia." },
-  { val: 1, label: "MUY\nPOCA",     desc: "Mínima fricción. El servo apenas trabajó." },
-  { val: 2, label: "MODERADA",      desc: "Fricción moderada. El servo trabaja con normalidad." },
-  { val: 3, label: "NOTABLE",       desc: "Resistencia notable. Señal de corrección significativa." },
-  { val: 4, label: "ALTA",          desc: "Alta resistencia. Señal valiosa para el sistema." },
-  { val: 5, label: "MÁXIMA",        desc: "Máxima corrección. El servo tiene material de trabajo." },
+  {
+    val: 0,
+    label: "FLUJO\nTOTAL",
+    desc: "Hábito automático, sin resistencia.",
+  },
+  {
+    val: 1,
+    label: "MUY\nPOCA",
+    desc: "Mínima fricción. El servo apenas trabajó.",
+  },
+  {
+    val: 2,
+    label: "MODERADA",
+    desc: "Fricción moderada. El servo trabaja con normalidad.",
+  },
+  {
+    val: 3,
+    label: "NOTABLE",
+    desc: "Resistencia notable. Señal de corrección significativa.",
+  },
+  {
+    val: 4,
+    label: "ALTA",
+    desc: "Alta resistencia. Señal valiosa para el sistema.",
+  },
+  {
+    val: 5,
+    label: "MÁXIMA",
+    desc: "Máxima corrección. El servo tiene material de trabajo.",
+  },
 ] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function identityLabel(n: number): string {
-  if (n === 0)   return "Despertando";
-  if (n <= 4)    return "Activando";
-  if (n <= 9)    return "Constante";
-  if (n <= 14)   return "Disciplinado";
-  if (n <= 19)   return "Consolidado";
+  if (n === 0) return "Despertando";
+  if (n <= 4) return "Activando";
+  if (n <= 9) return "Constante";
+  if (n <= 14) return "Disciplinado";
+  if (n <= 19) return "Consolidado";
   return "Automatizado";
 }
 
@@ -66,7 +102,10 @@ function CalibratingView({
       <div className="w-full">
         <span
           className="rounded-full px-3 py-[5px] text-[10px] font-semibold uppercase tracking-[0.12em]"
-          style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
+          style={{
+            border: "1px solid var(--border)",
+            color: "var(--text-muted)",
+          }}
         >
           Calibrador de Fricción
         </span>
@@ -77,7 +116,10 @@ function CalibratingView({
         className="flex h-[80px] w-[80px] items-center justify-center rounded-full"
         style={{ border: "2px solid var(--accent)" }}
       >
-        <span className="text-[34px] leading-none" style={{ color: "var(--accent)" }}>
+        <span
+          className="text-[34px] leading-none"
+          style={{ color: "var(--accent)" }}
+        >
           ✓
         </span>
       </div>
@@ -98,7 +140,10 @@ function CalibratingView({
       {/* Friction card */}
       <div
         className="w-full rounded-[var(--radius-lg)] p-4"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
       >
         <p
           className="mb-[3px] text-[11px] font-semibold uppercase tracking-[0.1em]"
@@ -112,9 +157,12 @@ function CalibratingView({
             (Opcional)
           </span>
         </p>
-        <p className="mb-4 text-[12px] italic leading-snug" style={{ color: "var(--text-muted)" }}>
-          ¿Cuánta resistencia tuvo que superar el servo hoy? No es un fallo — es la señal de
-          corrección que usa para alinearse.
+        <p
+          className="mb-4 text-[12px] italic leading-snug"
+          style={{ color: "var(--text-muted)" }}
+        >
+          ¿Cuánta resistencia tuvo que superar el servo hoy? No es un fallo — es
+          la señal de corrección que usa para alinearse.
         </p>
 
         {/* 0–5 buttons */}
@@ -127,7 +175,9 @@ function CalibratingView({
                 className="flex flex-col items-center justify-center rounded-[var(--radius-md)] py-3 transition-all active:scale-95"
                 style={{
                   minHeight: 64,
-                  background: isSelected ? "var(--accent-dim)" : "var(--surface-el)",
+                  background: isSelected
+                    ? "var(--accent-dim)"
+                    : "var(--surface-el)",
                   border: `1px solid ${isSelected ? "rgba(212,162,76,0.5)" : "var(--border)"}`,
                 }}
                 type="button"
@@ -135,7 +185,9 @@ function CalibratingView({
               >
                 <span
                   className="font-mono text-[22px] font-semibold leading-none"
-                  style={{ color: isSelected ? "var(--accent)" : "var(--text-primary)" }}
+                  style={{
+                    color: isSelected ? "var(--accent)" : "var(--text-primary)",
+                  }}
                 >
                   {val}
                 </span>
@@ -156,7 +208,10 @@ function CalibratingView({
         {/* Selected description + save */}
         {level && (
           <>
-            <p className="mt-3 text-[12px] italic" style={{ color: "var(--text-muted)" }}>
+            <p
+              className="mt-3 text-[12px] italic"
+              style={{ color: "var(--text-muted)" }}
+            >
               {level.desc}
             </p>
             <button
@@ -177,7 +232,10 @@ function CalibratingView({
 
       {/* Error */}
       {actionState.status === "error" && (
-        <p className="text-center text-[13px]" style={{ color: "var(--error)" }}>
+        <p
+          className="text-center text-[13px]"
+          style={{ color: "var(--error)" }}
+        >
           {actionState.message}
         </p>
       )}
@@ -185,7 +243,10 @@ function CalibratingView({
       {/* Omit */}
       <button
         className="w-full rounded-[var(--radius-lg)] py-3 text-[14px] transition-opacity active:opacity-60"
-        style={{ border: "1px solid var(--border)", color: "var(--text-faint)" }}
+        style={{
+          border: "1px solid var(--border)",
+          color: "var(--text-faint)",
+        }}
         type="button"
         onClick={onOmit}
       >
@@ -230,13 +291,28 @@ function VictoriasView({
   function getDayInfo(d: Date) {
     const key = d.toLocaleDateString("en-CA");
     const recs = byDay.get(key) ?? [];
-    const completed = recs.some((r) => r.status === "completed");
+    const completedRecs = recs.filter((r) => r.status === "completed");
+    const completed = completedRecs.length > 0;
     const isToday = key === todayKey;
-    if (!completed) return { completed: false, dot: null as null | "low" | "high" | "gray", isToday };
-    const calibrated = recs.filter((r) => r.status === "completed" && r.deviationValue > 0);
-    if (calibrated.length === 0) return { completed, dot: "gray" as const, isToday };
-    const avg = calibrated.reduce((a, b) => a + b.deviationValue, 0) / calibrated.length;
-    return { completed, dot: avg <= 2 ? ("low" as const) : ("high" as const), isToday };
+    const sessionCount = completedRecs.length;
+    if (!completed)
+      return {
+        completed: false,
+        dot: null as null | "low" | "high" | "gray",
+        isToday,
+        sessionCount: 0,
+      };
+    const calibrated = completedRecs.filter((r) => r.deviationValue > 0);
+    if (calibrated.length === 0)
+      return { completed, dot: "gray" as const, isToday, sessionCount };
+    const avg =
+      calibrated.reduce((a, b) => a + b.deviationValue, 0) / calibrated.length;
+    return {
+      completed,
+      dot: avg <= 2 ? ("low" as const) : ("high" as const),
+      isToday,
+      sessionCount,
+    };
   }
 
   return (
@@ -258,7 +334,10 @@ function VictoriasView({
         </button>
         <span
           className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em]"
-          style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
+          style={{
+            border: "1px solid var(--border)",
+            color: "var(--text-muted)",
+          }}
         >
           Banco de Victorias
         </span>
@@ -278,13 +357,20 @@ function VictoriasView({
             {Array.from({ length: 10 }, (_, col) => {
               const d = days[row * 10 + col];
               if (!d) return <div key={col} />;
-              const { completed, dot, isToday } = getDayInfo(d);
+              const { completed, dot, isToday, sessionCount } = getDayInfo(d);
               const dayNum = d.getDate();
               const dotColor =
-                dot === "low" ? "var(--accent)" : dot === "high" ? "#cc3f30" : "var(--border)";
+                dot === "low"
+                  ? "var(--accent)"
+                  : dot === "high"
+                    ? "#cc3f30"
+                    : "var(--border)";
 
               return (
-                <div key={col} className="relative flex flex-col items-center">
+                <div
+                  key={col}
+                  className="relative flex flex-col items-center pb-[8px]"
+                >
                   <div
                     className="flex h-[30px] w-[30px] items-center justify-center rounded-full"
                     style={{
@@ -311,11 +397,28 @@ function VictoriasView({
                       {dayNum}
                     </span>
                   </div>
+                  {/* Friction dot */}
                   {dot && (
                     <div
-                      className="absolute bottom-[-2px] right-0 h-[6px] w-[6px] rounded-full"
+                      className="absolute bottom-[2px] right-0 h-[5px] w-[5px] rounded-full"
                       style={{ background: dotColor }}
                     />
+                  )}
+                  {/* Extra-session badge */}
+                  {sessionCount > 1 && (
+                    <div
+                      className="absolute -right-[4px] -top-[3px] flex h-[11px] min-w-[11px] items-center justify-center rounded-full px-[2px]"
+                      style={{
+                        background: "var(--accent)",
+                        fontSize: 6,
+                        fontFamily: "monospace",
+                        fontWeight: 700,
+                        color: "#121008",
+                        lineHeight: 1,
+                      }}
+                    >
+                      +{sessionCount - 1}
+                    </div>
                   )}
                 </div>
               );
@@ -332,8 +435,14 @@ function VictoriasView({
           { color: "var(--border)", label: "Sin calibrar" },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-[5px]">
-            <div className="h-[7px] w-[7px] rounded-full" style={{ background: color }} />
-            <span className="text-[10px]" style={{ color: "var(--text-faint)" }}>
+            <div
+              className="h-[7px] w-[7px] rounded-full"
+              style={{ background: color }}
+            />
+            <span
+              className="text-[10px]"
+              style={{ color: "var(--text-faint)" }}
+            >
               {label}
             </span>
           </div>
@@ -345,8 +454,8 @@ function VictoriasView({
         className="text-center text-[12px] italic leading-relaxed"
         style={{ color: "var(--text-muted)" }}
       >
-        "No cuentes los días sin acción. El servo no trabaja con ausencias — solo con señales
-        positivas."
+        "No cuentes los días sin acción. El servo no trabaja con ausencias —
+        solo con señales positivas."
       </p>
     </div>
   );
@@ -361,13 +470,26 @@ function ServoView({
   records: HygieneRecord[];
   onBack: () => void;
 }) {
-  const { trajectoryData, distributionData, insight } = useMemo(() => {
-    const completed = records
+  const {
+    trajectoryData,
+    distributionData,
+    insight,
+    dayCount,
+    calibratedDayCount,
+  } = useMemo(() => {
+    const allCompleted = records
       .filter((r) => r.status === "completed")
       .slice()
-      .reverse(); // chronological
+      .reverse(); // chronological (oldest first)
 
-    // Trajectory: all completed sessions (dev=0 = flow, dev>0 = friction)
+    // De-dupe: only first session per day counts as identity signal
+    const firstByDay = new Map<string, HygieneRecord>();
+    for (const r of allCompleted) {
+      if (!firstByDay.has(r.dayKey)) firstByDay.set(r.dayKey, r);
+    }
+    const completed = Array.from(firstByDay.values());
+
+    // Trajectory: first session per day (dev=0 = flow, dev>0 = friction)
     const ys = completed.map((r) => r.deviationValue);
     const { slope, intercept } = (() => {
       const n = ys.length;
@@ -387,39 +509,56 @@ function ServoView({
     const trajectoryData = completed.map((r, i) => ({
       label: r.dayKey.slice(5).replace("-", "/"),
       friction: r.deviationValue,
-      trend: Math.max(0, Math.min(5, Math.round((slope * i + intercept) * 10) / 10)),
+      trend: Math.max(
+        0,
+        Math.min(5, Math.round((slope * i + intercept) * 10) / 10),
+      ),
     }));
 
     // Distribution: count per level 0–5
     const counts = [0, 0, 0, 0, 0, 0];
     for (const r of completed) {
-      if (r.deviationValue >= 0 && r.deviationValue <= 5) counts[r.deviationValue]++;
+      if (r.deviationValue >= 0 && r.deviationValue <= 5)
+        counts[r.deviationValue]++;
     }
-    const distributionData = counts.map((count, val) => ({ val: String(val), count }));
+    const distributionData = counts.map((count, val) => ({
+      val: String(val),
+      count,
+    }));
 
     // Insight: compare first vs second half of calibrated sessions
     const calibrated = completed.filter((r) => r.deviationValue > 0);
     let insight: string | null = null;
     if (calibrated.length >= 4) {
       const half = Math.floor(calibrated.length / 2);
-      const firstAvg = calibrated.slice(0, half).reduce((a, b) => a + b.deviationValue, 0) / half;
+      const firstAvg =
+        calibrated.slice(0, half).reduce((a, b) => a + b.deviationValue, 0) /
+        half;
       const secondAvg =
         calibrated.slice(half).reduce((a, b) => a + b.deviationValue, 0) /
         (calibrated.length - half);
       if (secondAvg < firstAvg - 0.5)
-        insight = "El servo está instalando la identidad. Menos corrección necesaria cada vez.";
+        insight =
+          "El servo está instalando la identidad. Menos corrección necesaria cada vez.";
       else if (secondAvg > firstAvg + 0.5)
-        insight = "El servo está trabajando más. La corrección activa indica que el sistema opera.";
-      else insight = "El servo mantiene equilibrio. Trayectoria estable — identidad consolidándose.";
+        insight =
+          "El servo está trabajando más. La corrección activa indica que el sistema opera.";
+      else
+        insight =
+          "El servo mantiene equilibrio. Trayectoria estable — identidad consolidándose.";
     }
 
-    return { trajectoryData, distributionData, insight };
+    return {
+      trajectoryData,
+      distributionData,
+      insight,
+      dayCount: completed.length,
+      calibratedDayCount: completed.filter((r) => r.deviationValue > 0).length,
+    };
   }, [records]);
 
-  const completedCount = records.filter((r) => r.status === "completed").length;
-  const calibratedCount = records.filter(
-    (r) => r.status === "completed" && r.deviationValue > 0,
-  ).length;
+  const completedCount = dayCount;
+  const calibratedCount = calibratedDayCount;
 
   const tooltipStyle = {
     background: "var(--surface)",
@@ -448,7 +587,10 @@ function ServoView({
         </button>
         <span
           className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em]"
-          style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
+          style={{
+            border: "1px solid var(--border)",
+            color: "var(--text-muted)",
+          }}
         >
           Trayectoria del Servo
         </span>
@@ -457,7 +599,10 @@ function ServoView({
       {/* Trajectory chart */}
       <div
         className="rounded-[var(--radius-lg)] p-4"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
       >
         <p
           className="mb-3 text-[10px] font-semibold uppercase tracking-[0.12em]"
@@ -468,14 +613,20 @@ function ServoView({
 
         {completedCount < 2 ? (
           <div className="flex h-[100px] items-center justify-center">
-            <p className="text-center text-[13px]" style={{ color: "var(--text-faint)" }}>
+            <p
+              className="text-center text-[13px]"
+              style={{ color: "var(--text-faint)" }}
+            >
               Registra al menos 2 victorias calibradas para ver la trayectoria.
             </p>
           </div>
         ) : (
           <div className="h-[120px]">
             <ResponsiveContainer height="100%" width="100%">
-              <LineChart data={trajectoryData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
+              <LineChart
+                data={trajectoryData}
+                margin={{ top: 4, right: 4, bottom: 0, left: -28 }}
+              >
                 <XAxis
                   dataKey="label"
                   tick={{ fill: "var(--text-faint)", fontSize: 8 }}
@@ -521,8 +672,14 @@ function ServoView({
         {/* Legend */}
         <div className="mt-2 flex items-center gap-4">
           <div className="flex items-center gap-1">
-            <div className="h-[6px] w-[6px] rounded-full" style={{ background: "var(--accent)" }} />
-            <span className="text-[10px]" style={{ color: "var(--text-faint)" }}>
+            <div
+              className="h-[6px] w-[6px] rounded-full"
+              style={{ background: "var(--accent)" }}
+            />
+            <span
+              className="text-[10px]"
+              style={{ color: "var(--text-faint)" }}
+            >
               Fricción diaria
             </span>
           </div>
@@ -531,13 +688,19 @@ function ServoView({
               className="h-[2px] w-[14px]"
               style={{ background: "var(--accent)", opacity: 0.45 }}
             />
-            <span className="text-[10px]" style={{ color: "var(--text-faint)" }}>
+            <span
+              className="text-[10px]"
+              style={{ color: "var(--text-faint)" }}
+            >
               Tendencia
             </span>
           </div>
         </div>
         {calibratedCount < 3 && completedCount >= 2 && (
-          <p className="mt-1 text-[11px] italic" style={{ color: "var(--text-faint)" }}>
+          <p
+            className="mt-1 text-[11px] italic"
+            style={{ color: "var(--text-faint)" }}
+          >
             Registra al menos 3 victorias con calibración para ver la tendencia.
           </p>
         )}
@@ -546,7 +709,10 @@ function ServoView({
       {/* Distribution chart */}
       <div
         className="rounded-[var(--radius-lg)] p-4"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
       >
         <p
           className="mb-3 text-[10px] font-semibold uppercase tracking-[0.12em]"
@@ -556,7 +722,10 @@ function ServoView({
         </p>
         <div className="h-[100px]">
           <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={distributionData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
+            <BarChart
+              data={distributionData}
+              margin={{ top: 4, right: 4, bottom: 0, left: -28 }}
+            >
               <XAxis
                 dataKey="val"
                 tick={{ fill: "var(--text-faint)", fontSize: 9 }}
@@ -594,8 +763,8 @@ function ServoView({
         className="text-center text-[12px] italic leading-relaxed"
         style={{ color: "var(--text-faint)" }}
       >
-        "Fricción alta no es fallo. Es el servo trabajando. La trayectoria descendente es la
-        identidad instalándose."
+        "Fricción alta no es fallo. Es el servo trabajando. La trayectoria
+        descendente es la identidad instalándose."
       </p>
     </div>
   );
@@ -605,9 +774,14 @@ function ServoView({
 
 export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
   const [view, setView] = useState<View>("main");
-  const [pendingSave, setPendingSave] = useState<{ id: string; loggedAt: string } | null>(null);
+  const [pendingSave, setPendingSave] = useState<{
+    id: string;
+    loggedAt: string;
+  } | null>(null);
   const [selectedFriction, setSelectedFriction] = useState<number | null>(null);
-  const [actionState, setActionState] = useState<ActionState>({ status: "idle" });
+  const [actionState, setActionState] = useState<ActionState>({
+    status: "idle",
+  });
   const [historyData, setHistoryData] = useState<HygieneRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const isSaving = useRef(false);
@@ -620,20 +794,28 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
   const todayKey = new Date().toLocaleDateString("en-CA");
 
-  const { totalCompleted, cycleNumber, sessionInCycle, progressPct, identity, doneToday } =
-    useMemo(() => {
-      const completed = historyData.filter((r) => r.status === "completed");
-      const total = completed.length;
-      const inCycle = total % 21;
-      return {
-        totalCompleted: total,
-        cycleNumber: Math.floor(total / 21) + 1,
-        sessionInCycle: inCycle,
-        progressPct: Math.round((inCycle / 21) * 100),
-        identity: identityLabel(inCycle),
-        doneToday: completed.some((r) => r.dayKey === todayKey),
-      };
-    }, [historyData, todayKey]);
+  const {
+    totalCompleted,
+    cycleNumber,
+    sessionInCycle,
+    progressPct,
+    identity,
+    todaySessions,
+  } = useMemo(() => {
+    const completed = historyData.filter((r) => r.status === "completed");
+    // Only the first session per day counts as an identity signal (Maltz rule)
+    const uniqueDays = new Set(completed.map((r) => r.dayKey));
+    const total = uniqueDays.size;
+    const inCycle = total % 21;
+    return {
+      totalCompleted: total,
+      cycleNumber: Math.floor(total / 21) + 1,
+      sessionInCycle: inCycle,
+      progressPct: Math.round((inCycle / 21) * 100),
+      identity: identityLabel(inCycle),
+      todaySessions: completed.filter((r) => r.dayKey === todayKey).length,
+    };
+  }, [historyData, todayKey]);
 
   async function saveHygiene(input: SaveHygieneInput): Promise<boolean> {
     if (!navigator.onLine) {
@@ -740,7 +922,9 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
   // ── Victorias ──
   if (view === "victorias") {
-    return <VictoriasView records={historyData} onBack={() => setView("main")} />;
+    return (
+      <VictoriasView records={historyData} onBack={() => setView("main")} />
+    );
   }
 
   // ── Servo ──
@@ -774,7 +958,7 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
           style={{
             minHeight: 160,
             background: "var(--surface)",
-            border: `1px solid ${doneToday ? "rgba(212,162,76,0.5)" : "var(--border)"}`,
+            border: `1px solid ${todaySessions > 0 ? "rgba(212,162,76,0.5)" : "var(--border)"}`,
           }}
           type="button"
           onClick={handleLoHice}
@@ -794,17 +978,30 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
             REGISTRAR ACCIÓN
           </p>
         </button>
-        {doneToday && (
+        {todaySessions > 0 && (
           <div
-            className="absolute right-3 top-3 rounded-full px-2 py-[3px] text-[9px] font-semibold"
+            className="absolute right-3 top-3 flex items-center gap-[3px] rounded-full px-[7px] py-[4px]"
             style={{
               background: "var(--accent-dim)",
               border: "1px solid rgba(212,162,76,0.3)",
-              color: "var(--accent)",
-              letterSpacing: "0.06em",
             }}
           >
-            HOY ✓
+            {Array.from({ length: Math.min(todaySessions, 2) }, (_, i) => (
+              <VisorIcon
+                key={i}
+                size={32}
+                weight="fill"
+                style={{ color: "var(--accent)" }}
+              />
+            ))}
+            {todaySessions > 5 && (
+              <span
+                className="font-mono text-[8px] font-bold"
+                style={{ color: "var(--accent)" }}
+              >
+                +{todaySessions - 5}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -833,8 +1030,13 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
           style={{ background: "var(--surface)" }}
         >
           <p className="leading-none" style={{ color: "var(--text-primary)" }}>
-            <span className="font-mono text-[32px] font-light">{sessionInCycle}</span>
-            <span className="font-mono text-[16px] font-light" style={{ color: "var(--text-muted)" }}>
+            <span className="font-mono text-[32px] font-light">
+              {sessionInCycle}
+            </span>
+            <span
+              className="font-mono text-[16px] font-light"
+              style={{ color: "var(--text-muted)" }}
+            >
               /21
             </span>
           </p>
@@ -853,10 +1055,16 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
         style={{ background: "var(--surface)" }}
       >
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[12px] font-semibold" style={{ color: "var(--text-muted)" }}>
+          <span
+            className="text-[12px] font-semibold"
+            style={{ color: "var(--text-muted)" }}
+          >
             Ciclo {cycleNumber} de identidad
           </span>
-          <span className="font-mono text-[12px]" style={{ color: "var(--accent)" }}>
+          <span
+            className="font-mono text-[12px]"
+            style={{ color: "var(--accent)" }}
+          >
             {progressPct}%
           </span>
         </div>
@@ -903,7 +1111,10 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
 
       {/* Error */}
       {actionState.status === "error" && (
-        <p className="text-center text-[13px]" style={{ color: "var(--error)" }}>
+        <p
+          className="text-center text-[13px]"
+          style={{ color: "var(--error)" }}
+        >
           {actionState.message}
         </p>
       )}
