@@ -69,14 +69,16 @@ export async function getLidHygieneHistoryAction(
 
   try {
     const supabase = getSupabaseAdmin();
-    const timezone = await getUserTimezone(session.user.id);
+    const timezone = getSafeTimezone(session.user.timezone);
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - weeks * 7);
     const cutoffKey = getDayKey(cutoff.toISOString(), timezone);
 
     const { data, error } = await supabase
       .from("dy_lid_hygiene")
-      .select("id, day_key, logged_at, status, deviation_value, friction_type, user_note")
+      .select(
+        "id, day_key, logged_at, status, deviation_value, friction_type, user_note",
+      )
       .eq("user_id", session.user.id)
       .gte("day_key", cutoffKey)
       .order("logged_at", { ascending: false });
