@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { VisorIcon, TrophyIcon, WrenchIcon } from "@phosphor-icons/react";
+import {
+  CalendarCheckIcon,
+  TrophyIcon,
+  WrenchIcon,
+} from "@phosphor-icons/react";
 import {
   saveLidHygieneAction,
   getLidHygieneHistoryAction,
@@ -257,10 +261,9 @@ export function HygieneSheet({ onSaved }: { onSaved: () => void }) {
                 }}
               >
                 {Array.from({ length: Math.min(todaySessions, 3) }, (_, i) => (
-                  <VisorIcon
+                  <CalendarCheckIcon
                     key={i}
                     size={16}
-                    weight="fill"
                     style={{ color: "var(--accent)" }}
                   />
                 ))}
