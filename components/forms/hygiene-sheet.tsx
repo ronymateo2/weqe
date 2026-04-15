@@ -482,12 +482,7 @@ function ServoView({
       .slice()
       .reverse(); // chronological (oldest first)
 
-    // De-dupe: only first session per day counts as identity signal
-    const firstByDay = new Map<string, HygieneRecord>();
-    for (const r of allCompleted) {
-      if (!firstByDay.has(r.dayKey)) firstByDay.set(r.dayKey, r);
-    }
-    const completed = Array.from(firstByDay.values());
+    const completed = allCompleted;
 
     // Trajectory: first session per day (dev=0 = flow, dev>0 = friction)
     const ys = completed.map((r) => r.deviationValue);
@@ -507,7 +502,7 @@ function ServoView({
     })();
 
     const trajectoryData = completed.map((r, i) => ({
-      label: r.dayKey.slice(5).replace("-", "/"),
+      label: `${r.dayKey.slice(5).replace("-", "/")} ${r.loggedAt.slice(11, 16)}`,
       friction: r.deviationValue,
       trend: Math.max(
         0,
@@ -617,7 +612,7 @@ function ServoView({
               className="text-center text-[13px]"
               style={{ color: "var(--text-faint)" }}
             >
-              Registra al menos 2 victorias calibradas para ver la trayectoria.
+              Registra al menos 2 sesiones para ver la trayectoria.
             </p>
           </div>
         ) : (
@@ -701,7 +696,7 @@ function ServoView({
             className="mt-1 text-[11px] italic"
             style={{ color: "var(--text-faint)" }}
           >
-            Registra al menos 3 victorias con calibración para ver la tendencia.
+            Registra al menos 3 sesiones con calibración para ver la tendencia.
           </p>
         )}
       </div>
