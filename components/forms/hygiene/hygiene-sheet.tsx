@@ -231,9 +231,9 @@ export function HygieneSheet({
         <SlideView direction={navDirection}>
         <div className="flex flex-col gap-5 px-5 pb-8">
           {/* Top bar: cycle/day pill + Victorias/Progreso buttons */}
-          <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="flex items-center justify-between gap-2 pt-1">
             <div
-              className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em]"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em]"
               style={{
                 border: "1px solid var(--border)",
                 background: "var(--surface)",
@@ -245,11 +245,13 @@ export function HygieneSheet({
               {" · "}DÍA{" "}
               <span style={{ color: "var(--accent)" }}>{sessionInCycle}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
-                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition-opacity active:opacity-70"
+                aria-label="Victorias"
+                className="flex items-center justify-center rounded-full transition-opacity active:opacity-70"
                 style={{
-                  minHeight: 36,
+                  width: 44,
+                  height: 44,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text-muted)",
@@ -257,13 +259,14 @@ export function HygieneSheet({
                 type="button"
                 onClick={() => transitionTo("victorias")}
               >
-                <TrophyIcon size={13} />
-                Victorias
+                <TrophyIcon size={18} />
               </button>
               <button
-                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition-opacity active:opacity-70"
+                aria-label="Progreso"
+                className="flex items-center justify-center rounded-full transition-opacity active:opacity-70"
                 style={{
-                  minHeight: 36,
+                  width: 44,
+                  height: 44,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text-muted)",
@@ -271,8 +274,7 @@ export function HygieneSheet({
                 type="button"
                 onClick={() => transitionTo("servo")}
               >
-                <WrenchIcon size={13} />
-                Progreso
+                <WrenchIcon size={18} />
               </button>
             </div>
           </div>

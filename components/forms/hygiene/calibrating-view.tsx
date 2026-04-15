@@ -99,7 +99,7 @@ export function CalibratingView({
             return (
               <button
                 key={val}
-                className="flex flex-col items-center justify-center rounded-[var(--radius-md)] py-3 transition-colors active:scale-95"
+                className="flex flex-col items-center justify-center overflow-hidden rounded-[var(--radius-md)] py-3 transition-colors active:scale-95"
                 style={{
                   minHeight: 64,
                   background: isSelected
@@ -119,10 +119,10 @@ export function CalibratingView({
                   {val}
                 </span>
                 <span
-                  className="mt-[3px] whitespace-pre-line text-center text-[7px] uppercase leading-tight"
+                  className="mt-[3px] w-full whitespace-pre-line break-all text-center text-[6px] uppercase leading-tight"
                   style={{
                     color: isSelected ? "var(--accent)" : "var(--text-faint)",
-                    letterSpacing: "0.05em",
+                    letterSpacing: "0.04em",
                   }}
                 >
                   {label}
