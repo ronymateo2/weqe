@@ -40,11 +40,14 @@ function buildISO(date: Date, timeStr: string): string {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString("es-CO", {
+  const s = date.toLocaleDateString("es-CO", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+  // Capitalize the month abbreviation (3-letter word like "abr", "ene", "dic")
+  // without uppercasing prepositions like "de"
+  return s.replace(/\b([a-z]{3})\b/, (m) => m[0].toUpperCase() + m.slice(1));
 }
 
 export function DateTimePicker({

@@ -48,7 +48,7 @@ function Calendar({
           defaultClassNames.month_caption,
         ),
         caption_label: cn(
-          "text-[13px] font-medium text-[var(--text-primary)] select-none",
+          "text-[13px] font-medium text-[var(--text-primary)] select-none capitalize",
           defaultClassNames.caption_label,
         ),
         table: "w-full border-collapse",
