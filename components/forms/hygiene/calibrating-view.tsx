@@ -9,12 +9,14 @@ export function CalibratingView({
   onSave,
   onOmit,
   actionState,
+  isSaving = false,
 }: {
   selectedFriction: number | null;
   onSelect: (v: number) => void;
   onSave: () => void;
   onOmit: () => void;
   actionState: ActionState;
+  isSaving?: boolean;
 }) {
   const level =
     selectedFriction !== null ? FRICTION_LEVELS[selectedFriction] : null;
@@ -144,18 +146,35 @@ export function CalibratingView({
 
         {/* Save — always visible */}
         <button
-          className="group mt-3 flex w-full items-center justify-center rounded-full py-[10px] text-[14px] font-medium transition-all active:opacity-70 active:scale-[0.98]"
+          className="group mt-3 flex w-full items-center justify-center rounded-full py-[10px] text-[14px] font-medium"
           style={{
             background: "var(--surface-el)",
             border: "1px solid var(--border)",
-            color: "var(--text-primary)",
+            color: isSaving ? "var(--text-faint)" : "var(--text-primary)",
+            opacity: isSaving ? 0.6 : 1,
+            pointerEvents: isSaving ? "none" : "auto",
+            transition: "opacity 200ms cubic-bezier(0,0,0.2,1), color 200ms cubic-bezier(0,0,0.2,1)",
+            transform: "scale(1)",
           }}
           type="button"
           onClick={onSave}
+          disabled={isSaving}
+          aria-busy={isSaving}
         >
-          Guardar{" "}
-          <span className="inline-block transition-transform group-active:translate-x-1">
-            →
+          <span
+            style={{
+              filter: isSaving ? "blur(1.5px)" : "blur(0px)",
+              transition: "filter 180ms cubic-bezier(0,0,0.2,1)",
+            }}
+          >
+            {isSaving ? "Guardando…" : (
+              <>
+                Guardar{" "}
+                <span className="inline-block transition-transform group-active:translate-x-1">
+                  →
+                </span>
+              </>
+            )}
           </span>
         </button>
       </div>

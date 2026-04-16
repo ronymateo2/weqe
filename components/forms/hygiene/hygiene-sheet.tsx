@@ -67,6 +67,7 @@ export function HygieneSheet({
     loggedAt: string;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingCalibration, setSavingCalibration] = useState(false);
   const [selectedFriction, setSelectedFriction] = useState<number | null>(null);
   const [actionState, setActionState] = useState<ActionState>({
     status: "idle",
@@ -160,6 +161,7 @@ export function HygieneSheet({
   async function handleCalibrationSave() {
     if (!pendingSave || isSaving.current) return;
     isSaving.current = true;
+    setSavingCalibration(true);
     setActionState({ status: "idle" });
 
     const ok = await saveHygiene({
@@ -171,6 +173,7 @@ export function HygieneSheet({
     });
 
     isSaving.current = false;
+    setSavingCalibration(false);
     if (ok) onSaved();
   }
 
@@ -204,6 +207,7 @@ export function HygieneSheet({
         <SlideView direction={navDirection}>
           <CalibratingView
             actionState={actionState}
+            isSaving={savingCalibration}
             selectedFriction={selectedFriction}
             onOmit={onSaved}
             onSave={handleCalibrationSave}
