@@ -87,6 +87,7 @@ export type HygieneRecord = {
   deviationValue: number | null;
   frictionType: FrictionType | null;
   userNote: string | null;
+  completedCount: number;
 };
 
 export type ActionState =

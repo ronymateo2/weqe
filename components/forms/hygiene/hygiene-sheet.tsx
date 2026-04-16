@@ -8,6 +8,7 @@ import {
 import {
   saveLidHygieneAction,
   getLidHygieneDashboardAction,
+  getLidHygieneSessionsAction,
 } from "@/lib/actions/lid-hygiene";
 import { queueHygiene } from "@/lib/offline/lid-hygiene-queue";
 import type {
@@ -75,6 +76,8 @@ export function HygieneSheet({
   const [firstDayKey, setFirstDayKey] = useState<string | null>(null);
   const [totalCompletedDays, setTotalCompletedDays] = useState(0);
   const [recentRecords, setRecentRecords] = useState<HygieneRecord[]>([]);
+  const [todayCompletedCount, setTodayCompletedCount] = useState(0);
+  const [sessions, setSessions] = useState<HygieneRecord[] | null>(null);
   const [loading, setLoading] = useState(true);
   const isSaving = useRef(false);
   const mounted = useRef(false);
@@ -82,10 +85,11 @@ export function HygieneSheet({
   useEffect(() => {
     mounted.current = true;
     getLidHygieneDashboardAction()
-      .then(({ firstDayKey, totalCompletedDays, recentRecords }) => {
+      .then(({ firstDayKey, totalCompletedDays, recentRecords, todayCompletedCount }) => {
         setFirstDayKey(firstDayKey);
         setTotalCompletedDays(totalCompletedDays);
         setRecentRecords(recentRecords);
+        setTodayCompletedCount(todayCompletedCount);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -93,7 +97,10 @@ export function HygieneSheet({
   const transitionTo = useCallback((next: View) => {
     setNavDirection(next === "main" ? "back" : "forward");
     setDisplayedView(next);
-  }, []);
+    if (next === "servo" && sessions === null) {
+      getLidHygieneSessionsAction().then(setSessions);
+    }
+  }, [sessions]);
 
   const todayKey = new Date().toLocaleDateString("en-CA");
 
@@ -106,10 +113,6 @@ export function HygieneSheet({
     todaySessions,
     cycleStartKey,
   } = useMemo(() => {
-    const completedToday = recentRecords.filter(
-      (r) => r.status === "completed" && r.dayKey === todayKey,
-    ).length;
-
     if (!firstDayKey) {
       return {
         totalCompleted: 0,
@@ -117,7 +120,7 @@ export function HygieneSheet({
         sessionInCycle: 0,
         progressPct: 0,
         identity: identityLabel(0),
-        todaySessions: completedToday,
+        todaySessions: todayCompletedCount,
         cycleStartKey: todayKey,
       };
     }
@@ -144,10 +147,10 @@ export function HygieneSheet({
       sessionInCycle: dayInCycle,
       progressPct: Math.round((dayInCycle / 21) * 100),
       identity: identityLabel(totalCompletedDays % 21),
-      todaySessions: completedToday,
+      todaySessions: todayCompletedCount,
       cycleStartKey: cycleStart,
     };
-  }, [firstDayKey, totalCompletedDays, recentRecords, todayKey]);
+  }, [firstDayKey, totalCompletedDays, todayCompletedCount, todayKey]);
 
   async function saveHygiene(input: SaveHygieneInput): Promise<boolean> {
     if (!navigator.onLine) {
@@ -188,6 +191,7 @@ export function HygieneSheet({
     isSaving.current = false;
     setSaving(false);
     if (ok) {
+      setTodayCompletedCount((n) => n + 1);
       setPendingSave({ id, loggedAt });
       setSelectedFriction(null);
       transitionTo("calibrating");
@@ -264,7 +268,7 @@ export function HygieneSheet({
 
       {displayedView === "servo" && (
         <SlideView direction={navDirection}>
-          <ServoView records={recentRecords} onBack={() => transitionTo("main")} />
+          <ServoView records={sessions ?? []} onBack={() => transitionTo("main")} />
         </SlideView>
       )}
 

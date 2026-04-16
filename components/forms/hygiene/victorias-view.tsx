@@ -25,24 +25,27 @@ export function VictoriasView({
     return map;
   }, [records]);
 
-  // 21 calendar days starting from cycle start (fixed, not relative to today)
-  const days = useMemo(() => {
+  // 21 calendar days + leading offset to align to Mon–Sun columns
+  const { days, startOffset } = useMemo(() => {
     const start = new Date(cycleStartKey + "T00:00:00Z");
-    return Array.from({ length: 21 }, (_, i) => {
+    // Mon=0 … Sun=6  (JS getUTCDay: 0=Sun, so shift by +6)
+    const offset = (start.getUTCDay() + 6) % 7;
+    const d21 = Array.from({ length: 21 }, (_, i) => {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
       return d;
     });
+    return { days: d21, startOffset: offset };
   }, [cycleStartKey]);
 
   function getDayInfo(d: Date) {
     const key = d.toISOString().slice(0, 10); // YYYY-MM-DD UTC
-    const recs = byDay.get(key) ?? [];
-    const completedRecs = recs.filter((r) => r.status === "completed");
-    const completed = completedRecs.length > 0;
+    const rec = byDay.get(key)?.[0];
+    const completed = rec?.status === "completed";
     const isToday = key === todayKey;
     const isFuture = key > todayKey;
-    const sessionCount = completedRecs.length;
+    const sessionCount = completed ? (rec?.completedCount ?? 1) : 0;
+
     if (!completed)
       return {
         completed: false,
@@ -51,14 +54,11 @@ export function VictoriasView({
         isFuture,
         sessionCount: 0,
       };
-    const calibrated = completedRecs.filter((r) => r.deviationValue !== null && r.deviationValue > 0);
-    if (calibrated.length === 0)
+    if (rec?.deviationValue == null || rec.deviationValue === 0)
       return { completed, dot: "gray" as const, isToday, isFuture: false, sessionCount };
-    const avg =
-      calibrated.reduce((a, b) => a + (b.deviationValue ?? 0), 0) / calibrated.length;
     return {
       completed,
-      dot: avg <= 2 ? ("low" as const) : ("high" as const),
+      dot: rec.deviationValue <= 2 ? ("low" as const) : ("high" as const),
       isToday,
       isFuture: false,
       sessionCount,
@@ -101,90 +101,106 @@ export function VictoriasView({
         Ciclo actual — 21 días calendario desde el inicio
       </p>
 
-      {/* 3 × 7 calendar grid */}
-      <div className="flex flex-col gap-[10px]">
-        {Array.from({ length: 3 }, (_, row) => (
-          <div key={row} className="grid grid-cols-7 gap-[6px]">
-            {Array.from({ length: 7 }, (_, col) => {
-              const d = days[row * 7 + col];
-              if (!d) return <div key={col} />;
-              const { completed, dot, isToday, isFuture, sessionCount } = getDayInfo(d);
-              const dayNum = d.getUTCDate();
-              const dotColor =
-                dot === "low"
-                  ? "var(--accent)"
-                  : dot === "high"
-                    ? "#cc3f30"
-                    : "var(--border)";
+      {/* Calendar grid aligned to weekday columns */}
+      <div className="flex flex-col gap-[6px]">
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 gap-[6px]">
+          {["L", "M", "M", "J", "V", "S", "D"].map((label, i) => (
+            <div key={i} className="flex items-center justify-center">
+              <span
+                className="text-[9px] font-semibold uppercase tracking-[0.08em]"
+                style={{ color: "var(--text-faint)" }}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
 
-              return (
-                <div
-                  key={col}
-                  className="relative flex flex-col items-center pb-[8px]"
-                >
+        {/* Day rows — offset + 21 cells, ≤ 4 rows */}
+        {Array.from(
+          { length: Math.ceil((startOffset + 21) / 7) },
+          (_, row) => (
+            <div key={row} className="grid grid-cols-7 gap-[6px]">
+              {Array.from({ length: 7 }, (_, col) => {
+                const cellIndex = row * 7 + col;
+                const dayIndex = cellIndex - startOffset;
+                const d = dayIndex >= 0 && dayIndex < 21 ? days[dayIndex] : null;
+
+                if (!d) return <div key={col} className="h-[38px]" />;
+
+                const { completed, dot, isToday, isFuture, sessionCount } = getDayInfo(d);
+                const dayNum = d.getUTCDate();
+                const dotColor =
+                  dot === "low"
+                    ? "var(--accent)"
+                    : dot === "high"
+                      ? "#cc3f30"
+                      : "var(--border)";
+
+                return (
                   <div
-                    className="flex h-[30px] w-[30px] items-center justify-center rounded-full"
-                    style={{
-                      background: completed
-                        ? isToday
-                          ? "var(--accent)"
-                          : "var(--accent-dim)"
-                        : isFuture
-                          ? "transparent"
-                          : "var(--surface-el)",
-                      border: `1px solid ${
-                        completed
-                          ? "rgba(212,162,76,0.55)"
-                          : isFuture
-                            ? "var(--border)"
-                            : "var(--border)"
-                      }`,
-                      opacity: isFuture ? 0.3 : 1,
-                      outline: isToday ? "2px solid var(--accent)" : "none",
-                      outlineOffset: 1,
-                    }}
+                    key={col}
+                    className="relative flex flex-col items-center pb-[8px]"
                   >
-                    <span
-                      className="font-mono text-[10px] font-medium"
+                    <div
+                      className="flex h-[30px] w-[30px] items-center justify-center rounded-full"
                       style={{
-                        color: completed
+                        background: completed
                           ? isToday
-                            ? "#121008"
-                            : "var(--accent)"
-                          : "var(--text-faint)",
+                            ? "var(--accent)"
+                            : "var(--accent-dim)"
+                          : "var(--surface-el)",
+                        border: `1px solid ${
+                          completed ? "rgba(212,162,76,0.55)" : "var(--border)"
+                        }`,
+                        opacity: isFuture ? 0.5 : 1,
+                        outline: isToday ? "2px solid var(--accent)" : "none",
+                        outlineOffset: 1,
                       }}
                     >
-                      {dayNum}
-                    </span>
-                  </div>
-                  {/* Friction dot */}
-                  {dot && (
-                    <div
-                      className="absolute bottom-[2px] right-0 h-[5px] w-[5px] rounded-full"
-                      style={{ background: dotColor }}
-                    />
-                  )}
-                  {/* Extra-session badge */}
-                  {sessionCount > 1 && (
-                    <div
-                      className="absolute -right-[4px] -top-[3px] flex h-[11px] min-w-[11px] items-center justify-center rounded-full px-[2px]"
-                      style={{
-                        background: "var(--accent)",
-                        fontSize: 6,
-                        fontFamily: "monospace",
-                        fontWeight: 700,
-                        color: "#121008",
-                        lineHeight: 1,
-                      }}
-                    >
-                      +{sessionCount - 1}
+                      <span
+                        className="font-mono text-[10px] font-medium"
+                        style={{
+                          color: completed
+                            ? isToday
+                              ? "#121008"
+                              : "var(--accent)"
+                            : "var(--text-muted)",
+                        }}
+                      >
+                        {dayNum}
+                      </span>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                    {/* Friction dot */}
+                    {dot && (
+                      <div
+                        className="absolute bottom-[2px] right-0 h-[5px] w-[5px] rounded-full"
+                        style={{ background: dotColor }}
+                      />
+                    )}
+                    {/* Extra-session badge */}
+                    {sessionCount > 1 && (
+                      <div
+                        className="absolute -right-[4px] -top-[3px] flex h-[11px] min-w-[11px] items-center justify-center rounded-full px-[2px]"
+                        style={{
+                          background: "var(--accent)",
+                          fontSize: 6,
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                          color: "#121008",
+                          lineHeight: 1,
+                        }}
+                      >
+                        +{sessionCount - 1}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ),
+        )}
       </div>
 
       {/* Legend */}
