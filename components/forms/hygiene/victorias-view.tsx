@@ -6,13 +6,14 @@ import type { HygieneRecord } from "@/types/domain";
 
 export function VictoriasView({
   records,
+  cycleStartKey,
   onBack,
 }: {
   records: HygieneRecord[];
+  cycleStartKey: string;
   onBack: () => void;
 }) {
-  const today = useMemo(() => new Date(), []);
-  const todayKey = today.toLocaleDateString("en-CA");
+  const todayKey = new Date().toLocaleDateString("en-CA");
 
   const byDay = useMemo(() => {
     const map = new Map<string, HygieneRecord[]>();
@@ -24,39 +25,42 @@ export function VictoriasView({
     return map;
   }, [records]);
 
-  const days = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() - 59 + i);
-        return d;
-      }),
-    [today],
-  );
+  // 21 calendar days starting from cycle start (fixed, not relative to today)
+  const days = useMemo(() => {
+    const start = new Date(cycleStartKey + "T00:00:00Z");
+    return Array.from({ length: 21 }, (_, i) => {
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() + i);
+      return d;
+    });
+  }, [cycleStartKey]);
 
   function getDayInfo(d: Date) {
-    const key = d.toLocaleDateString("en-CA");
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD UTC
     const recs = byDay.get(key) ?? [];
     const completedRecs = recs.filter((r) => r.status === "completed");
     const completed = completedRecs.length > 0;
     const isToday = key === todayKey;
+    const isFuture = key > todayKey;
     const sessionCount = completedRecs.length;
     if (!completed)
       return {
         completed: false,
         dot: null as null | "low" | "high" | "gray",
         isToday,
+        isFuture,
         sessionCount: 0,
       };
     const calibrated = completedRecs.filter((r) => r.deviationValue !== null && r.deviationValue > 0);
     if (calibrated.length === 0)
-      return { completed, dot: "gray" as const, isToday, sessionCount };
+      return { completed, dot: "gray" as const, isToday, isFuture: false, sessionCount };
     const avg =
       calibrated.reduce((a, b) => a + (b.deviationValue ?? 0), 0) / calibrated.length;
     return {
       completed,
       dot: avg <= 2 ? ("low" as const) : ("high" as const),
       isToday,
+      isFuture: false,
       sessionCount,
     };
   }
@@ -94,18 +98,18 @@ export function VictoriasView({
         className="text-[10px] font-semibold uppercase tracking-[0.12em]"
         style={{ color: "var(--text-faint)" }}
       >
-        Últimos 60 días — Solo victorias visibles
+        Ciclo actual — 21 días calendario desde el inicio
       </p>
 
-      {/* 6 × 10 calendar grid */}
+      {/* 3 × 7 calendar grid */}
       <div className="flex flex-col gap-[10px]">
-        {Array.from({ length: 6 }, (_, row) => (
-          <div key={row} className="grid grid-cols-10 gap-[6px]">
-            {Array.from({ length: 10 }, (_, col) => {
-              const d = days[row * 10 + col];
+        {Array.from({ length: 3 }, (_, row) => (
+          <div key={row} className="grid grid-cols-7 gap-[6px]">
+            {Array.from({ length: 7 }, (_, col) => {
+              const d = days[row * 7 + col];
               if (!d) return <div key={col} />;
-              const { completed, dot, isToday, sessionCount } = getDayInfo(d);
-              const dayNum = d.getDate();
+              const { completed, dot, isToday, isFuture, sessionCount } = getDayInfo(d);
+              const dayNum = d.getUTCDate();
               const dotColor =
                 dot === "low"
                   ? "var(--accent)"
@@ -125,8 +129,17 @@ export function VictoriasView({
                         ? isToday
                           ? "var(--accent)"
                           : "var(--accent-dim)"
-                        : "transparent",
-                      border: `1px solid ${completed ? "rgba(212,162,76,0.55)" : "var(--border)"}`,
+                        : isFuture
+                          ? "transparent"
+                          : "var(--surface-el)",
+                      border: `1px solid ${
+                        completed
+                          ? "rgba(212,162,76,0.55)"
+                          : isFuture
+                            ? "var(--border)"
+                            : "var(--border)"
+                      }`,
+                      opacity: isFuture ? 0.3 : 1,
                       outline: isToday ? "2px solid var(--accent)" : "none",
                       outlineOffset: 1,
                     }}

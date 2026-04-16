@@ -139,7 +139,7 @@ export function ServoView({
             color: "var(--text-muted)",
           }}
         >
-          Mi Progreso
+          Últimas 3 Semanas
         </span>
       </div>
 

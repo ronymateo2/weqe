@@ -7,7 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   saveLidHygieneAction,
-  getLidHygieneHistoryAction,
+  getLidHygieneDashboardAction,
 } from "@/lib/actions/lid-hygiene";
 import { queueHygiene } from "@/lib/offline/lid-hygiene-queue";
 import type {
@@ -72,15 +72,21 @@ export function HygieneSheet({
   const [actionState, setActionState] = useState<ActionState>({
     status: "idle",
   });
-  const [historyData, setHistoryData] = useState<HygieneRecord[]>([]);
+  const [firstDayKey, setFirstDayKey] = useState<string | null>(null);
+  const [totalCompletedDays, setTotalCompletedDays] = useState(0);
+  const [recentRecords, setRecentRecords] = useState<HygieneRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const isSaving = useRef(false);
   const mounted = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
-    getLidHygieneHistoryAction(9)
-      .then(setHistoryData)
+    getLidHygieneDashboardAction()
+      .then(({ firstDayKey, totalCompletedDays, recentRecords }) => {
+        setFirstDayKey(firstDayKey);
+        setTotalCompletedDays(totalCompletedDays);
+        setRecentRecords(recentRecords);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -98,20 +104,50 @@ export function HygieneSheet({
     progressPct,
     identity,
     todaySessions,
+    cycleStartKey,
   } = useMemo(() => {
-    const completed = historyData.filter((r) => r.status === "completed");
-    const uniqueDays = new Set(completed.map((r) => r.dayKey));
-    const total = uniqueDays.size;
-    const inCycle = total % 21;
+    const completedToday = recentRecords.filter(
+      (r) => r.status === "completed" && r.dayKey === todayKey,
+    ).length;
+
+    if (!firstDayKey) {
+      return {
+        totalCompleted: 0,
+        cycleNumber: 1,
+        sessionInCycle: 0,
+        progressPct: 0,
+        identity: identityLabel(0),
+        todaySessions: completedToday,
+        cycleStartKey: todayKey,
+      };
+    }
+
+    // Calendar-based cycles: count from first registration date
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const firstDate = new Date(firstDayKey + "T00:00:00Z");
+    const todayDate = new Date(todayKey + "T00:00:00Z");
+    const daysSinceFirst = Math.round(
+      (todayDate.getTime() - firstDate.getTime()) / msPerDay,
+    );
+
+    const cycle = Math.floor(daysSinceFirst / 21) + 1;
+    const dayInCycle = (daysSinceFirst % 21) + 1; // 1–21
+
+    // First calendar day of the current cycle
+    const cycleStartDate = new Date(firstDate);
+    cycleStartDate.setUTCDate(firstDate.getUTCDate() + (cycle - 1) * 21);
+    const cycleStart = cycleStartDate.toISOString().slice(0, 10);
+
     return {
-      totalCompleted: total,
-      cycleNumber: Math.floor(total / 21) + 1,
-      sessionInCycle: inCycle,
-      progressPct: Math.round((inCycle / 21) * 100),
-      identity: identityLabel(inCycle),
-      todaySessions: completed.filter((r) => r.dayKey === todayKey).length,
+      totalCompleted: totalCompletedDays,
+      cycleNumber: cycle,
+      sessionInCycle: dayInCycle,
+      progressPct: Math.round((dayInCycle / 21) * 100),
+      identity: identityLabel(totalCompletedDays % 21),
+      todaySessions: completedToday,
+      cycleStartKey: cycleStart,
     };
-  }, [historyData, todayKey]);
+  }, [firstDayKey, totalCompletedDays, recentRecords, todayKey]);
 
   async function saveHygiene(input: SaveHygieneInput): Promise<boolean> {
     if (!navigator.onLine) {
@@ -219,7 +255,8 @@ export function HygieneSheet({
       {displayedView === "victorias" && (
         <SlideView direction={navDirection}>
           <VictoriasView
-            records={historyData}
+            records={recentRecords}
+            cycleStartKey={cycleStartKey}
             onBack={() => transitionTo("main")}
           />
         </SlideView>
@@ -227,7 +264,7 @@ export function HygieneSheet({
 
       {displayedView === "servo" && (
         <SlideView direction={navDirection}>
-          <ServoView records={historyData} onBack={() => transitionTo("main")} />
+          <ServoView records={recentRecords} onBack={() => transitionTo("main")} />
         </SlideView>
       )}
 
