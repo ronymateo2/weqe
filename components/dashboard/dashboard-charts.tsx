@@ -501,6 +501,80 @@ export function DashboardDropsChart({
   );
 }
 
+type WeekdayDropAvg = {
+  weekday: number; // 0 = Mon ... 6 = Sun (ISO)
+  label: string;
+  avg: number | null;
+  uniqueDays: number;
+};
+
+export function DashboardDropsWeekdayChart({ data }: { data: WeekdayDropAvg[] }) {
+  const maxAvg = Math.max(...data.map((d) => d.avg ?? 0), 0.1);
+  const todayIso = (new Date().getDay() + 6) % 7; // 0 = Mon
+
+  return (
+    <div className="flex gap-[6px]">
+      {data.map((day) => {
+        const barH = day.avg !== null ? Math.max(3, (day.avg / maxAvg) * 80) : 0;
+        const isToday = day.weekday === todayIso;
+        return (
+          <div
+            key={day.weekday}
+            className="flex flex-1 flex-col items-center"
+            style={{ gap: "6px" }}
+          >
+            <span
+              className="mono"
+              style={{
+                fontSize: "11px",
+                color:
+                  day.avg !== null
+                    ? "var(--text-muted)"
+                    : "var(--text-faint)",
+                minHeight: "14px",
+                lineHeight: "14px",
+              }}
+            >
+              {day.avg !== null ? day.avg.toFixed(1) : "--"}
+            </span>
+            <div
+              style={{
+                width: "100%",
+                height: "80px",
+                display: "flex",
+                alignItems: "flex-end",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: `${barH}px`,
+                  background: isToday
+                    ? "var(--accent)"
+                    : "rgba(212,162,76,0.28)",
+                  borderRadius: "3px 3px 0 0",
+                  transition: "height 0.35s cubic-bezier(0,0,0.2,1)",
+                }}
+              />
+            </div>
+            <span
+              style={{
+                fontSize: "10px",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: isToday ? "var(--accent)" : "var(--text-faint)",
+                fontWeight: isToday ? 600 : 400,
+              }}
+            >
+              {day.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function DashboardTriggerPainChart({ stats }: { stats: TriggerZoneStat[] }) {
   const chartData = stats.map((item) => ({
     label: TRIGGER_LABELS[item.triggerType],

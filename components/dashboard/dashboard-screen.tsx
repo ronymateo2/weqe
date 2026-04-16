@@ -1,6 +1,7 @@
 import {
   DashboardCorrelationChart,
   DashboardDropsChart,
+  DashboardDropsWeekdayChart,
   DashboardTrendChart,
   DashboardTriggerPainChart,
 } from "@/components/dashboard/dashboard-charts";
@@ -65,6 +66,22 @@ export function DashboardScreen({ dashboardData }: DashboardScreenProps) {
             {hasDropsData
               ? "Gotas registradas por tipo."
               : "Registra gotas para ver el consumo por tipo."}
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <p className="section-label">Promedio por dia</p>
+        <div className="rounded-[16px] bg-[rgba(28,24,16,0.72)] p-5">
+          {dashboardData.dropsByWeekday.some((d) => d.avg !== null) ? (
+            <DashboardDropsWeekdayChart data={dashboardData.dropsByWeekday} />
+          ) : (
+            <div className="h-[120px] rounded-[12px] bg-[linear-gradient(180deg,rgba(37,32,20,0.9),rgba(28,24,16,0.55))]" />
+          )}
+          <p className="mt-3 text-[13px] text-[var(--text-muted)]">
+            {dashboardData.dropsByWeekday.some((d) => d.avg !== null)
+              ? "Gotas promedio por dia de la semana."
+              : "Registra gotas para ver el patron semanal."}
           </p>
         </div>
       </section>

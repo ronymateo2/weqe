@@ -43,6 +43,13 @@ type TriggerZoneStat = {
   days: number;
 };
 
+type WeekdayDropAvg = {
+  weekday: number; // 0 = Mon ... 6 = Sun (ISO)
+  label: string;
+  avg: number | null;
+  uniqueDays: number;
+};
+
 type DashboardSuccess = {
   ok: true;
   timezone: string;
@@ -65,6 +72,7 @@ type DashboardSuccess = {
     dropTypes: string[];
     points: DropsDayPoint[];
   };
+  dropsByWeekday: WeekdayDropAvg[];
 };
 
 type DashboardError = {
@@ -87,6 +95,7 @@ type DashboardError = {
   highPainTriggerStats: [];
   triggerZonePainStats: [];
   drops: { dropTypes: []; points: [] };
+  dropsByWeekday: WeekdayDropAvg[];
 };
 
 export type DashboardDataResult = DashboardSuccess | DashboardError;
@@ -162,6 +171,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       highPainTriggerStats: [],
       triggerZonePainStats: [],
       drops: { dropTypes: [], points: [] },
+      dropsByWeekday: [],
     };
   }
 
@@ -387,6 +397,33 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       dropsBucket.set(dayKey, dayMap);
     }
 
+    // Weekday averages — all historical drops (not limited to last 30 days)
+    const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const weekdayBucket = new Map<number, { total: number; dayKeys: Set<string> }>();
+
+    for (const drop of drops) {
+      const dayKey = getDayKey(drop.logged_at, timezone);
+      const [y, m, d] = dayKey.split('-').map(Number);
+      const jsDow = new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay(); // 0=Sun
+      const isoDow = (jsDow + 6) % 7; // 0=Mon
+      const bucket = weekdayBucket.get(isoDow) ?? { total: 0, dayKeys: new Set<string>() };
+      bucket.total += drop.quantity;
+      bucket.dayKeys.add(dayKey);
+      weekdayBucket.set(isoDow, bucket);
+    }
+
+    const dropsByWeekday: WeekdayDropAvg[] = WEEKDAY_LABELS.map((label, i) => {
+      const bucket = weekdayBucket.get(i);
+      return {
+        weekday: i,
+        label,
+        avg: bucket && bucket.dayKeys.size > 0
+          ? Number((bucket.total / bucket.dayKeys.size).toFixed(1))
+          : null,
+        uniqueDays: bucket?.dayKeys.size ?? 0,
+      };
+    });
+
     const allDropTypes = Array.from(
       new Set(Array.from(dropsBucket.values()).flatMap((m) => Array.from(m.keys()))),
     ).sort();
@@ -417,6 +454,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       highPainTriggerStats,
       triggerZonePainStats,
       drops: { dropTypes: allDropTypes, points: dropsPoints },
+      dropsByWeekday,
     };
   } catch (error) {
     return {
@@ -437,6 +475,7 @@ export async function getDashboardDataAction(): Promise<DashboardDataResult> {
       highPainTriggerStats: [],
       triggerZonePainStats: [],
       drops: { dropTypes: [], points: [] },
+      dropsByWeekday: [],
     };
   }
 }
