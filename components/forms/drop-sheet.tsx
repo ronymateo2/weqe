@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
@@ -45,9 +46,6 @@ export function DropSheet({ onSaved }: DropSheetProps) {
       window.removeEventListener("offline", onOffline);
     };
   }, []);
-
-  const toDatetimeLocal = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
   // Sync initial selection when dropTypes load
   useEffect(() => {
@@ -198,7 +196,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
             className="text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]"
             onClick={() => {
               setShowDatePicker(true);
-              setLoggedAt(toDatetimeLocal(new Date()));
+              setLoggedAt((prev) => prev ?? new Date().toISOString());
             }}
           >
             ¿Olvidaste registrarla? Cambiar fecha
@@ -218,12 +216,10 @@ export function DropSheet({ onSaved }: DropSheetProps) {
                 Usar hora actual
               </button>
             </div>
-            <input
-              type="datetime-local"
-              className="min-h-12 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 font-mono text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [color-scheme:dark]"
-              max={toDatetimeLocal(new Date())}
-              value={loggedAt ?? ""}
-              onChange={(e) => setLoggedAt(e.target.value)}
+            <DateTimePicker
+              value={loggedAt}
+              onChange={setLoggedAt}
+              max={new Date()}
             />
           </div>
         )}
