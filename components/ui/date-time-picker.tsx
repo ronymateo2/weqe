@@ -129,16 +129,18 @@ export function DateTimePicker({
       </Popover>
 
       {/* Time input */}
+      {/* NOTE: Do NOT add appearance-none or color-scheme:dark here.
+          Both break <input type="time"> on iOS Safari — the field becomes
+          invisible or stops responding to taps. */}
       <input
         type="time"
         value={timeStr}
         onChange={handleTimeChange}
         className={cn(
           "h-12 w-28 flex-shrink-0 rounded-[10px] border border-[var(--border)] bg-[var(--surface)]",
-          "px-3 font-mono text-base text-[var(--text-primary)] outline-none appearance-none",
+          "px-3 font-mono text-base text-[var(--text-primary)] outline-none",
           "transition-colors duration-[160ms] focus:border-[var(--accent)]",
-          "[color-scheme:dark]",
-          "[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
+          "[&::-webkit-calendar-picker-indicator]:opacity-0",
           !timeStr && "text-[var(--text-faint)]",
         )}
         placeholder="--:--"
