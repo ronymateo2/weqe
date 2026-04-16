@@ -29,7 +29,7 @@ export const PainSlider = memo(function PainSlider({
           {label}
         </span>
         <span
-          className="mono text-[22px] font-light"
+          className="mono text-[22px] font-normal"
           style={{ color: colorFn(value) }}
         >
           {value}

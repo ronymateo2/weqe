@@ -77,7 +77,7 @@ export function LogOccurrenceSheet({ observation, onSaved }: Props) {
           <div className="flex items-end justify-between">
             <p className="section-label">Nivel de intensidad</p>
             <span
-              className="mono text-[32px] font-light leading-none"
+              className="mono text-[32px] font-normal leading-none"
               style={{ color: painColor(intensity) }}
             >
               {intensity}
@@ -101,9 +101,9 @@ export function LogOccurrenceSheet({ observation, onSaved }: Props) {
             onChange={(e) => setIntensity(Number(e.target.value))}
           />
           <div className="flex justify-between">
-            <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Leve</span>
-            <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Moderado</span>
-            <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Severo</span>
+            <span className="text-[11px] uppercase tracking-widest text-[var(--text-muted)]">Leve</span>
+            <span className="text-[11px] uppercase tracking-widest text-[var(--text-muted)]">Moderado</span>
+            <span className="text-[11px] uppercase tracking-widest text-[var(--text-muted)]">Severo</span>
           </div>
         </div>
 

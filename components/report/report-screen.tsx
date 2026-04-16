@@ -311,7 +311,7 @@ export function ReportScreen({ data }: Props) {
             <p className="section-label">Correlacion sueno ↔ dolor</p>
             {data.spearman !== null ? (
               <>
-                <p className="mono text-[22px] font-light">
+                <p className="mono text-[22px] font-normal">
                   r = {data.spearman}
                 </p>
                 <p className="screen-subtitle text-[13px] mt-1">

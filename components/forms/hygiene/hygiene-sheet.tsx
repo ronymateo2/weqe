@@ -327,7 +327,7 @@ export function HygieneSheet({
           {/* Identity header */}
           <div className="text-center">
             <p
-              className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em]"
+              className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]"
               style={{ color: "var(--text-muted)" }}
             >
               TU IDENTIDAD ACTUAL
@@ -439,7 +439,7 @@ export function HygieneSheet({
                 {todaySessions > 0 ? (
                   <>
                     <p
-                      className="font-mono text-[60px] font-light leading-none"
+                      className="font-mono text-[60px] font-normal leading-none"
                       style={{ color: "var(--accent)" }}
                     >
                       {todaySessions}
@@ -490,13 +490,13 @@ export function HygieneSheet({
               style={{ background: "var(--surface)" }}
             >
               <p
-                className="font-mono text-[32px] font-light leading-none"
+                className="font-mono text-[32px] font-normal leading-none"
                 style={{ color: "var(--text-primary)" }}
               >
                 {totalCompleted}
               </p>
               <p
-                className="mt-1 text-[10px] font-semibold uppercase tracking-[0.1em]"
+                className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em]"
                 style={{ color: "var(--text-muted)" }}
               >
                 Días completados
@@ -510,18 +510,18 @@ export function HygieneSheet({
                 className="leading-none"
                 style={{ color: "var(--text-primary)" }}
               >
-                <span className="font-mono text-[32px] font-light">
+                <span className="font-mono text-[32px] font-normal">
                   {sessionInCycle}
                 </span>
                 <span
-                  className="font-mono text-[16px] font-light"
+                  className="font-mono text-[16px] font-normal"
                   style={{ color: "var(--text-muted)" }}
                 >
                   /21
                 </span>
               </p>
               <p
-                className="mt-1 text-[10px] font-semibold uppercase tracking-[0.1em]"
+                className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em]"
                 style={{ color: "var(--text-muted)" }}
               >
                 Este Ciclo

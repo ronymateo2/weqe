@@ -22,14 +22,14 @@
 - **UI Labels (uppercase):** Inter 500, 11-12px, 0.1em letter-spacing — section headers, field labels.
 - **Loading:** System font stack (no download) + `geist/font/mono` (Geist Mono) for data values
 - **Scale:**
-  - `10px / SF Pro 600 / 0.12em tracking` — section labels (uppercase)
+  - `11-12px / SF Pro 600 / 0.10em tracking` — section labels (uppercase)
   - `12px / SF Pro 500` — metadata, timestamps, helper text
   - `13px / SF Pro 500` — input labels, chip text, alert text
   - `15px / SF Pro 400` — body copy
   - `17px / SF Pro 600` — screen titles
   - `22px / SF Pro 600 / -0.02em` — page headings
-  - `22px / Geist Mono 300` — primary data values (pain score display in sliders)
-  - `32-36px / Geist Mono 300` — stat card values (dashboard)
+  - `22px / Geist Mono 400` — primary data values (pain score display in sliders)
+  - `32-36px / Geist Mono 400` — stat card values (dashboard)
   - `11-13px / Geist Mono 400` — secondary data (correlation coefficients, timestamps)
 
 ---
@@ -51,8 +51,8 @@
 
   /* Text */
   --text-primary:   #f0e4c8;  /* warm cream — NOT cold blue-white */
-  --text-muted:     #8a7860;  /* warm muted tan */
-  --text-faint:     #5a4e3a;  /* barely visible — placeholder text */
+  --text-muted:     #a89375;  /* warm light tan, legible at 50% brightness */
+  --text-faint:     #7a6a4f;  /* secondary text, visible on low brightness */
 
   /* Accent — FL-41 spectrum, ~580-600nm */
   --accent:         #d4a24c;  /* warm amber — primary interactive color */
@@ -175,7 +175,7 @@ This product is **dark-mode only**. There is no light mode. Users with neuropath
 .slider-value {
   font-family: var(--font-mono);
   font-size: 22px;
-  font-weight: 300;
+  font-weight: 400;
   /* Color = painColor(score) */
 }
 ```
@@ -250,3 +250,4 @@ Used for Gotas and Triggers screens (launched from FAB).
 | 2026-03-29 | Bottom sheet for Gotas/Triggers (not full screens) | These are quick-add flows that should not interrupt the user's current context. Sheet dismisses back to whatever tab launched it. |
 | 2026-03-29 | Error toasts don't auto-dismiss if action required | If the user needs to retry or re-auth, the toast stays visible. Silent error recovery is the worst UX for a health tracker. |
 | 2026-03-29 | Skeleton shape matches content (not generic spinner) | Charts get rect skeletons, lists get row skeletons. Reduces layout shift and helps the user understand what's loading before data arrives. |
+| 2026-04-16 | Aumento de contraste base y pesos tipográficos mínimos (`var(--text-faint)` y `font-weight: 400` en *Geist Mono*) | Pacientes con fotofobia y ojo seco usan el dispositivo con **50-60% de brillo**. Tonos muy tenues (`#5a4e3a`) o pesos finos (`300`) desaparecen. Todo elemento requiere legibilidad clínica bajo atenuación extrema de luminancia, sin migrar a tonos azules. |

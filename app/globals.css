@@ -7,8 +7,8 @@
   --surface-el: #252014;
   --border: #2e2718;
   --text-primary: #f0e4c8;
-  --text-muted: #8a7860;
-  --text-faint: #5a4e3a;
+  --text-muted: #a89375;
+  --text-faint: #7a6a4f;
   --accent: #d4a24c;
   --accent-dim: rgba(212, 162, 76, 0.15);
   --accent-bright: #e8b85e;
@@ -154,9 +154,9 @@ svg {
 .section-label {
   margin: 0 0 12px;
   color: var(--text-faint);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
 }
 
@@ -260,7 +260,7 @@ svg {
 }
 
 .bottom-nav__label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -433,7 +433,7 @@ svg {
 /* ── Mobile readability: larger text on small screens ────────────────────── */
 @media screen and (max-width: 480px) {
   .section-label {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .screen-subtitle {

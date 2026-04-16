@@ -120,7 +120,7 @@ export function SleepHoursInput({ id = "sleep-hours", label = "Horas de sueno", 
     <div className="space-y-3">
       <div className="flex items-end justify-between gap-4">
         <p className="m-0 text-[13px] font-medium text-[var(--text-primary)]">{label}</p>
-        <span className="mono text-[22px] font-light text-[var(--accent)]">
+        <span className="mono text-[22px] font-normal text-[var(--accent)]">
           {`${formatHours(coreOptions[activeCoreIndex])} h`}
         </span>
       </div>
