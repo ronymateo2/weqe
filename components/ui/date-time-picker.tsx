@@ -122,7 +122,6 @@ export function DateTimePicker({
             onSelect={handleDateSelect}
             defaultMonth={date ?? ceiling}
             disabled={{ after: ceiling }}
-            captionLayout="dropdown"
             locale={es}
           />
         </PopoverContent>
