@@ -133,8 +133,8 @@ export function DateTimePicker({
         value={timeStr}
         onChange={handleTimeChange}
         className={cn(
-          "min-h-12 w-28 flex-shrink-0 rounded-[10px] border border-[var(--border)] bg-[var(--surface)]",
-          "px-3 font-mono text-[15px] text-[var(--text-primary)] outline-none",
+          "h-12 w-28 flex-shrink-0 rounded-[10px] border border-[var(--border)] bg-[var(--surface)]",
+          "px-3 font-mono text-base text-[var(--text-primary)] outline-none appearance-none",
           "transition-colors duration-[160ms] focus:border-[var(--accent)]",
           "[color-scheme:dark]",
           "[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
