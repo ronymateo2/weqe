@@ -230,7 +230,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
               <span className="flex h-4 w-4 items-center justify-center">
                 <EyedropperIcon
                   aria-hidden
-                  size={13}
+                  size={24}
                   className="shrink-0 -translate-y-[1.5px]"
                   style={{ color: "var(--accent)" }}
                 />
