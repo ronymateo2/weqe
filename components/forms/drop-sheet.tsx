@@ -178,7 +178,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   if (isLoading) {
     return (
       <div className="space-y-5">
-        <Skeleton className="h-[52px] w-full rounded-[10px]" />
+        <Skeleton className="h-9 w-full rounded-[10px]" />
         <div className="space-y-2">
           <Skeleton className="h-[14px] w-24 rounded-full" />
           <Skeleton className="h-[148px] w-full rounded-[16px]" />
@@ -203,17 +203,13 @@ export function DropSheet({ onSaved }: DropSheetProps) {
     <div className="space-y-5">
       {lastDropLabel ? (
         <div
-          className="rounded-[12px] px-4 py-3"
+          className="flex items-center gap-2 rounded-[10px] px-3 h-9"
           style={{ background: "var(--surface-el)" }}
         >
-          <p className="text-[11px] font-medium uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>
-            Última aplicación
-          </p>
-          <p className="text-[15px] font-medium" style={{ color: "var(--text-primary)" }}>
-            {lastDropLabel.timeStr}
-          </p>
-          <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
-            {lastDropLabel.name} · {lastDropLabel.eye}
+          <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: "var(--accent)" }} />
+          <p className="text-[13px] truncate" style={{ color: "var(--text-secondary)" }}>
+            <span className="font-medium" style={{ color: "var(--text-primary)" }}>{lastDropLabel.timeStr}</span>
+            <span style={{ color: "var(--text-muted)" }}> · {lastDropLabel.name} · {lastDropLabel.eye}</span>
           </p>
         </div>
       ) : null}
