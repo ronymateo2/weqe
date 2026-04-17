@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={GeistMono.variable}>{children}</body>
+      <body className={GeistMono.variable}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

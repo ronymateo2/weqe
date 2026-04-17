@@ -12,14 +12,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { PainSlider } from "@/components/ui/pain-slider";
 import { TextInput } from "@/components/ui/text-input";
-import { Toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { TRIGGER_OPTIONS, SYMPTOM_OPTIONS } from "@/lib/constants";
 
 import { saveCheckInAction } from "@/lib/actions/check-ins";
 import { saveSymptomAction } from "@/lib/actions/symptoms";
 import type { SaveCheckInInput } from "@/lib/actions/check-ins";
 import { queueCheckIn } from "@/lib/offline/check-ins-queue";
-import type { ActionState, TriggerType } from "@/types/domain";
+import type { TriggerType } from "@/types/domain";
 import {
   BoneIcon,
   HandEyeIcon,
@@ -92,7 +92,6 @@ export function CheckInForm() {
   const [contextTab, setContextTab] = useState<ContextTab>("now");
   const [showTriggers, setShowTriggers] = useState(false);
   const [loggedAt, setLoggedAt] = useState<string | null>(null);
-  const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, setIsPending] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [zeroWarning, setZeroWarning] = useState<string | null>(null);
@@ -238,10 +237,7 @@ export function CheckInForm() {
 
       if (!navigator.onLine) {
         await queueCheckIn(input);
-        setState({
-          status: "success",
-          message: "Guardado sin conexión. Se sincronizará al reconectar.",
-        });
+        toast.success("Guardado sin conexión. Se sincronizará al reconectar.");
         resetForm();
         setIsPending(false);
         return;
@@ -249,7 +245,7 @@ export function CheckInForm() {
 
       try {
         const result = await saveCheckInAction(input);
-        
+
         if (result.ok) {
           for (const { type } of symptomsToSave) {
             await saveSymptomAction({
@@ -260,17 +256,15 @@ export function CheckInForm() {
           }
         }
 
-        setState({
-          status: result.ok ? "success" : "error",
-          message: result.message,
-        });
-        if (result.ok) resetForm();
+        if (result.ok) {
+          toast.success(result.message);
+          resetForm();
+        } else {
+          toast.error(result.message);
+        }
       } catch {
         await queueCheckIn(input);
-        setState({
-          status: "success",
-          message: "Guardado sin conexión. Se sincronizará al reconectar.",
-        });
+        toast.success("Guardado sin conexión. Se sincronizará al reconectar.");
         resetForm();
       }
 
@@ -326,13 +320,6 @@ export function CheckInForm() {
   return (
     <div className="relative pb-[calc(var(--sticky-cta-height)+44px)]">
       <div className="space-y-6">
-        {state.status !== "idle" && state.message ? (
-          <Toast
-            message={state.message}
-            tone={state.status === "success" ? "success" : "error"}
-            onDismiss={() => setState({ status: "idle" })}
-          />
-        ) : null}
         {/* Context — all optional */}
         <div className="rounded-[16px] border border-[var(--border)] bg-[rgba(28,24,16,0.7)]">
           <div className="flex items-center justify-between px-4 pt-4 pb-3">

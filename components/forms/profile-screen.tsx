@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { MobileSheet } from "@/components/layout/mobile-sheet";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
-import { Toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import {
   saveMedicationAction,
   deleteMedicationAction,
@@ -273,29 +273,30 @@ export function ProfileScreen({
         notes: form.notes || undefined,
       });
 
-      setState({
-        status: result.ok ? "success" : "error",
-        message: result.message,
-      });
+      if (!result.ok) {
+        setState({ status: "error", message: result.message });
+        return;
+      }
 
-      if (!result.ok || !result.medication) return;
+      if (!result.medication) return;
 
       setMedications((prev) => [...prev, result.medication!]);
       setSheetOpen(false);
       setForm(EMPTY_FORM);
+      setState({ status: "idle" });
+      toast.success(result.message);
     });
   };
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
       const result = await deleteMedicationAction(id);
-      setState({
-        status: result.ok ? "success" : "error",
-        message: result.message,
-      });
       if (result.ok) {
         setMedications((prev) => prev.filter((m) => m.id !== id));
         setDeletingId(null);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
       }
     });
   };
@@ -303,14 +304,6 @@ export function ProfileScreen({
   return (
     <>
       <div className="space-y-8">
-        {state.status !== "idle" && state.message && !sheetOpen ? (
-          <Toast
-            tone={state.status === "success" ? "success" : "error"}
-            message={state.message}
-            onDismiss={() => setState({ status: "idle" })}
-          />
-        ) : null}
-
         {/* ── Información ── */}
         <section className="space-y-3">
           <p className="section-label">Información</p>
