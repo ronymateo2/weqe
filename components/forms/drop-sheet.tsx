@@ -33,12 +33,16 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   const [loggedAt, setLoggedAt] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [lastDrop, setLastDrop] = useState<LastDropRecord | null>(null);
+  const [lastDropLoading, setLastDropLoading] = useState(true);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, startTransition] = useTransition();
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    getLastDropAction().then(setLastDrop).catch(() => {});
+    getLastDropAction()
+      .then(setLastDrop)
+      .catch(() => {})
+      .finally(() => setLastDropLoading(false));
   }, []);
 
   useEffect(() => {
@@ -148,6 +152,7 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   };
 
   const shouldShowCustomInput = selectedDropType === CUSTOM_DROP_TYPE;
+  const isLoading = lastDropLoading || (loading && dropTypes.length === 0);
 
   const lastDropLabel = lastDrop
     ? (() => {
@@ -164,25 +169,51 @@ export function DropSheet({ onSaved }: DropSheetProps) {
         } else {
           timeStr = diffDays === 1 ? "hace 1 día" : `hace ${diffDays} días`;
         }
-        const eyeLabel = lastDrop.eye === "left" ? "Izq" : lastDrop.eye === "right" ? "Der" : "Ambos";
-        return `${timeStr} · ${lastDrop.dropName} · ${eyeLabel}`;
+        const eyeLabel =
+          lastDrop.eye === "left" ? "Izq" : lastDrop.eye === "right" ? "Der" : "Ambos";
+        return { timeStr, name: lastDrop.dropName, eye: eyeLabel };
       })()
     : null;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-[52px] w-full rounded-[10px]" />
+        <div className="space-y-2">
+          <Skeleton className="h-[14px] w-24 rounded-full" />
+          <Skeleton className="h-[148px] w-full rounded-[16px]" />
+        </div>
+        <Skeleton className="h-[16px] w-48 rounded-full" />
+        <div className="grid grid-cols-[1fr_120px] gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-[14px] w-10 rounded-full" />
+            <Skeleton className="h-[48px] w-full rounded-[12px]" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-[14px] w-16 rounded-full" />
+            <Skeleton className="h-[48px] w-full rounded-[12px]" />
+          </div>
+        </div>
+        <Skeleton className="h-[52px] w-full rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       {lastDropLabel ? (
         <div
-          className="flex items-center gap-2 rounded-[10px] px-3 py-2"
+          className="rounded-[12px] px-4 py-3"
           style={{ background: "var(--surface-el)" }}
         >
-          <span
-            className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-            style={{ background: "var(--accent)" }}
-          />
-          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Última: </span>
-            {lastDropLabel}
+          <p className="text-[11px] font-medium uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>
+            Última aplicación
+          </p>
+          <p className="text-[15px] font-medium" style={{ color: "var(--text-primary)" }}>
+            {lastDropLabel.timeStr}
+          </p>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
+            {lastDropLabel.name} · {lastDropLabel.eye}
           </p>
         </div>
       ) : null}
@@ -209,26 +240,20 @@ export function DropSheet({ onSaved }: DropSheetProps) {
           </Link>
         </div>
 
-        {loading && dropTypes.length === 0 ? (
-          <Skeleton className="h-[148px] w-full rounded-[16px]" />
-        ) : (
-          <>
-            <WheelPicker
-              label="Seleccionar tipo de gota"
-              options={wheelOptions}
-              value={selectedDropType}
-              onChange={setSelectedDropType}
-            />
+        <WheelPicker
+          label="Seleccionar tipo de gota"
+          options={wheelOptions}
+          value={selectedDropType}
+          onChange={setSelectedDropType}
+        />
 
-            {shouldShowCustomInput ? (
-              <TextInput
-                placeholder="Nombre de la gota (ej. systane ultra)"
-                value={customDropName}
-                onChange={(event) => setCustomDropName(event.target.value)}
-              />
-            ) : null}
-          </>
-        )}
+        {shouldShowCustomInput ? (
+          <TextInput
+            placeholder="Nombre de la gota (ej. systane ultra)"
+            value={customDropName}
+            onChange={(event) => setCustomDropName(event.target.value)}
+          />
+        ) : null}
       </div>
 
       <div>
@@ -302,7 +327,6 @@ export function DropSheet({ onSaved }: DropSheetProps) {
         className="w-full"
         disabled={
           isPending ||
-          (loading && dropTypes.length === 0) ||
           !selectedDropName.trim() ||
           state.status === "success"
         }
