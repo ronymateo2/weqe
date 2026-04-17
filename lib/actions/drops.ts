@@ -162,6 +162,40 @@ export async function saveDropTypeAction(input: SaveDropTypeInput) {
   }
 }
 
+export type LastDropRecord = {
+  loggedAt: string;
+  dropName: string;
+  eye: DropEye;
+  quantity: number;
+};
+
+export async function getLastDropAction(): Promise<LastDropRecord | null> {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("dy_drops")
+      .select("logged_at, quantity, eye, dy_drop_types(name)")
+      .eq("user_id", session.user.id)
+      .order("logged_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      loggedAt: data.logged_at,
+      dropName: (data.dy_drop_types as any)?.name ?? "",
+      eye: data.eye as DropEye,
+      quantity: data.quantity,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function saveDropAction(input: SaveDropInput) {
   const session = await auth();
 

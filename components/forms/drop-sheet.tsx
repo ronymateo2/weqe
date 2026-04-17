@@ -10,7 +10,8 @@ import { TextInput } from "@/components/ui/text-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WheelPicker } from "@/components/ui/wheel-picker";
 import { DROP_EYES } from "@/lib/constants";
-import { saveDropAction } from "@/lib/actions/drops";
+import { saveDropAction, getLastDropAction } from "@/lib/actions/drops";
+import type { LastDropRecord } from "@/lib/actions/drops";
 import { useDropTypes } from "@/lib/hooks/use-drop-types";
 import { DROP_TYPES_CACHE_KEY } from "@/lib/hooks/use-drop-types";
 import { queueDrop } from "@/lib/offline/drops-queue";
@@ -31,9 +32,14 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   const [eye, setEye] = useState<DropEye>("left");
   const [loggedAt, setLoggedAt] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [lastDrop, setLastDrop] = useState<LastDropRecord | null>(null);
   const [state, setState] = useState<ActionState>({ status: "idle" });
   const [isPending, startTransition] = useTransition();
   const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    getLastDropAction().then(setLastDrop).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -143,8 +149,44 @@ export function DropSheet({ onSaved }: DropSheetProps) {
 
   const shouldShowCustomInput = selectedDropType === CUSTOM_DROP_TYPE;
 
+  const lastDropLabel = lastDrop
+    ? (() => {
+        const diffMs = Date.now() - new Date(lastDrop.loggedAt).getTime();
+        const diffMin = Math.floor(diffMs / 60_000);
+        const diffHr = Math.floor(diffMin / 60);
+        const diffDays = Math.floor(diffHr / 24);
+        let timeStr: string;
+        if (diffMin < 1) timeStr = "ahora mismo";
+        else if (diffMin < 60) timeStr = `hace ${diffMin} min`;
+        else if (diffDays < 1) {
+          const remMin = diffMin % 60;
+          timeStr = remMin > 0 ? `hace ${diffHr}h ${remMin}m` : `hace ${diffHr}h`;
+        } else {
+          timeStr = diffDays === 1 ? "hace 1 día" : `hace ${diffDays} días`;
+        }
+        const eyeLabel = lastDrop.eye === "left" ? "Izq" : lastDrop.eye === "right" ? "Der" : "Ambos";
+        return `${timeStr} · ${lastDrop.dropName} · ${eyeLabel}`;
+      })()
+    : null;
+
   return (
     <div className="space-y-5">
+      {lastDropLabel ? (
+        <div
+          className="flex items-center gap-2 rounded-[10px] px-3 py-2"
+          style={{ background: "var(--surface-el)" }}
+        >
+          <span
+            className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
+            style={{ background: "var(--accent)" }}
+          />
+          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+            <span style={{ color: "var(--text-muted)" }}>Última: </span>
+            {lastDropLabel}
+          </p>
+        </div>
+      ) : null}
+
       {(state.status !== "idle" && state.message) || error ? (
         <StatusBanner
           message={(state.status !== "idle" ? state.message : null) || error || ""}
