@@ -45,10 +45,10 @@ const MobileSheet = dynamic(
   { ssr: false },
 );
 
-const DateTimeWheelPicker = dynamic(
+const DateTimePicker = dynamic(
   () =>
-    import("@/components/ui/datetime-wheel-picker").then((m) => ({
-      default: m.DateTimeWheelPicker,
+    import("@/components/ui/date-time-picker").then((m) => ({
+      default: m.DateTimePicker,
     })),
   { ssr: false },
 );
@@ -372,9 +372,9 @@ export function CheckInForm() {
                     className="overflow-hidden"
                   >
                     <div className="pt-2">
-                      <DateTimeWheelPicker
+                      <DateTimePicker
                         max={new Date()}
-                        value={loggedAt ?? new Date().toISOString()}
+                        value={loggedAt}
                         onChange={setLoggedAt}
                       />
                     </div>
