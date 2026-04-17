@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { FRICTION_LEVELS } from "./constants";
 import type { ActionState } from "@/types/domain";
 
@@ -145,38 +146,14 @@ export function CalibratingView({
         )}
 
         {/* Save — always visible */}
-        <button
-          className="group mt-3 flex w-full items-center justify-center rounded-full py-[10px] text-[14px] font-medium"
-          style={{
-            background: "var(--surface-el)",
-            border: "1px solid var(--border)",
-            color: isSaving ? "var(--text-faint)" : "var(--text-primary)",
-            opacity: isSaving ? 0.6 : 1,
-            pointerEvents: isSaving ? "none" : "auto",
-            transition: "opacity 200ms cubic-bezier(0,0,0.2,1), color 200ms cubic-bezier(0,0,0.2,1)",
-            transform: "scale(1)",
-          }}
+        <Button
+          className="mt-3 w-full"
+          disabled={isSaving}
           type="button"
           onClick={onSave}
-          disabled={isSaving}
-          aria-busy={isSaving}
         >
-          <span
-            style={{
-              filter: isSaving ? "blur(1.5px)" : "blur(0px)",
-              transition: "filter 180ms cubic-bezier(0,0,0.2,1)",
-            }}
-          >
-            {isSaving ? "Guardando…" : (
-              <>
-                Guardar{" "}
-                <span className="inline-block transition-transform group-active:translate-x-1">
-                  →
-                </span>
-              </>
-            )}
-          </span>
-        </button>
+          {isSaving ? "Guardando…" : "Guardar"}
+        </Button>
       </div>
 
       {/* Error */}
@@ -190,17 +167,14 @@ export function CalibratingView({
       )}
 
       {/* Omit */}
-      <button
-        className="min-h-[48px] w-full rounded-[var(--radius-lg)] py-3 text-[14px] transition-opacity active:opacity-60"
-        style={{
-          border: "1px solid var(--border)",
-          color: "var(--text-faint)",
-        }}
+      <Button
+        className="w-full text-[var(--text-faint)]"
+        variant="ghost"
         type="button"
         onClick={onOmit}
       >
         omitir esto
-      </button>
+      </Button>
     </div>
   );
 }

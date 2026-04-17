@@ -5,6 +5,7 @@ import {
   TrophyIcon,
   WrenchIcon,
 } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import {
   saveLidHygieneAction,
   getLidHygieneDashboardAction,
@@ -397,31 +398,21 @@ export function HygieneSheet({
                   ¿Lo hiciste de nuevo?
                 </p>
                 <div className="flex w-full gap-3">
-                  <button
-                    className="flex-1 rounded-[var(--radius-lg)] py-3 text-[15px] font-semibold transition-all active:opacity-75 active:scale-[0.97]"
-                    style={{
-                      minHeight: 52,
-                      background: "var(--accent)",
-                      color: "#121008",
-                    }}
+                  <Button
+                    className="flex-1"
                     type="button"
                     onClick={handleLoHice}
                   >
                     Sí, lo hice
-                  </button>
-                  <button
-                    className="flex-1 rounded-[var(--radius-lg)] py-3 text-[15px] font-medium transition-all active:opacity-70"
-                    style={{
-                      minHeight: 52,
-                      background: "var(--surface-el)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text-muted)",
-                    }}
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    variant="subtle"
                     type="button"
                     onClick={() => setConfirmRepeat(false)}
                   >
                     Cancelar
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
