@@ -9,6 +9,7 @@ import { StatusBanner } from "@/components/ui/status-banner";
 import { TextInput } from "@/components/ui/text-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WheelPicker } from "@/components/ui/wheel-picker";
+import { EyedropperIcon } from "@phosphor-icons/react";
 import { DROP_EYES } from "@/lib/constants";
 import { saveDropAction, getLastDropAction } from "@/lib/actions/drops";
 import type { LastDropRecord } from "@/lib/actions/drops";
@@ -91,7 +92,9 @@ export function DropSheet({ onSaved }: DropSheetProps) {
     startTransition(async () => {
       const input = {
         id: crypto.randomUUID(),
-        loggedAt: loggedAt ? new Date(loggedAt).toISOString() : new Date().toISOString(),
+        loggedAt: loggedAt
+          ? new Date(loggedAt).toISOString()
+          : new Date().toISOString(),
         name: selectedDropName,
         quantity: Number(quantity),
         eye,
@@ -165,13 +168,26 @@ export function DropSheet({ onSaved }: DropSheetProps) {
         else if (diffMin < 60) timeStr = `hace ${diffMin} min`;
         else if (diffDays < 1) {
           const remMin = diffMin % 60;
-          timeStr = remMin > 0 ? `hace ${diffHr}h ${remMin}m` : `hace ${diffHr}h`;
+          timeStr =
+            remMin > 0 ? `hace ${diffHr}h ${remMin}m` : `hace ${diffHr}h`;
         } else {
           timeStr = diffDays === 1 ? "hace 1 día" : `hace ${diffDays} días`;
         }
         const eyeLabel =
-          lastDrop.eye === "left" ? "Izq" : lastDrop.eye === "right" ? "Der" : "Ambos";
-        return { timeStr, name: lastDrop.dropName, eye: eyeLabel };
+          lastDrop.eye === "left"
+            ? "Izq"
+            : lastDrop.eye === "right"
+              ? "Der"
+              : "Ambos";
+        const quantityLabel =
+          lastDrop.quantity === 1 ? "1 gota" : `${lastDrop.quantity} gotas`;
+
+        return {
+          timeStr,
+          name: lastDrop.dropName,
+          eye: eyeLabel,
+          quantityLabel,
+        };
       })()
     : null;
 
@@ -200,23 +216,61 @@ export function DropSheet({ onSaved }: DropSheetProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-[calc(20px+env(safe-area-inset-bottom))]">
       {lastDropLabel ? (
         <div
-          className="flex items-center gap-2 rounded-[10px] px-3 h-9"
-          style={{ background: "var(--surface-el)" }}
+          className="rounded-[10px] border px-3 py-2.5"
+          style={{
+            background: "var(--surface-el)",
+            borderColor: "var(--border)",
+          }}
         >
-          <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: "var(--accent)" }} />
-          <p className="text-[13px] truncate" style={{ color: "var(--text-secondary)" }}>
-            <span className="font-medium" style={{ color: "var(--text-primary)" }}>{lastDropLabel.timeStr}</span>
-            <span style={{ color: "var(--text-muted)" }}> · {lastDropLabel.name} · {lastDropLabel.eye}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-4 w-4 items-center justify-center">
+                <EyedropperIcon
+                  aria-hidden
+                  size={13}
+                  className="shrink-0 -translate-y-[1.5px]"
+                  style={{ color: "var(--accent)" }}
+                />
+              </span>
+              <p
+                className="m-0 text-[11px] font-semibold uppercase leading-none tracking-[0.10em]"
+                style={{ color: "var(--text-faint)" }}
+              >
+                Ultima gota
+              </p>
+            </div>
+            <p
+              className="mono text-[13px] font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {lastDropLabel.timeStr}
+            </p>
+          </div>
+
+          <p
+            className="mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <span
+              className="min-w-0 truncate"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {lastDropLabel.name}
+            </span>
+            <span className="shrink-0">· {lastDropLabel.eye}</span>
+            <span className="shrink-0">· {lastDropLabel.quantityLabel}</span>
           </p>
         </div>
       ) : null}
 
       {(state.status !== "idle" && state.message) || error ? (
         <StatusBanner
-          message={(state.status !== "idle" ? state.message : null) || error || ""}
+          message={
+            (state.status !== "idle" ? state.message : null) || error || ""
+          }
           tone={
             state.status === "error" || (error && state.status === "idle")
               ? "error"
@@ -311,8 +365,14 @@ export function DropSheet({ onSaved }: DropSheetProps) {
       </div>
 
       {!isOnline ? (
-        <div className="flex items-center gap-2 rounded-[10px] px-3 py-2" style={{ background: "var(--surface-el)" }}>
-          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: "var(--text-muted)" }} />
+        <div
+          className="flex items-center gap-2 rounded-[10px] px-3 py-2"
+          style={{ background: "var(--surface-el)" }}
+        >
+          <span
+            className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+            style={{ background: "var(--text-muted)" }}
+          />
           <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
             Sin conexión — se guardará y sincronizará al reconectar
           </p>
@@ -322,14 +382,16 @@ export function DropSheet({ onSaved }: DropSheetProps) {
       <Button
         className="w-full"
         disabled={
-          isPending ||
-          !selectedDropName.trim() ||
-          state.status === "success"
+          isPending || !selectedDropName.trim() || state.status === "success"
         }
         type="button"
         onClick={saveDrop}
       >
-        {isPending ? "Guardando..." : state.status === "success" ? "Guardada" : "Guardar gota"}
+        {isPending
+          ? "Guardando..."
+          : state.status === "success"
+            ? "Guardada"
+            : "Guardar gota"}
       </Button>
     </div>
   );

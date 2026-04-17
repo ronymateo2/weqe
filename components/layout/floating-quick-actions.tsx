@@ -131,6 +131,7 @@ export function FloatingQuickActions() {
       <MobileSheet
         description="Registra rapidamente una aplicacion sin salir del flujo actual."
         open={sheet === "drop"}
+        panelClassName="!h-[88svh]"
         title="Registrar gota"
         onClose={closeAll}
       >
